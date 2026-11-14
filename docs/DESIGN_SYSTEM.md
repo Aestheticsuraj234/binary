@@ -62,19 +62,20 @@ for React Native in `apps/mobile/src/lib/theme.ts`.
 
 ## Components in use
 
-| Component    | Source                            |
-| ------------ | --------------------------------- |
-| Button       | shadcn/ui `button`                |
-| Input, Label | shadcn/ui `input`, `label`        |
-| Card         | shadcn/ui `card`                  |
-| Avatar       | shadcn/ui `avatar`                |
-| Logo         | `components/brand/logo.tsx`       |
-| FormField    | `components/auth/form-field.tsx`  |
-| Icons        | `lucide-react`                    |
-| Badge        | shadcn/ui `badge` (Ch. 3)         |
-| Textarea     | shadcn/ui `textarea` (Ch. 3)      |
-| NativeSelect | shadcn/ui `native-select` (Ch. 3) |
-| AppNav       | `components/app/app-nav.tsx`      |
+| Component                          | Source                                     |
+| ---------------------------------- | ------------------------------------------ |
+| Button                             | shadcn/ui `button`                         |
+| Input, Label                       | shadcn/ui `input`, `label`                 |
+| Card                               | shadcn/ui `card`                           |
+| Avatar                             | shadcn/ui `avatar`                         |
+| Logo                               | `components/brand/logo.tsx`                |
+| FormField                          | `components/auth/form-field.tsx`           |
+| Icons                              | `lucide-react`                             |
+| Badge                              | shadcn/ui `badge` (Ch. 3)                  |
+| Textarea                           | shadcn/ui `textarea` (Ch. 3)               |
+| NativeSelect                       | shadcn/ui `native-select` (Ch. 3)          |
+| AppNav                             | `components/app/app-nav.tsx`               |
+| AgentCard, AgentAvatar, ModelBadge | `components/agents/agent-card.tsx` (Ch. 4) |
 
 Add new shadcn components with:
 
@@ -105,6 +106,16 @@ pnpm dlx shadcn@latest add <component>
   with its own loading, error and result state.
 - **One lime action per screen:** repeated actions (e.g. three Save buttons)
   use the `secondary` variant; lime is kept for the single main action.
+- **Agents (Ch. 4):** an agent is shown by its initials in a round
+  `bg-secondary` tile with lime text, and its model as an outline mono badge
+  ("Anthropic · claude-sonnet-5-5"). Clickable cards use
+  `hover:border-primary/60`.
+- **Selects in a form row:** shadcn's `NativeSelect` wrapper is `w-fit`, so
+  give the field wrapper `*:w-full` when the select should fill its column.
+- **Destructive actions:** a ghost button that turns `destructive` on hover,
+  plus a confirmation, e.g. "Fire Ada".
+- **Navigation sections:** a nav link stays active on its sub-pages
+  (`/agents/new`, `/agents/:id`).
 
 ## Mobile
 

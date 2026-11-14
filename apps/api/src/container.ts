@@ -1,4 +1,8 @@
-import {ProviderKeyRepository} from '@binary/db';
+import {
+  AgentRepository,
+  AgentTemplateRepository,
+  ProviderKeyRepository,
+} from '@binary/db';
 
 import {db} from './db';
 import {EngineFactory} from './engines/engine-factory';
@@ -11,6 +15,8 @@ import {KeyVault} from './keys/key-vault';
 
 /** Everything the routes need, created once and passed in. */
 export interface AppDependencies {
+  agents: AgentRepository;
+  agentTemplates: AgentTemplateRepository;
   providerKeys: ProviderKeyRepository;
   keyVault: KeyVault;
   engineFactory: EngineFactory;
@@ -23,8 +29,10 @@ export interface AppDependencies {
 export function createDependencies(
   createModel: LanguageModelFactory = createLanguageModel,
 ): AppDependencies {
+  const agents = new AgentRepository(db);
+  const agentTemplates = new AgentTemplateRepository(db);
   const providerKeys = new ProviderKeyRepository(db);
   const keyVault = new KeyVault(env.ENCRYPTION_KEY);
   const engineFactory = new EngineFactory(providerKeys, keyVault, createModel);
-  return {providerKeys, keyVault, engineFactory};
+  return {agents, agentTemplates, providerKeys, keyVault, engineFactory};
 }

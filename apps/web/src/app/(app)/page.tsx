@@ -1,7 +1,15 @@
-import type {ProviderKeySummary} from '@binary/shared';
-import {ArrowRight, Bot, FlaskConical, KeyRound, Sparkles} from 'lucide-react';
+import type {Agent, ProviderKeySummary} from '@binary/shared';
+import {
+  ArrowRight,
+  Bot,
+  FlaskConical,
+  KeyRound,
+  Sparkles,
+  UserPlus,
+} from 'lucide-react';
 import Link from 'next/link';
 
+import {AgentCard} from '@/components/agents/agent-card';
 import {
   Card,
   CardDescription,
@@ -19,6 +27,14 @@ const ADD_KEY = {
     'Binary uses your own OpenAI, Anthropic or Gemini key. It is encrypted before it is stored.',
 };
 
+const HIRE_AGENT = {
+  href: '/agents',
+  icon: UserPlus,
+  title: 'Hire your first agent',
+  description:
+    'Start from a template like Research Assistant, or write your own role.',
+};
+
 const TRY_PLAYGROUND = {
   href: '/playground',
   icon: FlaskConical,
@@ -27,14 +43,29 @@ const TRY_PLAYGROUND = {
     'Ask one question and compare OpenAI, Anthropic and Gemini side by side.',
 };
 
+/** The one thing a user should do next: key, then agent, then explore. */
+function chooseNextStep(hasKeys: boolean, hasAgents: boolean) {
+  if (!hasKeys) {
+    return ADD_KEY;
+  }
+  if (!hasAgents) {
+    return HIRE_AGENT;
+  }
+  return TRY_PLAYGROUND;
+}
+
 export default async function HomePage() {
-  const session = await getSession();
-  const data = await getFromApi<{keys: ProviderKeySummary[]}>(
-    '/api/provider-keys',
-  );
+  const [session, keyData, agentData] = await Promise.all([
+    getSession(),
+    getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
+    getFromApi<{agents: Agent[]}>('/api/agents'),
+  ]);
   const firstName = session?.user.name.split(' ')[0];
-  const hasKeys = (data?.keys.length ?? 0) > 0;
-  const nextStep = hasKeys ? TRY_PLAYGROUND : ADD_KEY;
+  const agents = agentData?.agents ?? [];
+  const nextStep = chooseNextStep(
+    (keyData?.keys.length ?? 0) > 0,
+    agents.length > 0,
+  );
   const NextStepIcon = nextStep.icon;
 
   return (
@@ -48,7 +79,7 @@ export default async function HomePage() {
           Welcome, {firstName}.
         </h1>
         <p className="text-muted-foreground">
-          Your workspace is ready. Your AI coworkers will appear here soon.
+          Your workspace is ready. Hire AI coworkers and give each one a job.
         </p>
       </div>
 
@@ -67,18 +98,40 @@ export default async function HomePage() {
         </Card>
       </Link>
 
-      <Card className="border-dashed bg-transparent">
-        <CardHeader>
-          <div className="mb-2 grid size-10 place-items-center rounded-lg bg-secondary">
-            <Bot className="size-5 text-primary" />
+      {agents.length === 0 && (
+        <Card className="border-dashed bg-transparent">
+          <CardHeader>
+            <div className="mb-2 grid size-10 place-items-center rounded-lg bg-secondary">
+              <Bot className="size-5 text-primary" />
+            </div>
+            <CardTitle>No agents yet</CardTitle>
+            <CardDescription>
+              Agents you hire will show up here, ready to take on tasks.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {agents.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Your agents
+            </h2>
+            <Link
+              href="/agents"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              See all
+            </Link>
           </div>
-          <CardTitle>No agents yet</CardTitle>
-          <CardDescription>
-            Agents arrive in the next chapter. They will think with the models
-            you connect here.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {agents.slice(0, 4).map((agent) => (
+              <AgentCard key={agent.id} agent={agent} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

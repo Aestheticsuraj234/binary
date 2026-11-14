@@ -3,7 +3,7 @@ import {Hono} from 'hono';
 
 import {requireUser, type AppEnv} from '../app-env';
 import type {AppDependencies} from '../container';
-import {MissingProviderKeyError} from '../engines/engine-factory';
+import {engineErrorResponse} from './engine-errors';
 
 /** POST a prompt to one provider and model, get the answer back. */
 export function playgroundRoutes({engineFactory}: AppDependencies) {
@@ -33,13 +33,7 @@ export function playgroundRoutes({engineFactory}: AppDependencies) {
       };
       return c.json(result);
     } catch (error) {
-      if (error instanceof MissingProviderKeyError) {
-        return c.json({error: error.message}, 400);
-      }
-      // A wrong model id, an invalid key or a provider outage all land here.
-      // Pass the provider's message on, so the user can fix the cause.
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return c.json({error: `The provider returned an error: ${message}`}, 502);
+      return engineErrorResponse(c, error);
     }
   });
 

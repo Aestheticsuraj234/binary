@@ -1,3 +1,11 @@
+export {
+  agentInputSchema,
+  runAgentSchema,
+  type Agent,
+  type AgentInput,
+  type AgentRunResult,
+  type AgentTemplate,
+} from './agents';
 export {APP_NAME, APP_SCHEME, APP_TAGLINE} from './constants';
 export {
   signInSchema,
