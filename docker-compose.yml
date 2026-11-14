@@ -1,0 +1,18 @@
+# Local infrastructure for Binary.
+# Postgres ships with pgvector already installed, because later chapters
+# store agent memory as vectors in the same database.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: binary-postgres
+    environment:
+      POSTGRES_USER: binary
+      POSTGRES_PASSWORD: binary
+      POSTGRES_DB: binary
+    ports:
+      - '5432:5432'
+    volumes:
+      - binary-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  binary-postgres-data:
