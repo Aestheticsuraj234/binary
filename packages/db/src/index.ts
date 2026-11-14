@@ -12,8 +12,13 @@ export {
   type NewAgentTemplate,
 } from './repositories/agent-template-repository';
 export {
+  MessageRepository,
+  type NewMessage,
+} from './repositories/message-repository';
+export {
   ProviderKeyRepository,
   type NewProviderKey,
   type ProviderKey,
 } from './repositories/provider-key-repository';
+export {ThreadRepository} from './repositories/thread-repository';
 export {UserRepository, type User} from './repositories/user-repository';

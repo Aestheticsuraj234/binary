@@ -6,7 +6,9 @@ import {agentTemplates, users} from '../schema';
 import {createTestUser} from '../test-utils';
 import {AgentRepository} from './agent-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
+import {MessageRepository} from './message-repository';
 import {ProviderKeyRepository} from './provider-key-repository';
+import {ThreadRepository} from './thread-repository';
 import {UserRepository} from './user-repository';
 
 const db = createDatabase(process.env.DATABASE_URL ?? '');
@@ -170,5 +172,72 @@ describe('AgentRepository', () => {
   it('deletes an agent and reports whether one existed', async () => {
     expect(await repository.delete(userId, agentId)).toBe(true);
     expect(await repository.delete(userId, agentId)).toBe(false);
+  });
+});
+
+describe('ThreadRepository and MessageRepository', () => {
+  const agentRepository = new AgentRepository(db);
+  const threadRepository = new ThreadRepository(db);
+  const messageRepository = new MessageRepository(db);
+  let agentId = '';
+  let threadId = '';
+
+  beforeAll(async () => {
+    const agent = await agentRepository.create({
+      userId,
+      name: 'Chatty',
+      role: 'Talks.',
+      avatar: 'juno',
+    });
+    agentId = agent.id;
+  });
+
+  it('starts a chat called "New chat"', async () => {
+    const thread = await threadRepository.createForAgent(userId, agentId);
+    threadId = thread.id;
+
+    expect(thread).toMatchObject({agentId, title: 'New chat'});
+  });
+
+  it('keeps messages in the order they were written', async () => {
+    await messageRepository.add({threadId, role: 'user', content: 'Hi'});
+    await messageRepository.add({
+      threadId,
+      role: 'assistant',
+      authorAgentId: agentId,
+      content: 'Hello!',
+    });
+
+    const saved = await messageRepository.listForThread(threadId);
+    expect(saved.map((message) => message.content)).toEqual(['Hi', 'Hello!']);
+  });
+
+  it('lists recent chats with their agent, most active first', async () => {
+    const older = await threadRepository.createForAgent(userId, agentId);
+    await threadRepository.rename(userId, threadId, 'Greetings');
+    await threadRepository.touch(threadId);
+
+    const recent = await threadRepository.listRecentForUser(userId, 10);
+    expect(recent.map((thread) => thread.id)).toEqual([threadId, older.id]);
+    expect(recent[0]).toMatchObject({
+      title: 'Greetings',
+      agent: {id: agentId, name: 'Chatty', avatar: 'juno'},
+    });
+    await threadRepository.delete(userId, older.id);
+  });
+
+  it("never returns or deletes another user's chat", async () => {
+    expect(
+      await threadRepository.findForUser(otherUserId, threadId),
+    ).toBeUndefined();
+    expect(await threadRepository.listRecentForUser(otherUserId, 10)).toEqual(
+      [],
+    );
+    expect(await threadRepository.delete(otherUserId, threadId)).toBe(false);
+  });
+
+  it('deletes a chat together with its messages', async () => {
+    expect(await threadRepository.delete(userId, threadId)).toBe(true);
+    expect(await messageRepository.listForThread(threadId)).toEqual([]);
   });
 });

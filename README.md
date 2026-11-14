@@ -8,10 +8,9 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 4 of 15. Accounts work on web and mobile, the full
-> database schema is in place, you can connect your own OpenAI, Anthropic
-> or Gemini key, and you can hire cartoon characters as agents, each with a
-> job and a personality, and talk to them. Saved chats arrive in Chapter 5.
+> **Status:** Chapter 5 of 15. Accounts work on web and mobile, you can
+> connect your own OpenAI, Anthropic or Gemini key, hire cartoon characters
+> as agents, and chat with them: answers stream in and every chat is saved.
 
 ## What's inside
 
@@ -134,3 +133,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 2: Database and ORM layer](docs/chapters/chapter-02/README.md)
 - [Chapter 3: AI engine layer and API key vault](docs/chapters/chapter-03/README.md)
 - [Chapter 4: Agents](docs/chapters/chapter-04/README.md)
+- [Chapter 5: Chat](docs/chapters/chapter-05/README.md)

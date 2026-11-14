@@ -3,12 +3,15 @@
 import {
   CHARACTERS,
   characterOf,
-  runAgentSchema,
+  sendMessageSchema,
   type Agent,
-  type AgentRunResult,
+  type ChatMessage,
+  type ChatStreamEvent,
+  type Thread,
 } from '@binary/shared';
-import {ArrowUp, Pencil, RotateCcw} from 'lucide-react';
+import {ArrowUp, Pencil, Plus, Trash2} from 'lucide-react';
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
 
 import {ModelBadge} from '@/components/agents/model-badge';
@@ -21,61 +24,109 @@ import {SpeechBubble} from '@/components/characters/speech-bubble';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
 import {API_URL} from '@/lib/env';
+import {readNdjson} from '@/lib/read-ndjson';
 import {cn} from '@/lib/utils';
 
+/** A message on screen: saved ones, plus the reply being written right now. */
 interface Message {
-  id: number;
-  role: 'user' | 'assistant';
+  id: string;
+  role: ChatMessage['role'];
   content: string;
-  /** "64 in · 41 out · 0.7s" under an answer. */
-  usage?: string;
   isError?: boolean;
+  /** True while the answer is still streaming in. */
+  isStreaming?: boolean;
 }
 
-// How many earlier messages go to the model. Matches the API's limit.
-const HISTORY_LIMIT = 20;
-
-/** Roughly how long the character "talks": longer answers, longer chatter. */
-function talkingTime(text: string) {
-  return Math.min(4000, Math.max(1200, text.length * 20));
+interface AgentChatProps {
+  agent: Agent;
+  /** The open chat. Empty for a new chat, which is saved on its first message. */
+  threadId?: string;
+  title?: string;
+  savedMessages: ChatMessage[];
 }
 
-function usageLine({inputTokens, outputTokens, durationMs}: AgentRunResult) {
-  return `${inputTokens} in · ${outputTokens} out · ${(durationMs / 1000).toFixed(1)}s`;
+const JSON_HEADERS = {'Content-Type': 'application/json'};
+
+/**
+ * Messages written in this visit have local ids until saved. Only they rise
+ * into view; a saved chat appears at once when opened.
+ */
+function isNew(message: Message) {
+  return message.id.startsWith('local-');
+}
+
+/** Creates the chat on the server; returns its id, or null if that failed. */
+async function startThread(agentId: string): Promise<string | null> {
+  const response = await fetch(`${API_URL}/api/agents/${agentId}/threads`, {
+    method: 'POST',
+    credentials: 'include',
+  }).catch(() => null);
+  if (!response?.ok) {
+    return null;
+  }
+  const body: {thread: Thread} = await response.json();
+  return body.thread.id;
 }
 
 /**
- * A conversation with one character. The character on the stage reacts to
- * what is happening: thinking while it waits, talking as the answer lands,
- * happy afterwards, and "oops" when something goes wrong.
- *
- * Messages live in this page only; saved chats with streaming arrive in
- * Chapter 5.
+ * A saved conversation with one character. Answers stream in word by word,
+ * and the character on the stage reacts: thinking until the first word,
+ * talking while words arrive, happy when done, and "oops" on errors.
  */
-export function AgentChat({agent}: {agent: Agent}) {
+export function AgentChat({
+  agent,
+  threadId: openThreadId,
+  title,
+  savedMessages,
+}: AgentChatProps) {
+  const router = useRouter();
   const id = characterOf(agent.avatar);
   const character = CHARACTERS[id];
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [threadId, setThreadId] = useState(openThreadId);
+  const [messages, setMessages] = useState<Message[]>(savedMessages);
+  const [shownThreadId, setShownThreadId] = useState(openThreadId);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
   const [mood, setMood] = useState<Mood>('idle');
   const [isRunning, setIsRunning] = useState(false);
-  const nextId = useRef(0);
+  const nextLocalId = useRef(0);
   const moodTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const endOfChat = useRef<HTMLDivElement>(null);
 
-  // Keep the newest message in view.
-  useEffect(() => {
-    endOfChat.current?.scrollIntoView({behavior: 'smooth', block: 'end'});
-  }, [messages.length, isRunning]);
-
-  function addMessage(message: Omit<Message, 'id'>) {
-    nextId.current += 1;
-    const messageId = nextId.current;
-    setMessages((current) => [...current, {...message, id: messageId}]);
+  // When the URL opens a different chat (sidebar, New chat), show it. This
+  // runs during render, React's way to reset state when a prop changes.
+  if (openThreadId !== shownThreadId) {
+    setShownThreadId(openThreadId);
+    setThreadId(openThreadId);
+    setMessages(savedMessages);
+    setError('');
   }
 
-  /** Plays a short sequence of moods, e.g. talking, then happy, then idle. */
+  // Keep the newest words in view while the answer streams in.
+  useEffect(() => {
+    endOfChat.current?.scrollIntoView({block: 'end'});
+  }, [messages]);
+
+  /** Adds a message that has no server id yet; returns its local id. */
+  function addMessage(message: Omit<Message, 'id'>) {
+    nextLocalId.current += 1;
+    const localId = `local-${nextLocalId.current}`;
+    setMessages((current) => [...current, {...message, id: localId}]);
+    return localId;
+  }
+
+  function updateMessage(
+    localId: string,
+    change: (message: Message) => Message,
+  ) {
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === localId ? change(message) : message,
+      ),
+    );
+  }
+
+  /** Plays a short sequence of moods, e.g. happy, then idle. */
   function playMoods(steps: [Mood, number][]) {
     moodTimers.current.forEach(clearTimeout);
     moodTimers.current = [];
@@ -91,12 +142,23 @@ export function AgentChat({agent}: {agent: Agent}) {
     }
   }
 
+  /** Shows a failure in the reply bubble, keeping any words that arrived. */
+  function showFailure(replyId: string, reason: string) {
+    updateMessage(replyId, (message) =>
+      message.content
+        ? {
+            ...message,
+            content: `${message.content}\n\n${reason}`,
+            isError: true,
+            isStreaming: false,
+          }
+        : {...message, content: reason, isError: true, isStreaming: false},
+    );
+    playMoods([['oops', 0]]);
+  }
+
   async function send(text: string) {
-    const history = messages
-      .filter((message) => !message.isError)
-      .slice(-HISTORY_LIMIT)
-      .map(({role, content}) => ({role, content}));
-    const parsed = runAgentSchema.safeParse({prompt: text, history});
+    const parsed = sendMessageSchema.safeParse({content: text});
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? 'Check the message.');
       return;
@@ -104,33 +166,74 @@ export function AgentChat({agent}: {agent: Agent}) {
 
     setError('');
     setDraft('');
-    addMessage({role: 'user', content: parsed.data.prompt});
-    playMoods([['thinking', 0]]);
     setIsRunning(true);
-    const response = await fetch(`${API_URL}/api/agents/${agent.id}/run`, {
+    addMessage({role: 'user', content: parsed.data.content});
+    const replyId = addMessage({
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+    });
+    playMoods([['thinking', 0]]);
+
+    // A new chat is saved on its first message. Updating the address bar
+    // without navigating keeps this page (and the stream) alive.
+    let chatId = threadId;
+    if (!chatId) {
+      chatId = (await startThread(agent.id)) ?? undefined;
+      if (!chatId) {
+        showFailure(replyId, 'Could not start the chat. Is the API running?');
+        setIsRunning(false);
+        return;
+      }
+      setThreadId(chatId);
+      window.history.replaceState(
+        null,
+        '',
+        `/agents/${agent.id}?chat=${chatId}`,
+      );
+    }
+
+    const response = await fetch(`${API_URL}/api/threads/${chatId}/messages`, {
       method: 'POST',
       credentials: 'include',
-      headers: {'Content-Type': 'application/json'},
+      headers: JSON_HEADERS,
       body: JSON.stringify(parsed.data),
     }).catch(() => null);
-    setIsRunning(false);
 
-    const body = response ? await response.json() : null;
     if (!response?.ok) {
-      addMessage({
-        role: 'assistant',
-        content: body?.error ?? 'Could not reach the API.',
-        isError: true,
-      });
-      playMoods([['oops', 0]]);
+      const body = response ? await response.json().catch(() => null) : null;
+      showFailure(replyId, body?.error ?? 'Could not reach the API.');
+      setIsRunning(false);
       return;
     }
-    addMessage({role: 'assistant', content: body.text, usage: usageLine(body)});
-    playMoods([
-      ['talking', talkingTime(body.text)],
-      ['happy', 1500],
-      ['idle', 0],
-    ]);
+
+    try {
+      for await (const event of readNdjson<ChatStreamEvent>(response)) {
+        if (event.type === 'delta') {
+          setMood('talking');
+          updateMessage(replyId, (message) => ({
+            ...message,
+            content: message.content + event.text,
+          }));
+        } else if (event.type === 'done') {
+          updateMessage(replyId, () => event.message);
+          playMoods([
+            ['happy', 1500],
+            ['idle', 0],
+          ]);
+        } else {
+          showFailure(replyId, event.error);
+        }
+      }
+    } catch {
+      showFailure(
+        replyId,
+        'The connection dropped before the answer finished.',
+      );
+    }
+    setIsRunning(false);
+    // Reload the sidebar so this chat moves to the top of Recent chats.
+    router.refresh();
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -153,12 +256,35 @@ export function AgentChat({agent}: {agent: Agent}) {
   }
 
   function handleNewChat() {
+    // Reset here too: if the address was only replaced, the router may not
+    // see this as a change of chat.
+    setThreadId(undefined);
     setMessages([]);
     setError('');
     playMoods([
       ['happy', 900],
       ['idle', 0],
     ]);
+    router.push(`/agents/${agent.id}`);
+  }
+
+  async function handleDeleteChat() {
+    if (
+      !threadId ||
+      !window.confirm('Delete this chat? This cannot be undone.')
+    ) {
+      return;
+    }
+    const response = await fetch(`${API_URL}/api/threads/${threadId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    }).catch(() => null);
+    if (!response?.ok) {
+      setError('Could not delete the chat. Try again.');
+      return;
+    }
+    handleNewChat();
+    router.refresh();
   }
 
   return (
@@ -196,7 +322,7 @@ export function AgentChat({agent}: {agent: Agent}) {
           {character.personality}
         </p>
 
-        <div className="flex gap-2 lg:justify-center">
+        <div className="flex lg:justify-center">
           <Button asChild variant="outline" size="sm" className="rounded-full">
             <Link
               href={`/agents/${agent.id}/edit`}
@@ -206,21 +332,42 @@ export function AgentChat({agent}: {agent: Agent}) {
               <span className="hidden sm:inline">Edit</span>
             </Link>
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-full"
-            onClick={handleNewChat}
-            disabled={messages.length === 0 || isRunning}
-            aria-label="New chat"
-          >
-            <RotateCcw />
-            <span className="hidden sm:inline">New chat</span>
-          </Button>
         </div>
       </aside>
 
       <section className="flex min-h-0 flex-1 flex-col">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b px-4 sm:px-6">
+          <h2 className="truncate text-sm font-medium">
+            {/* A new chat gets its title from the first message once saved. */}
+            {(threadId && title) || 'New chat'}
+          </h2>
+          <div className="flex shrink-0 gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full"
+              onClick={handleNewChat}
+              disabled={isRunning || !threadId}
+            >
+              <Plus />
+              New chat
+            </Button>
+            {threadId && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="rounded-full text-muted-foreground hover:text-destructive"
+                onClick={handleDeleteChat}
+                disabled={isRunning}
+                aria-label="Delete chat"
+                title="Delete chat"
+              >
+                <Trash2 />
+              </Button>
+            )}
+          </div>
+        </header>
+
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:px-6">
             {messages.length === 0 && (
@@ -249,7 +396,13 @@ export function AgentChat({agent}: {agent: Agent}) {
 
             {messages.map((message) =>
               message.role === 'user' ? (
-                <div key={message.id} className="animate-rise flex justify-end">
+                <div
+                  key={message.id}
+                  className={cn(
+                    'flex justify-end',
+                    isNew(message) && 'animate-rise',
+                  )}
+                >
                   <p className="max-w-[85%] rounded-3xl rounded-tr-md bg-secondary px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
                     {message.content}
                   </p>
@@ -257,47 +410,46 @@ export function AgentChat({agent}: {agent: Agent}) {
               ) : (
                 <div
                   key={message.id}
-                  className="animate-rise flex items-start gap-3"
+                  className={cn(
+                    'flex items-start gap-3',
+                    isNew(message) && 'animate-rise',
+                  )}
                 >
                   <CharacterAvatar
                     id={id}
                     mood={message.isError ? 'oops' : 'idle'}
                     size={36}
                   />
-                  <div className="min-w-0 max-w-[85%] space-y-1.5">
+                  {message.isStreaming && !message.content ? (
+                    <div
+                      className="flex gap-1.5 rounded-3xl rounded-tl-md border bg-card px-4 py-4"
+                      aria-label={`${agent.name} is thinking`}
+                      role="status"
+                    >
+                      <span className="size-2 animate-pulse rounded-full bg-muted-foreground" />
+                      <span className="size-2 animate-pulse rounded-full bg-muted-foreground [animation-delay:150ms]" />
+                      <span className="size-2 animate-pulse rounded-full bg-muted-foreground [animation-delay:300ms]" />
+                    </div>
+                  ) : (
                     <p
                       role={message.isError ? 'alert' : undefined}
                       className={cn(
-                        'rounded-3xl rounded-tl-md border bg-card px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap',
+                        'max-w-[85%] min-w-0 rounded-3xl rounded-tl-md border bg-card px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap',
                         message.isError &&
                           'border-destructive/50 text-destructive',
                       )}
                     >
                       {message.content}
+                      {message.isStreaming && (
+                        <span
+                          aria-hidden
+                          className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-full bg-primary"
+                        />
+                      )}
                     </p>
-                    {message.usage && (
-                      <p className="pl-2 font-mono text-xs text-muted-foreground">
-                        {message.usage}
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
               ),
-            )}
-
-            {isRunning && (
-              <div className="animate-rise flex items-center gap-3">
-                <CharacterAvatar id={id} mood="thinking" size={36} />
-                <div
-                  className="flex gap-1.5 rounded-3xl rounded-tl-md border bg-card px-4 py-4"
-                  aria-label={`${agent.name} is thinking`}
-                  role="status"
-                >
-                  <span className="size-2 animate-pulse rounded-full bg-muted-foreground" />
-                  <span className="size-2 animate-pulse rounded-full bg-muted-foreground [animation-delay:150ms]" />
-                  <span className="size-2 animate-pulse rounded-full bg-muted-foreground [animation-delay:300ms]" />
-                </div>
-              </div>
             )}
             <div ref={endOfChat} />
           </div>

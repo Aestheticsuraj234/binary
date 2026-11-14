@@ -9,6 +9,7 @@ import {agentTemplateRoutes} from './routes/agent-templates';
 import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
+import {threadRoutes} from './routes/threads';
 
 /** Builds the API. Dependencies come in from the composition root. */
 export function createApp(dependencies: AppDependencies) {
@@ -43,6 +44,7 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/playground', playgroundRoutes(dependencies));
   app.route('/api/agents', agentRoutes(dependencies));
   app.route('/api/agent-templates', agentTemplateRoutes(dependencies));
+  app.route('/api/threads', threadRoutes(dependencies));
 
   return app;
 }

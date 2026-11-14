@@ -1,7 +1,9 @@
 import {
   AgentRepository,
   AgentTemplateRepository,
+  MessageRepository,
   ProviderKeyRepository,
+  ThreadRepository,
 } from '@binary/db';
 
 import {db} from './db';
@@ -18,6 +20,8 @@ export interface AppDependencies {
   agents: AgentRepository;
   agentTemplates: AgentTemplateRepository;
   providerKeys: ProviderKeyRepository;
+  threads: ThreadRepository;
+  messages: MessageRepository;
   keyVault: KeyVault;
   engineFactory: EngineFactory;
 }
@@ -32,7 +36,17 @@ export function createDependencies(
   const agents = new AgentRepository(db);
   const agentTemplates = new AgentTemplateRepository(db);
   const providerKeys = new ProviderKeyRepository(db);
+  const threads = new ThreadRepository(db);
+  const messages = new MessageRepository(db);
   const keyVault = new KeyVault(env.ENCRYPTION_KEY);
   const engineFactory = new EngineFactory(providerKeys, keyVault, createModel);
-  return {agents, agentTemplates, providerKeys, keyVault, engineFactory};
+  return {
+    agents,
+    agentTemplates,
+    providerKeys,
+    threads,
+    messages,
+    keyVault,
+    engineFactory,
+  };
 }

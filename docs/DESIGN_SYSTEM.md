@@ -129,6 +129,17 @@ pnpm dlx shadcn@latest add <component>
   bordered card with its face; corners `rounded-3xl` with the corner nearest
   the speaker tightened. Composer is a rounded card with a round lime send
   button; Enter sends.
+- **Streaming (Ch. 5):** a reply with no words yet shows three pulsing
+  dots; while words arrive, a small lime pulsing caret follows the text.
+  Errors keep any words that arrived and add the reason in `destructive`.
+- **Chat header (Ch. 5):** a 56px bar above the messages with the chat
+  title (or "New chat"), a ghost **New chat** and an icon-only
+  **Delete chat** that turns `destructive` on hover.
+- **Recent chats (Ch. 5):** in the sidebar under Your crew: the
+  character's face (24px) and the chat title, newest first; the open chat
+  gets `bg-secondary`. Crew rows are compact (face 32px and name).
+- **Animate only what is new:** messages written now rise in; a saved chat
+  appears at once.
 - **Model badge:** outline, mono: "Anthropic · claude-sonnet-5-5".
 - **Selects in a form row:** shadcn's `NativeSelect` wrapper is `w-fit`, so
   give the field wrapper `*:w-full` when the select should fill its column.
