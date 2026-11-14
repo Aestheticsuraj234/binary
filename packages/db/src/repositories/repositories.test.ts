@@ -5,6 +5,7 @@ import {createDatabase} from '../client';
 import {agentTemplates, users} from '../schema';
 import {createTestUser} from '../test-utils';
 import {AgentRepository} from './agent-repository';
+import {ApprovalRepository} from './approval-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
 import {McpServerRepository} from './mcp-server-repository';
 import {MessageRepository} from './message-repository';
@@ -427,5 +428,87 @@ describe('routines, triggers and runs', () => {
     expect(runs[1]?.error).toBe('No key.');
     const [latest] = await runRepository.latestForRoutines([routineId]);
     expect(latest?.id).toBe(second.id);
+  });
+});
+
+describe('ApprovalRepository', () => {
+  const approvals = new ApprovalRepository(db);
+  const toolCallRepository = new ToolCallRepository(db);
+  let threadId = '';
+  let approvalId = '';
+  let toolCallId = '';
+
+  beforeAll(async () => {
+    const agent = await new AgentRepository(db).create({
+      userId,
+      name: 'Mimi',
+      role: 'Helps customers.',
+      avatar: 'mimi',
+      approvalMode: 'auto_approve_reads',
+    });
+    threadId = (await new ThreadRepository(db).createForAgent(userId, agent.id))
+      .id;
+    const message = await new MessageRepository(db).add({
+      threadId,
+      role: 'assistant',
+      content: 'I asked to refund it.',
+    });
+    const [call] = await toolCallRepository.addMany([
+      {
+        messageId: message.id,
+        toolName: 'shop_refund_order',
+        risk: 'write',
+        status: 'awaiting_approval',
+        input: {orderId: 'A1'},
+      },
+    ]);
+    toolCallId = call?.id ?? '';
+  });
+
+  it('creates a request and lists it as pending, with its agent and chat', async () => {
+    const [created] = await approvals.createMany(userId, [
+      {toolCallId, summary: 'shop refund order {"orderId":"A1"}'},
+    ]);
+    approvalId = created?.id ?? '';
+
+    const [pending] = await approvals.listPendingForUser(userId);
+    expect(pending).toMatchObject({
+      id: approvalId,
+      status: 'pending',
+      threadId,
+      agent: {name: 'Mimi'},
+      toolCall: {toolName: 'shop_refund_order', input: {orderId: 'A1'}},
+    });
+    expect(await approvals.countPendingForUser(userId)).toBe(1);
+  });
+
+  it("shows the approval id on the chat's tool calls", async () => {
+    const [call] = await toolCallRepository.listForThread(threadId);
+
+    expect(call?.approvalId).toBe(approvalId);
+  });
+
+  it('is invisible to another user', async () => {
+    expect(await approvals.listPendingForUser(otherUserId)).toEqual([]);
+    expect(
+      await approvals.findForUser(otherUserId, approvalId),
+    ).toBeUndefined();
+  });
+
+  it('accepts only the first decision', async () => {
+    expect(await approvals.decide(approvalId, 'approved')).toBe(true);
+    expect(await approvals.decide(approvalId, 'rejected')).toBe(false);
+    expect(await approvals.countPendingForUser(userId)).toBe(0);
+  });
+
+  it('records the tool result and marks the request executed', async () => {
+    await toolCallRepository.finish(toolCallId, 'succeeded', {ok: true});
+    await approvals.markExecuted(approvalId);
+
+    const approval = await approvals.findForUser(userId, approvalId);
+    expect(approval).toMatchObject({
+      status: 'executed',
+      toolCall: {status: 'succeeded', output: {ok: true}},
+    });
   });
 });

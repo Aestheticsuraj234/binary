@@ -142,6 +142,7 @@ beforeAll(async () => {
     provider: 'anthropic',
     model: 'claude-sonnet-5-5',
     avatar: 'mimi',
+    approvalMode: 'auto_approve_reads',
   });
   agent = (await readJson<{agent: Agent}>(created)).agent;
 });
@@ -194,20 +195,24 @@ describe('an agent using a read tool from an app', () => {
 });
 
 describe('an agent trying a write tool', () => {
-  it('is blocked: the tool never runs and the model is told why', async () => {
+  it('asks first: the tool waits, nothing is refunded, the model is told', async () => {
     const {events} = await ask('Please refund my order A1');
     const calls = toolEvents(events);
+    const done = events.at(-1);
 
     expect(calls.at(-1)).toMatchObject({
       toolName: 'shop_refund_order',
       risk: 'write',
-      status: 'rejected',
-      output: {blocked: true},
+      status: 'awaiting_approval',
+      output: {awaitingApproval: true},
     });
     expect(shop.refunds).toEqual([]);
     expect(JSON.stringify(prompts.at(-1))).toContain(
-      'Binary blocked this action',
+      "needs the user's approval",
     );
+    expect(
+      done?.type === 'done' && done.message.toolCalls?.[0]?.approvalId,
+    ).toBeTruthy();
   });
 });
 

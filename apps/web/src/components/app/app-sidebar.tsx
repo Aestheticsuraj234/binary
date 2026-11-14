@@ -4,6 +4,7 @@ import {characterOf, type Agent, type ThreadSummary} from '@binary/shared';
 import {
   Compass,
   FlaskConical,
+  Inbox,
   KeyRound,
   Menu,
   Plug,
@@ -22,6 +23,7 @@ import {initialsOf} from '@/lib/initials';
 import {cn} from '@/lib/utils';
 
 const LINKS = [
+  {href: '/today', label: 'Today', icon: Inbox},
   {href: '/', label: 'Discover', icon: Compass},
   {href: '/routines', label: 'Routines', icon: Repeat},
   {href: '/apps', label: 'Apps & tools', icon: Plug},
@@ -32,6 +34,8 @@ const LINKS = [
 interface AppSidebarProps {
   agents: Agent[];
   recentChats: ThreadSummary[];
+  /** Requests waiting for the user, shown as a count next to Today. */
+  pendingApprovals: number;
   user: {name: string; email: string};
 }
 
@@ -50,6 +54,7 @@ const ROW =
 function SidebarContent({
   agents,
   recentChats,
+  pendingApprovals,
   user,
   pathname,
   chatId,
@@ -80,6 +85,14 @@ function SidebarContent({
           >
             <Icon className="size-4" />
             {label}
+            {href === '/today' && pendingApprovals > 0 && (
+              <span
+                className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-warning px-1.5 text-xs font-semibold text-background"
+                aria-label={`${pendingApprovals} waiting for you`}
+              >
+                {pendingApprovals}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
@@ -164,7 +177,12 @@ function SidebarContent({
  * a slide-out drawer on phones. Your hired characters and recent chats live
  * here, one click from a conversation.
  */
-export function AppSidebar({agents, recentChats, user}: AppSidebarProps) {
+export function AppSidebar({
+  agents,
+  recentChats,
+  pendingApprovals,
+  user,
+}: AppSidebarProps) {
   const pathname = usePathname();
   const chatId = useSearchParams().get('chat');
   const [isOpen, setIsOpen] = useState(false);
@@ -196,6 +214,7 @@ export function AppSidebar({agents, recentChats, user}: AppSidebarProps) {
         <SidebarContent
           agents={agents}
           recentChats={recentChats}
+          pendingApprovals={pendingApprovals}
           user={user}
           pathname={pathname}
           chatId={chatId}
@@ -225,6 +244,7 @@ export function AppSidebar({agents, recentChats, user}: AppSidebarProps) {
             <SidebarContent
               agents={agents}
               recentChats={recentChats}
+              pendingApprovals={pendingApprovals}
               user={user}
               pathname={pathname}
               chatId={chatId}

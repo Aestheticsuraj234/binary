@@ -2,6 +2,9 @@
 
 import {
   agentInputSchema,
+  APPROVAL_MODE_INFO,
+  APPROVAL_MODES,
+  DEFAULT_APPROVAL_MODE,
   CHARACTER_IDS,
   CHARACTERS,
   characterOf,
@@ -11,6 +14,7 @@ import {
   TEMPLATE_CHARACTERS,
   type Agent,
   type AgentTemplate,
+  type ApprovalMode,
   type CharacterId,
   type Provider,
 } from '@binary/shared';
@@ -78,6 +82,9 @@ export function AgentForm({
   const [provider, setProvider] = useState<Provider>(
     agent?.provider ?? connectedProviders[0] ?? 'openai',
   );
+  const [approvalMode, setApprovalMode] = useState<ApprovalMode>(
+    agent?.approvalMode ?? DEFAULT_APPROVAL_MODE,
+  );
   const [model, setModel] = useState(
     agent?.model ?? PROVIDER_INFO[provider].models[0] ?? '',
   );
@@ -116,6 +123,7 @@ export function AgentForm({
       provider,
       model,
       avatar,
+      approvalMode,
       templateId: template?.id,
     });
     if (!parsed.success) {
@@ -276,6 +284,30 @@ export function AgentForm({
               ))}
             </NativeSelect>
           </div>
+        </div>
+
+        <div className="space-y-2 *:w-full">
+          <Label htmlFor="approvalMode">Permissions</Label>
+          <NativeSelect
+            id="approvalMode"
+            className="h-10 w-full"
+            value={approvalMode}
+            onChange={(event) =>
+              setApprovalMode(
+                APPROVAL_MODES.find((mode) => mode === event.target.value) ??
+                  DEFAULT_APPROVAL_MODE,
+              )
+            }
+          >
+            {APPROVAL_MODES.map((mode) => (
+              <NativeSelectOption key={mode} value={mode}>
+                {APPROVAL_MODE_INFO[mode].label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <p className="text-xs text-muted-foreground">
+            {APPROVAL_MODE_INFO[approvalMode].description}
+          </p>
         </div>
 
         {error && (

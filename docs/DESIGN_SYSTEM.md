@@ -162,6 +162,21 @@ pnpm dlx shadcn@latest add <component>
   now. It won't be shown again.", with the value in mono and a copy button.
   Afterwards, say it was shown once and offer to make a new one; never show
   it again.
+- **Asking for approval (Ch. 8):** a waiting tool row reads "Wants to use
+  <tool>" with a `warning/40` border and a "Needs your OK" line holding a
+  `secondary` **Approve** and a ghost **Reject** (lime stays on Send). After
+  you decide it reads "Used" or "You said no to"; a plan-only agent's row
+  reads "Blocked" and says why, with no buttons.
+- **Decision notes (Ch. 8):** a `tool` message is a centered, small, muted
+  line between bubbles ("You approved shop refund order."), never a bubble.
+- **Today inbox (Ch. 8):** "Today" is the first sidebar link, with a
+  `warning` count pill (`aria-label` "N waiting for you"). Each request is a
+  card: the character's face, "<Name> wants to <tool>", risk badge, time, a
+  Chat link, the input in mono, then Approve and Reject. A decided card
+  stays and says what happened. Empty: a happy Sunny, "Nothing is waiting
+  for you".
+- **Permissions select (Ch. 8):** a `NativeSelect` of the four modes, most
+  careful first, with the chosen mode's one-line description below it.
 - **Missing setup notices:** when a feature works only partly (for example
   schedules without Trigger.dev), a `warning` note at the top of the page
   says what works, what doesn't, and the one step that fixes it.

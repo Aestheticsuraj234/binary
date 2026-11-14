@@ -15,10 +15,11 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, agentData, threadData] = await Promise.all([
+  const [session, agentData, threadData, todayData] = await Promise.all([
     getSession(),
     getFromApi<{agents: Agent[]}>('/api/agents'),
     getFromApi<{threads: ThreadSummary[]}>('/api/threads'),
+    getFromApi<{pending: number}>('/api/today/count'),
   ]);
   if (!session) {
     redirect('/sign-in');
@@ -29,6 +30,7 @@ export default async function AppLayout({
       <AppSidebar
         agents={agentData?.agents ?? []}
         recentChats={threadData?.threads ?? []}
+        pendingApprovals={todayData?.pending ?? 0}
         user={session.user}
       />
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>

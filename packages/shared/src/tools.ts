@@ -40,6 +40,8 @@ export interface ToolCallView {
   status: ToolCallStatus;
   input: unknown;
   output: unknown;
+  /** Set while the call waits for the user's decision (Chapter 8). */
+  approvalId?: string;
 }
 
 export const connectAppSchema = z.object({

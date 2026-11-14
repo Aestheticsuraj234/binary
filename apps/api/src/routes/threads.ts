@@ -17,6 +17,7 @@ export function threadRoutes({
   threads,
   messages,
   toolCalls,
+  approvals,
   engineFactory,
   toolboxes,
 }: AppDependencies) {
@@ -100,7 +101,7 @@ export function threadRoutes({
         output.writeln(JSON.stringify(event));
       try {
         const message = await writeReply(
-          {messages, threads, toolCalls, toolboxes},
+          {messages, threads, toolCalls, approvals, toolboxes},
           {userId, agent, engine, threadId: thread.id, content, onEvent: send},
         );
         await send({type: 'done', message});

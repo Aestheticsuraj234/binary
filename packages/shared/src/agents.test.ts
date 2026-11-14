@@ -9,6 +9,7 @@ const VALID_AGENT = {
   provider: 'anthropic',
   model: 'claude-sonnet-5-5',
   avatar: 'nova',
+  approvalMode: 'auto_approve_reads',
 };
 
 describe('agentInputSchema', () => {
@@ -35,6 +36,15 @@ describe('agentInputSchema', () => {
     const result = agentInputSchema.safeParse({...VALID_AGENT, name: '   '});
 
     expect(result.error?.issues[0]?.message).toBe('Give your agent a name.');
+  });
+
+  it('rejects an unknown approval mode', () => {
+    const result = agentInputSchema.safeParse({
+      ...VALID_AGENT,
+      approvalMode: 'yolo',
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it('rejects an unknown character', () => {

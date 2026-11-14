@@ -22,6 +22,7 @@ const NEW_AGENT = {
   provider: 'anthropic',
   model: 'claude-sonnet-5-5',
   avatar: 'nova',
+  approvalMode: 'auto_approve_reads',
 };
 let cookie = '';
 let otherCookie = '';
@@ -177,6 +178,7 @@ describe('editing an agent', () => {
       ...NEW_AGENT,
       name: 'Senior Researcher',
       avatar: 'juno',
+      approvalMode: 'auto_approve_reads',
     });
 
     expect(response.status).toBe(200);

@@ -3,7 +3,11 @@ import {dynamicTool, type ToolSet} from 'ai';
 
 import {toToolInfo, type AgentTool} from './agent-tool';
 import type {AppConnection} from './mcp';
-import {BLOCKED_RESULT, type ToolPolicy} from './policy';
+import {
+  AWAITING_APPROVAL_RESULT,
+  BLOCKED_RESULT,
+  type ToolPolicy,
+} from './policy';
 
 /**
  * Every tool one user's agents can call right now: the built-in ones plus
@@ -36,7 +40,8 @@ export class Toolbox {
 
   /**
    * The tools in the shape the AI SDK expects. Each one asks the policy
-   * first; a refused tool returns BLOCKED_RESULT instead of running.
+   * first: it runs, returns AWAITING_APPROVAL_RESULT (asked, not run), or
+   * returns BLOCKED_RESULT (never runs).
    */
   toToolSet(policy: ToolPolicy): ToolSet {
     const entries = [...this.tools.values()].map(({name, risk, tool}) => [
@@ -45,14 +50,35 @@ export class Toolbox {
         description: tool.description,
         inputSchema: tool.inputSchema,
         execute: async (input, options) => {
-          if (!policy.allows(risk)) {
+          const decision = policy.decide(risk);
+          if (decision === 'block') {
             return BLOCKED_RESULT;
+          }
+          if (decision === 'ask') {
+            return AWAITING_APPROVAL_RESULT;
           }
           return tool.execute?.(input, options);
         },
       }),
     ]);
     return Object.fromEntries(entries);
+  }
+
+  /**
+   * Runs a call the user approved. The approval is the permission, so the
+   * policy is not asked again. Throws if the tool is gone (for example, its
+   * app was removed since the agent asked).
+   */
+  async runApproved(name: string, input: unknown): Promise<unknown> {
+    const execute = this.tools.get(name)?.tool.execute;
+    if (!execute) {
+      throw new Error(`The tool ${name} is no longer available.`);
+    }
+    return execute(input, {
+      toolCallId: `approved-${name}`,
+      messages: [],
+      context: {},
+    });
   }
 
   /** Closes the app connections opened for this request. */
