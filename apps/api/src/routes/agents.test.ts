@@ -47,6 +47,7 @@ const NEW_AGENT = {
   instructions: 'Always list your sources.',
   provider: 'anthropic',
   model: 'claude-sonnet-5-5',
+  avatar: 'nova',
 };
 let cookie = '';
 let otherCookie = '';
@@ -201,15 +202,16 @@ describe("another user's agent", () => {
 });
 
 describe('editing and running an agent', () => {
-  it('updates the agent', async () => {
+  it('updates the agent, including its character', async () => {
     const response = await request('PUT', `/api/agents/${agentId}`, {
       ...NEW_AGENT,
       name: 'Senior Researcher',
+      avatar: 'juno',
     });
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      agent: {name: 'Senior Researcher', templateId},
+      agent: {name: 'Senior Researcher', avatar: 'juno', templateId},
     });
   });
 
@@ -242,7 +244,41 @@ describe('editing and running an agent', () => {
       content: expect.stringContaining('You are Senior Researcher'),
     });
     expect(system?.content).toContain('Always list your sources.');
+    expect(system?.content).toContain('Dreamy and creative.');
     expect(JSON.stringify(user)).toContain('three sources on pgvector');
+  });
+
+  it('sends the earlier conversation before the new message', async () => {
+    const response = await request('POST', `/api/agents/${agentId}/run`, {
+      prompt: 'And a fourth?',
+      history: [
+        {role: 'user', content: 'Find three sources.'},
+        {role: 'assistant', content: 'Here are three sources.'},
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    const prompt = models.at(-1)?.doGenerateCalls[0]?.prompt ?? [];
+    expect(prompt.map((message) => message.role)).toEqual([
+      'system',
+      'user',
+      'assistant',
+      'user',
+    ]);
+    expect(JSON.stringify(prompt.at(-1))).toContain('And a fourth?');
+  });
+
+  it('rejects a history that is too long', async () => {
+    const history = Array.from({length: 21}, () => ({
+      role: 'user',
+      content: 'Hi',
+    }));
+    const response = await request('POST', `/api/agents/${agentId}/run`, {
+      prompt: 'Hi',
+      history,
+    });
+
+    expect(response.status).toBe(400);
   });
 
   it('validates the message', async () => {
