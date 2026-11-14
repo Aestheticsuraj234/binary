@@ -6,4 +6,9 @@ export {
   type AgentTemplate,
   type NewAgentTemplate,
 } from './repositories/agent-template-repository';
+export {
+  ProviderKeyRepository,
+  type NewProviderKey,
+  type ProviderKey,
+} from './repositories/provider-key-repository';
 export {UserRepository, type User} from './repositories/user-repository';
