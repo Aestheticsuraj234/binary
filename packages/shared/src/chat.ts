@@ -1,5 +1,7 @@
 import {z} from 'zod';
 
+import type {ToolCallView} from './tools';
+
 export const sendMessageSchema = z.object({
   content: z
     .string()
@@ -16,12 +18,14 @@ export interface ChatTurn {
   content: string;
 }
 
-/** A saved message. `tool` messages arrive with tools in a later chapter. */
+/** A saved message. */
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'tool';
   content: string;
   createdAt: string;
+  /** Tools the agent used while writing this answer, in order. */
+  toolCalls?: ToolCallView[];
 }
 
 /** A saved conversation with one agent. */
@@ -43,10 +47,12 @@ export interface ThreadSummary {
 
 /**
  * What the API streams back while an agent answers: one JSON object per
- * line (NDJSON). Pieces of text first, then either the saved message or an
- * error.
+ * line (NDJSON). Pieces of text and tool updates as they happen, then either
+ * the saved message or an error. A `tool` event is sent when a tool starts
+ * and again when it ends; `call.id` ties the two together.
  */
 export type ChatStreamEvent =
   | {type: 'delta'; text: string}
+  | {type: 'tool'; call: ToolCallView}
   | {type: 'done'; message: ChatMessage}
   | {type: 'error'; error: string};
