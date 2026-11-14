@@ -8,11 +8,12 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 7 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 8 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
 > give them tools and MCP apps, and set up routines they run on a schedule,
-> by webhook or on demand, on Trigger.dev. Tools that change things stay
-> blocked until approvals arrive in Chapter 8.
+> by webhook or on demand, on Trigger.dev. Each character has a permission
+> level: tools that change things ask first, and you approve or reject them
+> in the chat or in the **Today** inbox.
 
 ## What's inside
 
@@ -140,3 +141,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 5: Chat](docs/chapters/chapter-05/README.md)
 - [Chapter 6: Tool system and MCP apps](docs/chapters/chapter-06/README.md)
 - [Chapter 7: Durable jobs and routines](docs/chapters/chapter-07/README.md)
+- [Chapter 8: Approvals, permissions and Today](docs/chapters/chapter-08/README.md)

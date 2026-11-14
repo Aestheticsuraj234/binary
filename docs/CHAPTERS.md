@@ -18,7 +18,7 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 5   | Real-time chat and threads                | Chat with an agent, streaming replies, threads and history, live updates via Postgres LISTEN/NOTIFY                      | ✅ Done ² |
 | 6   | Tool system and MCP apps                  | Tool registry with risk levels (read / write / computer), connect apps through MCP servers, including Composio           | ✅ Done ³ |
 | 7   | Durable jobs and routines                 | Long-running tasks and scheduled routines (cron, webhook, manual) on Trigger.dev, with run history                       | ✅ Done ⁴ |
-| 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                 | Planned   |
+| 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                 | ✅ Done ⁵ |
 | 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | Planned   |
 | 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | Planned   |
 | 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | Planned   |
@@ -36,12 +36,19 @@ new kinds of failure).
 Postgres LISTEN/NOTIFY are not built yet**: chats stream to the tab that
 sent the message, but other open tabs and devices only update on reload.
 
-³ Chapter 6 blocks **write** and **computer** tools: they never run until
-Chapter 8 can ask you first. Read tools run straight away.
+³ Chapter 6 blocked **write** and **computer** tools until Chapter 8 could
+ask you first. Since Chapter 8 they ask, depending on the agent's approval
+mode.
 
 ⁴ Chapter 7 was verified on a real Trigger.dev project (Run now, a cron
 firing, schedule removal). Without Trigger.dev, routines run inside the API
 and schedules don't fire.
+
+⁵ Chapter 8 asks without holding anything open: a request is a row, decided
+once, and the agent follows up in its chat. Agents hired before it keep the
+database default, **Ask first**; new ones start on **Auto-approve reads**.
+Requests don't expire yet, and the Today count updates on page load (still
+no LISTEN/NOTIFY).
 
 ## Every chapter ships with
 
