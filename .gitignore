@@ -17,4 +17,7 @@ apps/mobile/.expo
 apps/mobile/ios
 apps/mobile/android
 *.tsbuildinfo
+
+# Trigger.dev's local build output
+.trigger
 next-env.d.ts
