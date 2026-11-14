@@ -1,7 +1,7 @@
-import {desc, eq, inArray} from 'drizzle-orm';
+import {and, desc, eq, gte, inArray} from 'drizzle-orm';
 
 import type {Database} from '../client';
-import {routineRuns} from '../schema';
+import {agents, routineRuns, routines} from '../schema';
 
 export type RoutineRunRow = typeof routineRuns.$inferSelect;
 
@@ -62,6 +62,21 @@ export class RoutineRunRepository {
       .from(routineRuns)
       .where(inArray(routineRuns.routineId, routineIds))
       .orderBy(routineRuns.routineId, desc(routineRuns.createdAt));
+  }
+
+  /** The user's runs since a moment (Today), newest first, with their routine. */
+  listForUserSince(userId: string, since: Date) {
+    return this.db
+      .select({
+        ...RUN_COLUMNS,
+        routine: {id: routines.id, name: routines.name},
+        agent: {id: agents.id, name: agents.name, avatar: agents.avatar},
+      })
+      .from(routineRuns)
+      .innerJoin(routines, eq(routineRuns.routineId, routines.id))
+      .innerJoin(agents, eq(routines.agentId, agents.id))
+      .where(and(eq(agents.userId, userId), gte(routineRuns.createdAt, since)))
+      .orderBy(desc(routineRuns.createdAt));
   }
 
   async markRunning(id: string, threadId: string) {

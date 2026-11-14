@@ -8,7 +8,13 @@ export type NewAgent = typeof agents.$inferInsert;
 /** The fields a user can change after hiring an agent. */
 export type AgentChanges = Pick<
   NewAgent,
-  'name' | 'role' | 'instructions' | 'provider' | 'model' | 'avatar'
+  | 'name'
+  | 'role'
+  | 'instructions'
+  | 'provider'
+  | 'model'
+  | 'avatar'
+  | 'approvalMode'
 >;
 
 // The columns the app shows today. `userId` stays on the server, and the
@@ -23,6 +29,7 @@ const AGENT_COLUMNS = {
   instructions: agents.instructions,
   provider: agents.provider,
   model: agents.model,
+  approvalMode: agents.approvalMode,
   createdAt: agents.createdAt,
   updatedAt: agents.updatedAt,
 };

@@ -1,4 +1,5 @@
 import {
+  APPROVAL_STATUSES,
   PROVIDERS,
   RUN_STATUSES,
   TOOL_CALL_STATUSES,
@@ -17,6 +18,9 @@ export const agentEngineEnum = pgEnum('agent_engine', [
   'codex',
 ]);
 
+// Mirrors APPROVAL_MODES in packages/shared, which lists the same values
+// from most careful to most trusting. Postgres enums keep their order, so
+// building this from that list would force a migration for nothing.
 export const approvalModeEnum = pgEnum('approval_mode', [
   'ask_first',
   'accept_edits',
@@ -49,13 +53,7 @@ export const toolCallStatusEnum = pgEnum(
   TOOL_CALL_STATUSES,
 );
 
-export const approvalStatusEnum = pgEnum('approval_status', [
-  'pending',
-  'approved',
-  'rejected',
-  'expired',
-  'executed',
-]);
+export const approvalStatusEnum = pgEnum('approval_status', APPROVAL_STATUSES);
 
 export const clientEnum = pgEnum('client', ['web', 'mobile']);
 
