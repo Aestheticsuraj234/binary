@@ -8,6 +8,7 @@ import {
   Menu,
   Plug,
   Plus,
+  Repeat,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -22,6 +23,7 @@ import {cn} from '@/lib/utils';
 
 const LINKS = [
   {href: '/', label: 'Discover', icon: Compass},
+  {href: '/routines', label: 'Routines', icon: Repeat},
   {href: '/apps', label: 'Apps & tools', icon: Plug},
   {href: '/playground', label: 'Playground', icon: FlaskConical},
   {href: '/settings', label: 'API keys', icon: KeyRound},

@@ -155,6 +155,16 @@ pnpm dlx shadcn@latest add <component>
 - **Apps page (Ch. 6):** a risk legend first, so users learn the words
   before they see them on tools. Show only the app's host, never its full
   URL; a lock icon means a token is stored.
+- **Run status (Ch. 7):** an outline pill: Queued (muted clock), Running
+  (lime spinner), Done (lime check), Failed (destructive x). Times show in
+  the viewer's zone and durations are mono ("2.4s").
+- **Secrets shown once (Ch. 7):** a `warning` box saying "Copy this secret
+  now. It won't be shown again.", with the value in mono and a copy button.
+  Afterwards, say it was shown once and offer to make a new one; never show
+  it again.
+- **Missing setup notices:** when a feature works only partly (for example
+  schedules without Trigger.dev), a `warning` note at the top of the page
+  says what works, what doesn't, and the one step that fixes it.
 - **Animate only what is new:** messages written now rise in; a saved chat
   appears at once.
 - **Model badge:** outline, mono: "Anthropic · claude-sonnet-5-5".

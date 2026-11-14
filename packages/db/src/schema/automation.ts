@@ -40,7 +40,10 @@ export const triggers = pgTable(
     type: triggerTypeEnum().notNull(),
     // Set only for type "cron", e.g. "0 9 * * 1-5".
     cron: text(),
-    // Set only for type "webhook"; callers must send it to start the routine.
+    // The time zone the cron runs in, e.g. "Asia/Kolkata" (Chapter 7).
+    timezone: text(),
+    // Set only for type "webhook": a SHA-256 hash of the secret callers send.
+    // The secret itself is shown once and never stored (Chapter 7).
     webhookSecret: text(),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },

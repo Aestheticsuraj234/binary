@@ -1,5 +1,4 @@
-import {schema} from '@binary/db';
-import {eq} from 'drizzle-orm';
+import {deleteUsersByEmail} from '@binary/db/test-utils';
 import {afterAll, describe, expect, it} from 'vitest';
 
 import {createApp} from './app';
@@ -21,7 +20,7 @@ function postJson(path: string, body: unknown) {
 }
 
 afterAll(async () => {
-  await db.delete(schema.users).where(eq(schema.users.email, email));
+  await deleteUsersByEmail(db, [email]);
   await db.$client.end();
 });
 

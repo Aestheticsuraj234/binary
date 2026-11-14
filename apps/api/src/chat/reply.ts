@@ -1,0 +1,131 @@
+import type {
+  MessageRepository,
+  ThreadRepository,
+  ToolCallRepository,
+} from '@binary/db';
+import type {ChatMessage, ChatStreamEvent, ChatTurn} from '@binary/shared';
+
+import {buildSystemPrompt} from '../agents/system-prompt';
+import type {AgentEngine} from '../engines/agent-engine';
+import {ProviderError} from '../errors';
+import {readOnlyPolicy} from '../tools/policy';
+import type {ToolboxFactory} from '../tools/toolbox-factory';
+import {titleFrom} from './title';
+import {ToolCallLog} from './tool-call-log';
+
+// How many earlier messages the model reads. Older ones are still saved and
+// shown; they just stop costing tokens on every reply.
+const HISTORY_LIMIT = 20;
+
+export interface ReplyDependencies {
+  messages: MessageRepository;
+  threads: ThreadRepository;
+  toolCalls: ToolCallRepository;
+  toolboxes: ToolboxFactory;
+}
+
+export interface ReplyRequest {
+  userId: string;
+  agent: {
+    id: string;
+    name: string;
+    role: string;
+    instructions: string;
+    avatar: string | null;
+  };
+  engine: AgentEngine;
+  threadId: string;
+  content: string;
+  /** The title a new thread gets. Defaults to its first message. */
+  title?: string;
+  /** Hears every piece of text and tool update as it happens. */
+  onEvent?: (event: ChatStreamEvent) => Promise<unknown>;
+}
+
+/**
+ * One turn of a conversation: save the message, let the agent answer with
+ * its tools, save the answer and the tools it used. Chat streams the events
+ * to the browser; routines run the same steps with nobody watching.
+ *
+ * Throws ProviderError if the model fails; the question stays saved.
+ */
+export async function writeReply(
+  {messages, threads, toolCalls, toolboxes}: ReplyDependencies,
+  {userId, agent, engine, threadId, content, title, onEvent}: ReplyRequest,
+): Promise<ChatMessage> {
+  const emit = async (event: ChatStreamEvent) => {
+    await onEvent?.(event);
+  };
+
+  const earlier = await messages.listForThread(threadId);
+  // Tool messages are not chat; the model only reads user and agent turns.
+  const history: ChatTurn[] = earlier
+    .slice(-HISTORY_LIMIT)
+    .flatMap((message) =>
+      message.role === 'tool'
+        ? []
+        : [{role: message.role, content: message.content}],
+    );
+
+  // Save the question first, so it is kept even if the answer fails.
+  await messages.add({threadId, role: 'user', content});
+  if (earlier.length === 0) {
+    await threads.rename(userId, threadId, title ?? titleFrom(content));
+  }
+
+  const {toolbox} = await toolboxes.forUser(userId);
+  const log = new ToolCallLog((name) => toolbox.riskOf(name));
+  const emitTool = async (
+    call: ReturnType<ToolCallLog['start']> | undefined,
+  ) => {
+    if (call) {
+      await emit({type: 'tool', call});
+    }
+  };
+  let answer = '';
+
+  try {
+    const events = engine.stream({
+      system: buildSystemPrompt(agent),
+      prompt: content,
+      history,
+      tools: toolbox.toToolSet(readOnlyPolicy),
+    });
+    for await (const event of events) {
+      if (event.type === 'text') {
+        answer += event.text;
+        await emit({type: 'delta', text: event.text});
+      } else if (event.type === 'tool-call') {
+        await emitTool(log.start(event.id, event.name, event.input));
+      } else if (event.type === 'tool-result') {
+        await emitTool(log.finish(event.id, event.output));
+      } else {
+        await emitTool(log.fail(event.id, event.error));
+      }
+    }
+  } catch (error) {
+    throw new ProviderError(error);
+  } finally {
+    await toolbox.close();
+  }
+
+  const saved = await messages.add({
+    threadId,
+    role: 'assistant',
+    authorAgentId: agent.id,
+    content: answer,
+  });
+  const savedCalls = await toolCalls.addMany(log.toRows(saved.id));
+  await threads.touch(threadId);
+
+  const message: ChatMessage = {
+    ...saved,
+    createdAt: saved.createdAt.toISOString(),
+  };
+  if (savedCalls.length > 0) {
+    message.toolCalls = savedCalls.map(
+      ({messageId: _messageId, ...call}) => call,
+    );
+  }
+  return message;
+}

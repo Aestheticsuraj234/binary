@@ -14,6 +14,8 @@ export default tseslint.config(
       '**/.expo/**',
       '**/dist/**',
       '**/.turbo/**',
+      // Trigger.dev's local build output (from `trigger dev`).
+      '**/.trigger/**',
       '**/next-env.d.ts',
       '**/*.config.{js,mjs,cjs}',
       'apps/mobile/expo-env.d.ts',
@@ -65,8 +67,12 @@ export default tseslint.config(
     },
   },
   {
-    // Next.js and Expo Router require default exports in these files.
-    files: ['apps/web/src/app/**/*.tsx', 'apps/mobile/src/app/**/*.tsx'],
+    // Next.js, Expo Router and Trigger.dev require default exports here.
+    files: [
+      'apps/web/src/app/**/*.tsx',
+      'apps/mobile/src/app/**/*.tsx',
+      'apps/api/trigger.config.ts',
+    ],
     rules: {'no-restricted-syntax': 'off'},
   },
 );

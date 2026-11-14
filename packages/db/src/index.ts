@@ -25,7 +25,20 @@ export {
   type NewProviderKey,
   type ProviderKey,
 } from './repositories/provider-key-repository';
+export {
+  RoutineRepository,
+  type NewRoutine,
+  type RoutineChanges,
+} from './repositories/routine-repository';
+export {
+  RoutineRunRepository,
+  type RoutineRunRow,
+} from './repositories/routine-run-repository';
 export {ThreadRepository} from './repositories/thread-repository';
+export {
+  TriggerRepository,
+  type Trigger,
+} from './repositories/trigger-repository';
 export {
   ToolCallRepository,
   type NewToolCall,

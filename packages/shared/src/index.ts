@@ -30,6 +30,16 @@ export {
   type SignUpInput,
 } from './auth-schemas';
 export {
+  describeSchedule,
+  routineInputSchema,
+  RUN_STATUSES,
+  SCHEDULE_PRESETS,
+  type Routine,
+  type RoutineInput,
+  type RoutineRun,
+  type RunStatus,
+} from './routines';
+export {
   connectAppSchema,
   TOOL_CALL_STATUSES,
   TOOL_RISKS,

@@ -8,11 +8,11 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 6 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 7 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
-> and give them tools: built-in ones and any app you connect through MCP,
-> including Composio. Tools that change things are blocked until approvals
-> arrive in Chapter 8.
+> give them tools and MCP apps, and set up routines they run on a schedule,
+> by webhook or on demand, on Trigger.dev. Tools that change things stay
+> blocked until approvals arrive in Chapter 8.
 
 ## What's inside
 
@@ -90,19 +90,20 @@ laptop must be on the same Wi-Fi.
 
 ## Everyday commands
 
-| Command            | What it does                                 |
-| ------------------ | -------------------------------------------- |
-| `pnpm dev`         | Start the API and web app                    |
-| `pnpm mobile`      | Start the Expo dev server                    |
-| `pnpm test`        | Migrate, then run all tests (needs Postgres) |
-| `pnpm db:migrate`  | Apply pending database migrations            |
-| `pnpm db:generate` | Create a migration after changing the schema |
-| `pnpm db:studio`   | Browse the database in Drizzle Studio        |
-| `pnpm db:seed`     | Add the templates and demo account again     |
-| `pnpm lint`        | Check code style (Google TypeScript Style)   |
-| `pnpm typecheck`   | Type-check every app and package             |
-| `pnpm format`      | Format every file with Prettier              |
-| `pnpm build`       | Production build                             |
+| Command            | What it does                                  |
+| ------------------ | --------------------------------------------- |
+| `pnpm dev`         | Start the API and web app                     |
+| `pnpm mobile`      | Start the Expo dev server                     |
+| `pnpm trigger:dev` | Run routines on Trigger.dev (optional, Ch. 7) |
+| `pnpm test`        | Migrate, then run all tests (needs Postgres)  |
+| `pnpm db:migrate`  | Apply pending database migrations             |
+| `pnpm db:generate` | Create a migration after changing the schema  |
+| `pnpm db:studio`   | Browse the database in Drizzle Studio         |
+| `pnpm db:seed`     | Add the templates and demo account again      |
+| `pnpm lint`        | Check code style (Google TypeScript Style)    |
+| `pnpm typecheck`   | Type-check every app and package              |
+| `pnpm format`      | Format every file with Prettier               |
+| `pnpm build`       | Production build                              |
 
 ## Troubleshooting
 
@@ -138,3 +139,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 4: Agents](docs/chapters/chapter-04/README.md)
 - [Chapter 5: Chat](docs/chapters/chapter-05/README.md)
 - [Chapter 6: Tool system and MCP apps](docs/chapters/chapter-06/README.md)
+- [Chapter 7: Durable jobs and routines](docs/chapters/chapter-07/README.md)

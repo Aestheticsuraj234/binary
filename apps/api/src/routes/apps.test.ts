@@ -1,6 +1,6 @@
-import {McpServerRepository, schema, UserRepository} from '@binary/db';
+import {McpServerRepository, UserRepository} from '@binary/db';
 import type {ConnectedApp, ToolInfo} from '@binary/shared';
-import {inArray} from 'drizzle-orm';
+import {deleteUsersByEmail} from '@binary/db/test-utils';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 import {createApp} from '../app';
@@ -35,9 +35,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await shop.close();
-  await db
-    .delete(schema.users)
-    .where(inArray(schema.users.email, createdEmails));
+  await deleteUsersByEmail(db, createdEmails);
   await db.$client.end();
 });
 
