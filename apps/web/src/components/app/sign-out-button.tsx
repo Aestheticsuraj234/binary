@@ -16,9 +16,14 @@ export function SignOutButton() {
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleSignOut}>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleSignOut}
+      aria-label="Sign out"
+    >
       <LogOut />
-      Sign out
+      <span className="hidden sm:inline">Sign out</span>
     </Button>
   );
 }

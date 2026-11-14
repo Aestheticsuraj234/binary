@@ -13,10 +13,14 @@
     "db:seed": "tsx --env-file=../../.env scripts/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.105",
+    "@ai-sdk/google": "^4.0.121",
+    "@ai-sdk/openai": "^4.0.118",
     "@better-auth/expo": "^1.7.23",
     "@binary/db": "workspace:*",
     "@binary/shared": "workspace:*",
     "@hono/node-server": "^2.1.8",
+    "ai": "^7.0.173",
     "better-auth": "^1.7.23",
     "hono": "^4.13.18",
     "zod": "^4.6.7"

@@ -5,6 +5,7 @@ import {createDatabase} from '../client';
 import {agentTemplates, users} from '../schema';
 import {createTestUser} from '../test-utils';
 import {AgentTemplateRepository} from './agent-template-repository';
+import {ProviderKeyRepository} from './provider-key-repository';
 import {UserRepository} from './user-repository';
 
 const db = createDatabase(process.env.DATABASE_URL ?? '');
@@ -67,5 +68,38 @@ describe('AgentTemplateRepository', () => {
     const matches = all.filter((saved) => saved.slug === TEMPLATE_SLUG);
     expect(matches).toHaveLength(1);
     expect(matches[0]?.role).toBe('Tests things twice.');
+  });
+});
+
+describe('ProviderKeyRepository', () => {
+  const repository = new ProviderKeyRepository(db);
+  const key = {
+    provider: 'openai' as const,
+    encryptedKey: 'ciphertext-1',
+    iv: 'iv-1',
+    last4: 'a1b2',
+  };
+
+  it('saves a key and lists it without the secret parts', async () => {
+    await repository.save({...key, userId});
+
+    const list = await repository.listForUser(userId);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({provider: 'openai', last4: 'a1b2'});
+    expect(list[0]).not.toHaveProperty('encryptedKey');
+  });
+
+  it('replaces the key when saving the same provider again', async () => {
+    await repository.save({...key, userId, encryptedKey: 'ciphertext-2'});
+
+    const saved = await repository.find(userId, 'openai');
+    expect(saved?.encryptedKey).toBe('ciphertext-2');
+    expect(await repository.listForUser(userId)).toHaveLength(1);
+  });
+
+  it('deletes a key and reports whether one existed', async () => {
+    expect(await repository.delete(userId, 'openai')).toBe(true);
+    expect(await repository.delete(userId, 'openai')).toBe(false);
+    expect(await repository.find(userId, 'openai')).toBeUndefined();
   });
 });

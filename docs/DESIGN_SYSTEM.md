@@ -62,15 +62,19 @@ for React Native in `apps/mobile/src/lib/theme.ts`.
 
 ## Components in use
 
-| Component    | Source                           |
-| ------------ | -------------------------------- |
-| Button       | shadcn/ui `button`               |
-| Input, Label | shadcn/ui `input`, `label`       |
-| Card         | shadcn/ui `card`                 |
-| Avatar       | shadcn/ui `avatar`               |
-| Logo         | `components/brand/logo.tsx`      |
-| FormField    | `components/auth/form-field.tsx` |
-| Icons        | `lucide-react`                   |
+| Component    | Source                            |
+| ------------ | --------------------------------- |
+| Button       | shadcn/ui `button`                |
+| Input, Label | shadcn/ui `input`, `label`        |
+| Card         | shadcn/ui `card`                  |
+| Avatar       | shadcn/ui `avatar`                |
+| Logo         | `components/brand/logo.tsx`       |
+| FormField    | `components/auth/form-field.tsx`  |
+| Icons        | `lucide-react`                    |
+| Badge        | shadcn/ui `badge` (Ch. 3)         |
+| Textarea     | shadcn/ui `textarea` (Ch. 3)      |
+| NativeSelect | shadcn/ui `native-select` (Ch. 3) |
+| AppNav       | `components/app/app-nav.tsx`      |
 
 Add new shadcn components with:
 
@@ -79,6 +83,11 @@ cd apps/web
 pnpm dlx shadcn@latest add <component>
 ```
 
+> **Known CLI issue:** in this repo the shadcn CLI sometimes writes
+> `import {cn} from "cn"` and installs an unrelated `cn` package. After every
+> `add`, check `src/components/ui` imports `@/lib/utils` and run
+> `pnpm remove cn` if it appeared in `package.json`.
+
 ## Patterns
 
 - **Auth screens:** split layout on desktop (brand panel left, form right);
@@ -86,6 +95,16 @@ pnpm dlx shadcn@latest add <component>
 - **Empty states:** dashed-border card, icon tile, one-line title, one-line
   explanation.
 - **Status badges:** pill with border, `text-xs`, small lime icon.
+- **App shell (Ch. 3):** 64px header with logo, `AppNav` and the user. The
+  active nav link gets a `bg-secondary` pill. Below `sm`, nav labels, the
+  avatar and the "Sign out" label hide and only icons remain, so nothing
+  scrolls sideways at 390px.
+- **Secret values:** never show a full secret; show `•••• last4` in a
+  `secondary` badge, and "Not added" in an `outline` badge.
+- **Side-by-side comparisons:** equal cards in a `md:grid-cols-3` grid, each
+  with its own loading, error and result state.
+- **One lime action per screen:** repeated actions (e.g. three Save buttons)
+  use the `secondary` variant; lime is kept for the single main action.
 
 ## Mobile
 

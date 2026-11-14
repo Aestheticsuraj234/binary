@@ -1,12 +1,10 @@
+import {PROVIDERS} from '@binary/shared';
 import {pgEnum} from 'drizzle-orm/pg-core';
 
 // Postgres enums: the database itself rejects any value not in these lists.
 
-export const providerEnum = pgEnum('provider', [
-  'openai',
-  'anthropic',
-  'google',
-]);
+// Shared with the API validation and web forms, so all three always agree.
+export const providerEnum = pgEnum('provider', PROVIDERS);
 
 export const agentEngineEnum = pgEnum('agent_engine', [
   'api',

@@ -8,9 +8,10 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 2 of 15. Sign-up, sign-in and sessions work on web and
-> mobile, and the full database schema is in place. Agents arrive in later
-> chapters.
+> **Status:** Chapter 3 of 15. Accounts work on web and mobile, the full
+> database schema is in place, and you can connect your own OpenAI,
+> Anthropic or Gemini key and compare them in the Playground. Agents arrive
+> in Chapter 4.
 
 ## What's inside
 
@@ -41,13 +42,16 @@ pnpm install
 cp .env.example .env
 ```
 
-Open `.env` and replace `BETTER_AUTH_SECRET=change-me` with a real secret:
+Open `.env` and replace both `change-me` values (`BETTER_AUTH_SECRET` and
+`ENCRYPTION_KEY`) with real secrets. Run this once for each:
 
 ```bash
 openssl rand -base64 32
 ```
 
-The API refuses to start until you do. That's on purpose.
+The API refuses to start until you do. That's on purpose. Keep
+`ENCRYPTION_KEY` safe: it encrypts the API keys users save, and changing it
+later makes those keys unreadable.
 
 ### 3. Set up the database
 
@@ -66,7 +70,7 @@ pnpm dev
 ```
 
 Open http://localhost:3000, sign in with the demo account or create your
-own, and you'll land on your workspace.
+own, add an API key under **API keys**, and try the **Playground**.
 
 ### 5. Run the mobile app (optional)
 
@@ -106,6 +110,10 @@ laptop must be on the same Wi-Fi.
   `pnpm dev` again.
 - **The web app shows `NEXT_PUBLIC_API_URL` errors.** Check that `.env` exists
   in the repo root and contains `NEXT_PUBLIC_API_URL=http://localhost:4000`.
+- **API says `ENCRYPTION_KEY must be 32 bytes`.** Coming from Chapter 2? Add
+  `ENCRYPTION_KEY=` with the output of `openssl rand -base64 32` to `.env`.
+- **The playground shows a provider error.** The key may be wrong, or the
+  model id may have been renamed by the provider; pick another model.
 - **Coming from Chapter 1?** Chapter 2 moved to new, plural table names, so
   old accounts are gone. Run `pnpm setup` again and sign up or use the demo
   account. See [Chapter 2](docs/chapters/chapter-02/README.md#coming-from-chapter-1).
@@ -123,3 +131,4 @@ short functions, early returns, and no clever abstractions.
 - [Design system](docs/DESIGN_SYSTEM.md)
 - [Chapter 1: Project init and authentication](docs/chapters/chapter-01/README.md)
 - [Chapter 2: Database and ORM layer](docs/chapters/chapter-02/README.md)
+- [Chapter 3: AI engine layer and API key vault](docs/chapters/chapter-03/README.md)
