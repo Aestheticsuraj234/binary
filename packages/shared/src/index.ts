@@ -1,4 +1,13 @@
 export {
+  APPROVAL_MODE_INFO,
+  APPROVAL_MODES,
+  APPROVAL_STATUSES,
+  DEFAULT_APPROVAL_MODE,
+  type Approval,
+  type ApprovalMode,
+  type ApprovalStatus,
+} from './approvals';
+export {
   agentInputSchema,
   type Agent,
   type AgentInput,

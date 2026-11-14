@@ -1,5 +1,6 @@
 import {z} from 'zod';
 
+import {APPROVAL_MODES, type ApprovalMode} from './approvals';
 import {characterSchema} from './characters';
 import {type Provider, providerSchema} from './providers';
 
@@ -25,6 +26,8 @@ export const agentInputSchema = z.object({
   model: z.string().trim().min(1, 'Choose a model.').max(100),
   /** The character that plays this agent (saved in the `avatar` column). */
   avatar: characterSchema,
+  /** How much the agent may do without asking (Chapter 8). */
+  approvalMode: z.enum(APPROVAL_MODES),
   /** The template this agent was hired from, if any. */
   templateId: z.uuid().nullish(),
 });
@@ -43,6 +46,7 @@ export interface Agent {
   // Empty only for engines that bring their own model (Chapter 11).
   provider: Provider | null;
   model: string | null;
+  approvalMode: ApprovalMode;
   createdAt: string;
   updatedAt: string;
 }
