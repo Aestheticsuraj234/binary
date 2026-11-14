@@ -1,8 +1,9 @@
 # Binary design system
 
 One visual direction for every screen: **a calm, near-black workspace with a
-single acid-lime accent.** Neutrals carry the interface; lime only marks what
-matters most on a screen.
+single acid-lime accent, where cartoon characters are the stars.** Neutrals
+carry the interface; lime marks what matters most; the characters bring the
+color and the personality.
 
 ## Inspiration
 
@@ -10,6 +11,9 @@ matters most on a screen.
   a curated gallery of modern product UI. Patterns taken: generous whitespace,
   rounded cards, pill badges, quiet borders instead of heavy shadows.
 - **Accent:** [Higgsfield](https://higgsfield.ai/)-style acid lime `#D1FE17`.
+- **Character-first layout (Ch. 4, part 2):** Grok's companions (a
+  character pane that reacts while it talks, picked from a side menu) and
+  companion apps' curated rosters. The characters themselves are original.
 - **Components:** [shadcn/ui](https://ui.shadcn.com) as the base;
   [21st.dev](https://21st.dev/) for future patterns that shadcn lacks.
 
@@ -62,20 +66,23 @@ for React Native in `apps/mobile/src/lib/theme.ts`.
 
 ## Components in use
 
-| Component                          | Source                                     |
-| ---------------------------------- | ------------------------------------------ |
-| Button                             | shadcn/ui `button`                         |
-| Input, Label                       | shadcn/ui `input`, `label`                 |
-| Card                               | shadcn/ui `card`                           |
-| Avatar                             | shadcn/ui `avatar`                         |
-| Logo                               | `components/brand/logo.tsx`                |
-| FormField                          | `components/auth/form-field.tsx`           |
-| Icons                              | `lucide-react`                             |
-| Badge                              | shadcn/ui `badge` (Ch. 3)                  |
-| Textarea                           | shadcn/ui `textarea` (Ch. 3)               |
-| NativeSelect                       | shadcn/ui `native-select` (Ch. 3)          |
-| AppNav                             | `components/app/app-nav.tsx`               |
-| AgentCard, AgentAvatar, ModelBadge | `components/agents/agent-card.tsx` (Ch. 4) |
+| Component                  | Source                                      |
+| -------------------------- | ------------------------------------------- |
+| Button                     | shadcn/ui `button`                          |
+| Input, Label               | shadcn/ui `input`, `label`                  |
+| Card                       | shadcn/ui `card`                            |
+| Avatar                     | shadcn/ui `avatar`                          |
+| Logo                       | `components/brand/logo.tsx`                 |
+| FormField                  | `components/auth/form-field.tsx`            |
+| Icons                      | `lucide-react`                              |
+| Badge                      | shadcn/ui `badge` (Ch. 3)                   |
+| Textarea                   | shadcn/ui `textarea` (Ch. 3)                |
+| NativeSelect               | shadcn/ui `native-select` (Ch. 3)           |
+| AppSidebar                 | `components/app/app-sidebar.tsx` (Ch. 4)    |
+| Character, CharacterAvatar | `components/characters/character.tsx`       |
+| CrewCard, CastCard         | `components/characters/character-cards.tsx` |
+| SpeechBubble               | `components/characters/speech-bubble.tsx`   |
+| ModelBadge                 | `components/agents/model-badge.tsx`         |
 
 Add new shadcn components with:
 
@@ -96,26 +103,39 @@ pnpm dlx shadcn@latest add <component>
 - **Empty states:** dashed-border card, icon tile, one-line title, one-line
   explanation.
 - **Status badges:** pill with border, `text-xs`, small lime icon.
-- **App shell (Ch. 3):** 64px header with logo, `AppNav` and the user. The
-  active nav link gets a `bg-secondary` pill. Below `sm`, nav labels, the
-  avatar and the "Sign out" label hide and only icons remain, so nothing
-  scrolls sideways at 390px.
+- **App shell (Ch. 4):** a 288px sidebar (`lg` and up): logo, a dashed
+  "Hire a character" pill, Discover / Playground / API keys as rounded
+  pills (active = `bg-secondary`), **Your crew** with each character's face,
+  and a profile card with an icon-only sign-out. Below `lg`, a 56px top bar
+  with a menu button opens the same content in a drawer that slides in.
 - **Secret values:** never show a full secret; show `•••• last4` in a
   `secondary` badge, and "Not added" in an `outline` badge.
 - **Side-by-side comparisons:** equal cards in a `md:grid-cols-3` grid, each
   with its own loading, error and result state.
 - **One lime action per screen:** repeated actions (e.g. three Save buttons)
   use the `secondary` variant; lime is kept for the single main action.
-- **Agents (Ch. 4):** an agent is shown by its initials in a round
-  `bg-secondary` tile with lime text, and its model as an outline mono badge
-  ("Anthropic · claude-sonnet-5-5"). Clickable cards use
-  `hover:border-primary/60`.
+- **Characters (Ch. 4):** every agent is shown by its character, never by
+  initials. Full body on stages and cards; `CharacterAvatar` (face in a
+  round tile tinted with the character's color) in lists and chat. A
+  character's color only tints its own panels (`<color>` at about 8–15%
+  opacity) and is never used for buttons or text.
+- **Moods:** idle, thinking, talking, happy, oops. Show the mood that
+  matches what is happening: thinking while waiting, oops on errors.
+- **Character cards:** `rounded-3xl`, a tinted stage on top, text below;
+  hover lifts the card 4px, tints the border lime and makes the character hop.
+- **Speech bubbles:** characters "say" greetings and hints in a
+  `SpeechBubble` with a tail pointing at them.
+- **Chat:** your messages right in `bg-secondary`, the character's left in a
+  bordered card with its face; corners `rounded-3xl` with the corner nearest
+  the speaker tightened. Composer is a rounded card with a round lime send
+  button; Enter sends.
+- **Model badge:** outline, mono: "Anthropic · claude-sonnet-5-5".
 - **Selects in a form row:** shadcn's `NativeSelect` wrapper is `w-fit`, so
   give the field wrapper `*:w-full` when the select should fill its column.
 - **Destructive actions:** a ghost button that turns `destructive` on hover,
   plus a confirmation, e.g. "Fire Ada".
-- **Navigation sections:** a nav link stays active on its sub-pages
-  (`/agents/new`, `/agents/:id`).
+- **Rounding:** pills (`rounded-full`) for buttons and nav, `rounded-3xl`
+  for cards, stages and bubbles. Friendlier than square, still precise.
 
 ## Mobile
 
@@ -124,9 +144,29 @@ holds the same values as plain constants. Mobile uses `StyleSheet` with these
 constants, not a styling library, to keep setup simple. When a token
 changes, update **both** files.
 
+## Motion
+
+Defined in `globals.css`, applied by class:
+
+| Class / element     | Motion                               |
+| ------------------- | ------------------------------------ |
+| `.character-float`  | 6px bob, 4s loop                     |
+| `.character-eyes`   | blink every 5s                       |
+| `.character-talk`   | mouth opens and closes while talking |
+| `.group:hover` card | character hops once                  |
+| `.character-spin`   | Sunny's rays turn, 24s per turn      |
+| `.animate-rise`     | chat bubbles rise 8px and fade in    |
+| `.animate-slide-in` | phone drawer slides in from the left |
+
+Keep it slow and small, and switch it all off under
+`prefers-reduced-motion`.
+
 ## Don'ts
 
 - No gradients, glows or neon shadows.
-- No more than one accent color.
-- No animations beyond shadcn's defaults.
+- No more than one accent color for the interface. Character colors are for
+  characters and their own tinted panels only.
+- No motion outside the table above, and none that loops fast or moves
+  layout.
+- No realistic or AI-generated avatars: characters are drawn in SVG.
 - No custom CSS when a Tailwind class or shadcn component exists.

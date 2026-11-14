@@ -10,8 +10,8 @@ feature and is documented in [`docs/chapters`](docs/chapters).
 
 > **Status:** Chapter 4 of 15. Accounts work on web and mobile, the full
 > database schema is in place, you can connect your own OpenAI, Anthropic
-> or Gemini key, and you can hire agents with a role and instructions and
-> give them tasks. Chat arrives in Chapter 5.
+> or Gemini key, and you can hire cartoon characters as agents, each with a
+> job and a personality, and talk to them. Saved chats arrive in Chapter 5.
 
 ## What's inside
 
@@ -70,8 +70,8 @@ pnpm dev
 ```
 
 Open http://localhost:3000, sign in with the demo account or create your
-own, add an API key under **API keys**, then hire an agent under **Agents**
-or try the **Playground**.
+own, add an API key under **API keys**, then hire a character on
+**Discover** or try the **Playground**.
 
 ### 5. Run the mobile app (optional)
 

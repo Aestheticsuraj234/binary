@@ -5,7 +5,12 @@ the model it thinks with, and answers in character through the same
 `EngineFactory` the playground uses. The proof: hire a Research Assistant
 from a template, give it a task, and get an answer that knows who it is.
 
-![An agent's page](screenshots/agent.png)
+![A conversation with a character](screenshots/chat.png)
+
+> **Part 2 redesigned this chapter around characters.** Agents are now
+> played by cartoon characters, with a sidebar, Discover, a character
+> creator and a conversation screen. See [CHARACTERS.md](CHARACTERS.md).
+> The list below describes part 1; the APIs it lists are unchanged.
 
 ## What you get
 
@@ -25,15 +30,16 @@ from a template, give it a task, and get an answer that knows who it is.
 
 ## Files in this chapter's docs
 
-| File                                   | What's in it                                       |
-| -------------------------------------- | -------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Ownership, system prompt, API contracts            |
-| [TESTING.md](TESTING.md)               | Tests and results                                  |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                          |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter          |
-| [architecture/](architecture)          | Components, request flows, ownership and wiring    |
-| [screenshots/](screenshots)            | Agents list, an agent's page (desktop + phone)     |
+| File                                   | What's in it                                          |
+| -------------------------------------- | ----------------------------------------------------- |
+| [CHARACTERS.md](CHARACTERS.md)         | Part 2: the cast, sidebar, Discover, creator and chat |
+| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions    |
+| [ARCHITECTURE.md](ARCHITECTURE.md)     | Ownership, system prompt, API contracts               |
+| [TESTING.md](TESTING.md)               | Tests and results                                     |
+| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                             |
+| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter             |
+| [architecture/](architecture)          | Components, request flows, ownership and wiring       |
+| [screenshots/](screenshots)            | Agents list, an agent's page (desktop + phone)        |
 
 ## Run it
 
@@ -45,8 +51,8 @@ pnpm db:seed   # makes sure the four templates exist
 pnpm dev
 ```
 
-Open http://localhost:3000 → **Agents**. If you have no API key yet, the page
-sends you to **API keys** first.
+Open http://localhost:3000. **Discover** shows the cast; pick one to hire.
+If you have no API key yet, Pebble asks you to add one first.
 
 ## What comes next
 
