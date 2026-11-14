@@ -1,8 +1,10 @@
 import {expo} from '@better-auth/expo';
+import {schema} from '@binary/db';
 import {APP_SCHEME} from '@binary/shared';
 import {betterAuth} from 'better-auth';
+import {drizzleAdapter} from 'better-auth/adapters/drizzle';
 
-import {pool} from './db';
+import {db} from './db';
 import {env} from './env';
 
 // While developing, Expo Go opens the app through `exp://<your-ip>:<port>`.
@@ -12,7 +14,18 @@ const EXPO_DEV_ORIGINS = ['exp://', 'exp://**'];
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  database: pool,
+  // Better Auth reads and writes the users, sessions, accounts and
+  // verifications tables defined in packages/db through Drizzle.
+  database: drizzleAdapter(db, {
+    provider: 'pg',
+    usePlural: true,
+    schema: {
+      users: schema.users,
+      sessions: schema.sessions,
+      accounts: schema.accounts,
+      verifications: schema.verifications,
+    },
+  }),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
