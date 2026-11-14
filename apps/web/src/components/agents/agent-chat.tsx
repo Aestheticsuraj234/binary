@@ -26,6 +26,7 @@ import {
 import {SpeechBubble} from '@/components/characters/speech-bubble';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
+import {decide} from '@/lib/approvals';
 import {API_URL} from '@/lib/env';
 import {readNdjson} from '@/lib/read-ndjson';
 import {cn} from '@/lib/utils';
@@ -287,6 +288,40 @@ export function AgentChat({
     router.push(`/agents/${agent.id}`);
   }
 
+  /**
+   * Approves or rejects a call the agent asked for. The server runs the
+   * tool, notes the decision in the chat and lets the agent reply, so the
+   * chat is reloaded from there afterwards.
+   */
+  async function handleDecide(
+    approvalId: string,
+    decision: 'approve' | 'reject',
+  ) {
+    setError('');
+    playMoods([['thinking', 0]]);
+    const result = await decide(approvalId, decision);
+    if (threadId) {
+      const response = await fetch(`${API_URL}/api/threads/${threadId}`, {
+        credentials: 'include',
+      }).catch(() => null);
+      if (response?.ok) {
+        const body: {messages: ChatMessage[]} = await response.json();
+        setMessages(body.messages);
+      }
+    }
+    if (result.error) {
+      setError(result.error);
+      playMoods([['oops', 0]]);
+    } else {
+      playMoods([
+        ['happy', 1500],
+        ['idle', 0],
+      ]);
+    }
+    // The sidebar's count of waiting requests just changed.
+    router.refresh();
+  }
+
   async function handleDeleteChat() {
     if (
       !threadId ||
@@ -414,7 +449,17 @@ export function AgentChat({
             )}
 
             {messages.map((message) =>
-              message.role === 'user' ? (
+              message.role === 'tool' ? (
+                // A decision about a tool call: a quiet line, not a bubble.
+                <p
+                  key={message.id}
+                  className="mx-auto max-w-[85%] text-center text-xs text-muted-foreground"
+                >
+                  {message.content.length > 160
+                    ? `${message.content.slice(0, 159)}…`
+                    : message.content}
+                </p>
+              ) : message.role === 'user' ? (
                 <div
                   key={message.id}
                   className={cn(
@@ -461,7 +506,11 @@ export function AgentChat({
                       {message.toolCalls && (
                         <div className="space-y-1.5">
                           {message.toolCalls.map((call) => (
-                            <ToolCall key={call.id} call={call} />
+                            <ToolCall
+                              key={call.id}
+                              call={call}
+                              onDecide={handleDecide}
+                            />
                           ))}
                         </div>
                       )}
