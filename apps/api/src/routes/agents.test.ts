@@ -1,8 +1,8 @@
 import {randomUUID} from 'node:crypto';
 
-import {AgentTemplateRepository, schema} from '@binary/db';
+import {AgentTemplateRepository} from '@binary/db';
 import type {Agent, AgentTemplate} from '@binary/shared';
-import {eq, inArray} from 'drizzle-orm';
+import {deleteTemplateBySlug, deleteUsersByEmail} from '@binary/db/test-utils';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 import {createApp} from '../app';
@@ -53,12 +53,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db
-    .delete(schema.users)
-    .where(inArray(schema.users.email, createdEmails));
-  await db
-    .delete(schema.agentTemplates)
-    .where(eq(schema.agentTemplates.slug, TEMPLATE_SLUG));
+  await deleteUsersByEmail(db, createdEmails);
+  await deleteTemplateBySlug(db, TEMPLATE_SLUG);
   await db.$client.end();
 });
 

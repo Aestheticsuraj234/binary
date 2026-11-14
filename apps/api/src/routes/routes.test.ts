@@ -1,7 +1,7 @@
-import {ProviderKeyRepository, schema, UserRepository} from '@binary/db';
+import {ProviderKeyRepository, UserRepository} from '@binary/db';
 import type {Provider} from '@binary/shared';
 import {MockLanguageModelV4} from 'ai/test';
-import {inArray} from 'drizzle-orm';
+import {deleteUsersByEmail} from '@binary/db/test-utils';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 import {createApp} from '../app';
@@ -52,9 +52,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db
-    .delete(schema.users)
-    .where(inArray(schema.users.email, createdEmails));
+  await deleteUsersByEmail(db, createdEmails);
   await db.$client.end();
 });
 

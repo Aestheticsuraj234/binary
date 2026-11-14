@@ -1,4 +1,3 @@
-import {schema} from '@binary/db';
 import type {
   Agent,
   ChatMessage,
@@ -8,7 +7,7 @@ import type {
 } from '@binary/shared';
 import {simulateReadableStream} from 'ai';
 import {MockLanguageModelV4} from 'ai/test';
-import {inArray} from 'drizzle-orm';
+import {deleteUsersByEmail} from '@binary/db/test-utils';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 import {createApp} from '../app';
@@ -149,9 +148,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await shop.close();
-  await db
-    .delete(schema.users)
-    .where(inArray(schema.users.email, createdEmails));
+  await deleteUsersByEmail(db, createdEmails);
   await db.$client.end();
 });
 
