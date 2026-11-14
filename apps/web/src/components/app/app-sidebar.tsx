@@ -1,9 +1,9 @@
 'use client';
 
-import {characterOf, type Agent} from '@binary/shared';
+import {characterOf, type Agent, type ThreadSummary} from '@binary/shared';
 import {Compass, FlaskConical, KeyRound, Menu, Plus, X} from 'lucide-react';
 import Link from 'next/link';
-import {usePathname} from 'next/navigation';
+import {usePathname, useSearchParams} from 'next/navigation';
 import {useState} from 'react';
 
 import {SignOutButton} from '@/components/app/sign-out-button';
@@ -20,15 +20,29 @@ const LINKS = [
 
 interface AppSidebarProps {
   agents: Agent[];
+  recentChats: ThreadSummary[];
   user: {name: string; email: string};
 }
 
 interface SidebarContentProps extends AppSidebarProps {
   pathname: string;
+  /** The open chat, from `?chat=` on an agent's page. */
+  chatId: string | null;
 }
 
+const SECTION_LABEL =
+  'px-3 text-xs font-medium tracking-wide text-muted-foreground uppercase';
+const ROW =
+  'group flex items-center gap-3 rounded-2xl px-2 py-1.5 text-sm transition-colors hover:bg-secondary';
+
 /** Everything in the sidebar. Shared by the desktop column and phone drawer. */
-function SidebarContent({agents, user, pathname}: SidebarContentProps) {
+function SidebarContent({
+  agents,
+  recentChats,
+  user,
+  pathname,
+  chatId,
+}: SidebarContentProps) {
   return (
     <div className="flex h-full flex-col gap-6 p-4">
       <Link href="/" className="px-2 pt-2">
@@ -59,41 +73,61 @@ function SidebarContent({agents, user, pathname}: SidebarContentProps) {
         ))}
       </nav>
 
-      <div className="min-h-0 flex-1 space-y-2">
-        <p className="px-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Your crew
-        </p>
-        {agents.length === 0 && (
-          <p className="px-3 text-sm text-muted-foreground">
-            No one hired yet.
-          </p>
-        )}
-        <ul className="-mx-1 max-h-full space-y-1 overflow-y-auto px-1">
-          {agents.map((agent) => {
-            const isActive = pathname.startsWith(`/agents/${agent.id}`);
-            return (
+      {/* Crew and chats share one scrolling area, so the profile stays put. */}
+      <div className="-mx-1 min-h-0 flex-1 space-y-6 overflow-y-auto px-1">
+        <section className="space-y-2">
+          <p className={SECTION_LABEL}>Your crew</p>
+          {agents.length === 0 && (
+            <p className="px-3 text-sm text-muted-foreground">
+              No one hired yet.
+            </p>
+          )}
+          <ul aria-label="Your crew" className="space-y-0.5">
+            {agents.map((agent) => (
               <li key={agent.id}>
                 <Link
                   href={`/agents/${agent.id}`}
                   className={cn(
-                    'group flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-secondary',
-                    isActive && 'bg-secondary',
+                    ROW,
+                    pathname === `/agents/${agent.id}` &&
+                      !chatId &&
+                      'bg-secondary',
                   )}
                 >
-                  <CharacterAvatar id={characterOf(agent.avatar)} size={36} />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">
-                      {agent.name}
-                    </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {agent.role}
-                    </span>
-                  </span>
+                  <CharacterAvatar id={characterOf(agent.avatar)} size={32} />
+                  <span className="truncate font-medium">{agent.name}</span>
                 </Link>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        </section>
+
+        {recentChats.length > 0 && (
+          <section className="space-y-2">
+            <p className={SECTION_LABEL}>Recent chats</p>
+            <ul aria-label="Recent chats" className="space-y-0.5">
+              {recentChats.map((chat) => (
+                <li key={chat.id}>
+                  <Link
+                    href={`/agents/${chat.agent.id}?chat=${chat.id}`}
+                    title={`${chat.title} · ${chat.agent.name}`}
+                    className={cn(
+                      ROW,
+                      'text-muted-foreground hover:text-foreground',
+                      chatId === chat.id && 'bg-secondary text-foreground',
+                    )}
+                  >
+                    <CharacterAvatar
+                      id={characterOf(chat.agent.avatar)}
+                      size={24}
+                    />
+                    <span className="truncate">{chat.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
 
       <div className="flex items-center gap-3 rounded-2xl border bg-card p-2">
@@ -116,11 +150,12 @@ function SidebarContent({agents, user, pathname}: SidebarContentProps) {
 
 /**
  * The app's navigation: a fixed column on large screens, and a top bar with
- * a slide-out drawer on phones. Your hired characters live here, one click
- * from a conversation.
+ * a slide-out drawer on phones. Your hired characters and recent chats live
+ * here, one click from a conversation.
  */
-export function AppSidebar({agents, user}: AppSidebarProps) {
+export function AppSidebar({agents, recentChats, user}: AppSidebarProps) {
   const pathname = usePathname();
+  const chatId = useSearchParams().get('chat');
   const [isOpen, setIsOpen] = useState(false);
 
   // Close the drawer when any link inside it is followed.
@@ -147,7 +182,13 @@ export function AppSidebar({agents, user}: AppSidebarProps) {
       </header>
 
       <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 border-r bg-card/40 lg:block">
-        <SidebarContent agents={agents} user={user} pathname={pathname} />
+        <SidebarContent
+          agents={agents}
+          recentChats={recentChats}
+          user={user}
+          pathname={pathname}
+          chatId={chatId}
+        />
       </aside>
 
       {isOpen && (
@@ -170,7 +211,13 @@ export function AppSidebar({agents, user}: AppSidebarProps) {
             >
               <X className="size-4" />
             </button>
-            <SidebarContent agents={agents} user={user} pathname={pathname} />
+            <SidebarContent
+              agents={agents}
+              recentChats={recentChats}
+              user={user}
+              pathname={pathname}
+              chatId={chatId}
+            />
           </div>
         </div>
       )}
