@@ -8,6 +8,7 @@ const VALID_AGENT = {
   instructions: 'Always list your sources.',
   provider: 'anthropic',
   model: 'claude-sonnet-5-5',
+  avatar: 'nova',
 };
 
 describe('agentInputSchema', () => {
@@ -34,6 +35,15 @@ describe('agentInputSchema', () => {
     const result = agentInputSchema.safeParse({...VALID_AGENT, name: '   '});
 
     expect(result.error?.issues[0]?.message).toBe('Give your agent a name.');
+  });
+
+  it('rejects an unknown character', () => {
+    const result = agentInputSchema.safeParse({
+      ...VALID_AGENT,
+      avatar: 'gandalf',
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it('rejects an unknown provider', () => {

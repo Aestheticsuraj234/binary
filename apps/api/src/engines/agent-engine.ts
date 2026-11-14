@@ -1,7 +1,11 @@
+import type {ChatTurn} from '@binary/shared';
+
 export interface GenerateRequest {
   prompt: string;
   /** Instructions that shape every answer, e.g. the agent's role. */
   system?: string;
+  /** Earlier messages, oldest first, so the model can follow a conversation. */
+  history?: ChatTurn[];
 }
 
 export interface GenerateResult {

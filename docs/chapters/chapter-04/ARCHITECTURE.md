@@ -56,8 +56,10 @@ All routes need a signed-in session cookie (401 otherwise).
 | `DELETE /api/agents/:id`   | —                                                          | `204`                                                     | `404`                                                                   |
 | `POST /api/agents/:id/run` | `{prompt}` (1–4000 chars)                                  | `200 {text, inputTokens, outputTokens, durationMs}`       | `404`; `400` invalid prompt or no key; `502` provider error with reason |
 
-`Agent` is `{id, templateId, name, role, instructions, provider, model,
-createdAt, updatedAt}`. `provider` and `model` are nullable in the database
+`Agent` is `{id, templateId, avatar, name, role, instructions, provider,
+model, createdAt, updatedAt}`. Since part 2, create and edit also need
+`avatar` (a character id), and `/run` accepts `history`: up to 20 earlier
+`{role: 'user' | 'assistant', content}` turns (see [CHARACTERS.md](CHARACTERS.md)). `provider` and `model` are nullable in the database
 because Chapter 11's CLI engines bring their own model; today every agent
 created through the API has both.
 

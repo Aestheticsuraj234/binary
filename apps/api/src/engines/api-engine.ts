@@ -10,8 +10,16 @@ import type {
 export class ApiEngine implements AgentEngine {
   constructor(private readonly model: LanguageModel) {}
 
-  async generate({prompt, system}: GenerateRequest): Promise<GenerateResult> {
-    const result = await generateText({model: this.model, system, prompt});
+  async generate({
+    prompt,
+    system,
+    history = [],
+  }: GenerateRequest): Promise<GenerateResult> {
+    const result = await generateText({
+      model: this.model,
+      system,
+      messages: [...history, {role: 'user', content: prompt}],
+    });
     return {
       text: result.text,
       // Some providers leave usage out; count that as zero.

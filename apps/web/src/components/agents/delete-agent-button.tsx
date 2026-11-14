@@ -36,7 +36,7 @@ export function DeleteAgentButton({
       setError('Could not delete the agent. Try again.');
       return;
     }
-    router.push('/agents');
+    router.push('/');
     router.refresh();
   }
 

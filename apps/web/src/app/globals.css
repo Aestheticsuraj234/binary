@@ -70,3 +70,116 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+/*
+ * Character motion (components/characters/character.tsx).
+ * Small, slow and looping, so characters feel alive without pulling focus.
+ * Everything stops for people who ask their system for reduced motion.
+ */
+.character * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.character-float {
+  animation: character-float 4s ease-in-out infinite;
+}
+
+.character-eyes {
+  animation: character-blink 5s infinite;
+}
+
+.character-talk {
+  animation: character-talk 0.32s ease-in-out infinite;
+}
+
+.character-spin {
+  animation: character-spin 24s linear infinite;
+}
+
+.character-pulse,
+.character-dot,
+.character-twinkle {
+  animation: character-pulse 1.4s ease-in-out infinite;
+}
+
+/* Cards with the `group` class make their character hop on hover. */
+.group:hover .character-float,
+.group:focus-visible .character-float {
+  animation: character-hop 0.6s ease-in-out;
+}
+
+/* Things that slide up into view: chat bubbles and fresh cards. */
+.animate-rise {
+  animation: rise 0.35s ease-out both;
+}
+
+/* The phone menu drawer slides in from the left edge. */
+.animate-slide-in {
+  animation: slide-in 0.25s ease-out both;
+}
+
+@keyframes character-float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes character-blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes character-talk {
+  50% {
+    transform: scaleY(0.35);
+  }
+}
+
+@keyframes character-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes character-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes character-hop {
+  40% {
+    transform: translateY(-14px) rotate(-3deg);
+  }
+  70% {
+    transform: translateY(0) rotate(2deg);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character *,
+  .animate-rise,
+  .animate-slide-in {
+    animation: none !important;
+  }
+}

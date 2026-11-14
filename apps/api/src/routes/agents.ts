@@ -89,7 +89,7 @@ export function agentRoutes({
     if (!body.success) {
       return c.json({error: body.error.issues[0]?.message}, 400);
     }
-    const {name, role, instructions, provider, model} = body.data;
+    const {name, role, instructions, provider, model, avatar} = body.data;
 
     const keyError = await missingKeyMessage(userId, provider);
     if (keyError) {
@@ -102,6 +102,7 @@ export function agentRoutes({
       instructions,
       provider,
       model,
+      avatar,
     });
     return c.json({agent});
   });
@@ -142,6 +143,7 @@ export function agentRoutes({
       const answer = await engine.generate({
         system: buildSystemPrompt(agent),
         prompt: body.data.prompt,
+        history: body.data.history,
       });
       const result: AgentRunResult = {
         ...answer,

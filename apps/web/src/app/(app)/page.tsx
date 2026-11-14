@@ -1,137 +1,95 @@
-import type {Agent, ProviderKeySummary} from '@binary/shared';
-import {
-  ArrowRight,
-  Bot,
-  FlaskConical,
-  KeyRound,
-  Sparkles,
-  UserPlus,
-} from 'lucide-react';
+import type {Agent, AgentTemplate, ProviderKeySummary} from '@binary/shared';
 import Link from 'next/link';
 
-import {AgentCard} from '@/components/agents/agent-card';
+import {Character} from '@/components/characters/character';
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  CastCard,
+  CrewCard,
+  DesignYourOwnCard,
+} from '@/components/characters/character-cards';
+import {SpeechBubble} from '@/components/characters/speech-bubble';
+import {Button} from '@/components/ui/button';
 import {getFromApi} from '@/lib/server-api';
 import {getSession} from '@/lib/session';
 
-const ADD_KEY = {
-  href: '/settings',
-  icon: KeyRound,
-  title: 'Add your first API key',
-  description:
-    'Binary uses your own OpenAI, Anthropic or Gemini key. It is encrypted before it is stored.',
-};
-
-const HIRE_AGENT = {
-  href: '/agents',
-  icon: UserPlus,
-  title: 'Hire your first agent',
-  description:
-    'Start from a template like Research Assistant, or write your own role.',
-};
-
-const TRY_PLAYGROUND = {
-  href: '/playground',
-  icon: FlaskConical,
-  title: 'Try the playground',
-  description:
-    'Ask one question and compare OpenAI, Anthropic and Gemini side by side.',
-};
-
-/** The one thing a user should do next: key, then agent, then explore. */
-function chooseNextStep(hasKeys: boolean, hasAgents: boolean) {
-  if (!hasKeys) {
-    return ADD_KEY;
-  }
-  if (!hasAgents) {
-    return HIRE_AGENT;
-  }
-  return TRY_PLAYGROUND;
-}
-
-export default async function HomePage() {
-  const [session, keyData, agentData] = await Promise.all([
+/** Discover: the characters you work with, and the ones you could hire. */
+export default async function DiscoverPage() {
+  const [session, keyData, agentData, templateData] = await Promise.all([
     getSession(),
     getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
     getFromApi<{agents: Agent[]}>('/api/agents'),
+    getFromApi<{templates: AgentTemplate[]}>('/api/agent-templates'),
   ]);
   const firstName = session?.user.name.split(' ')[0];
+  const hasKeys = (keyData?.keys.length ?? 0) > 0;
   const agents = agentData?.agents ?? [];
-  const nextStep = chooseNextStep(
-    (keyData?.keys.length ?? 0) > 0,
-    agents.length > 0,
-  );
-  const NextStepIcon = nextStep.icon;
+  const templates = templateData?.templates ?? [];
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-6 py-16">
-      <div className="space-y-3">
-        <p className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-muted-foreground">
-          <Sparkles className="size-3.5 text-primary" />
-          You&apos;re signed in
-        </p>
-        <h1 className="text-4xl font-semibold tracking-tight">
-          Welcome, {firstName}.
-        </h1>
-        <p className="text-muted-foreground">
-          Your workspace is ready. Hire AI coworkers and give each one a job.
-        </p>
-      </div>
+    <main className="mx-auto w-full max-w-6xl flex-1 space-y-12 px-4 py-8 sm:px-6 lg:py-12">
+      <section className="flex items-center justify-between gap-6">
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">Hi {firstName}</p>
+          <h1 className="max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
+            Who are we working with today?
+          </h1>
+          <p className="max-w-lg text-muted-foreground">
+            Every character has a job, a personality and a model to think with.
+            Hire one and give it something to do.
+          </p>
+        </div>
+        <div className="hidden shrink-0 items-end md:flex" aria-hidden>
+          <Character id="sunny" size={110} className="-mr-6 mb-6" />
+          <Character id="nova" size={150} />
+          <Character id="bolt" size={110} className="-ml-6 mb-2" />
+        </div>
+      </section>
 
-      <Link href={nextStep.href} className="block">
-        <Card className="transition-colors hover:border-primary/60">
-          <CardHeader className="flex flex-row items-center gap-4">
-            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary">
-              <NextStepIcon className="size-5 text-primary" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <CardTitle>{nextStep.title}</CardTitle>
-              <CardDescription>{nextStep.description}</CardDescription>
-            </div>
-            <ArrowRight className="size-4 text-muted-foreground" />
-          </CardHeader>
-        </Card>
-      </Link>
-
-      {agents.length === 0 && (
-        <Card className="border-dashed bg-transparent">
-          <CardHeader>
-            <div className="mb-2 grid size-10 place-items-center rounded-lg bg-secondary">
-              <Bot className="size-5 text-primary" />
-            </div>
-            <CardTitle>No agents yet</CardTitle>
-            <CardDescription>
-              Agents you hire will show up here, ready to take on tasks.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      {!hasKeys && (
+        <section className="flex flex-col gap-4 rounded-3xl border bg-card p-5 sm:flex-row sm:items-center">
+          <Character id="pebble" mood="oops" size={96} />
+          <SpeechBubble className="flex-1 bg-background">
+            We can&apos;t think without a brain yet. Add an OpenAI, Anthropic or
+            Gemini key and the whole cast can get to work.
+          </SpeechBubble>
+          <Button asChild className="h-10 rounded-full px-5">
+            <Link href="/settings">Add a key</Link>
+          </Button>
+        </section>
       )}
 
       {agents.length > 0 && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold tracking-tight">
-              Your agents
-            </h2>
-            <Link
-              href="/agents"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              See all
-            </Link>
+          <div className="space-y-1">
+            <h2 className="text-2xl font-semibold tracking-tight">Your crew</h2>
+            <p className="text-sm text-muted-foreground">
+              Pick someone to talk to.
+            </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {agents.slice(0, 4).map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {agents.map((agent) => (
+              <CrewCard key={agent.id} agent={agent} />
             ))}
           </div>
         </section>
       )}
+
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Meet the cast
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Ready-made roles. Change anything before you hire them.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {templates.map((template) => (
+            <CastCard key={template.id} template={template} />
+          ))}
+          <DesignYourOwnCard />
+        </div>
+      </section>
     </main>
   );
 }
