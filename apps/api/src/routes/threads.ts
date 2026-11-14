@@ -1,7 +1,9 @@
 import {
   sendMessageSchema,
+  type ChatMessage,
   type ChatStreamEvent,
   type ChatTurn,
+  type ToolCallView,
 } from '@binary/shared';
 import {Hono} from 'hono';
 import {stream} from 'hono/streaming';
@@ -9,11 +11,16 @@ import {stream} from 'hono/streaming';
 import {buildSystemPrompt} from '../agents/system-prompt';
 import {requireUser, type AppEnv} from '../app-env';
 import {titleFrom} from '../chat/title';
+import {ToolCallLog} from '../chat/tool-call-log';
 import type {AppDependencies} from '../container';
-import {engineErrorResponse, providerErrorMessage} from './engine-errors';
+import {
+  NotFoundError,
+  parseBody,
+  providerErrorMessage,
+  ValidationError,
+} from '../errors';
+import {readOnlyPolicy} from '../tools/policy';
 import {isUuid} from './ids';
-
-const NOT_FOUND = {error: 'Chat not found.'};
 
 // How many earlier messages the model reads. Older ones are still saved and
 // shown; they just stop costing tokens on every reply.
@@ -27,14 +34,22 @@ export function threadRoutes({
   agents,
   threads,
   messages,
+  toolCalls,
   engineFactory,
+  toolboxes,
 }: AppDependencies) {
   const routes = new Hono<AppEnv>();
   routes.use(requireUser);
 
-  /** Finds one of the user's chats; a malformed id is just "not found". */
-  function findThread(userId: string, id: string) {
-    return isUuid(id) ? threads.findForUser(userId, id) : undefined;
+  /** One of the user's chats; a malformed id is just "not found". */
+  async function findThread(userId: string, id: string) {
+    const thread = isUuid(id)
+      ? await threads.findForUser(userId, id)
+      : undefined;
+    if (!thread) {
+      throw new NotFoundError('Chat');
+    }
+    return thread;
   }
 
   routes.get('/', async (c) => {
@@ -45,27 +60,31 @@ export function threadRoutes({
     return c.json({threads: recent});
   });
 
+  // Each message comes with the tools its answer used.
   routes.get('/:id', async (c) => {
     const thread = await findThread(c.get('user').id, c.req.param('id'));
-    if (!thread) {
-      return c.json(NOT_FOUND, 404);
-    }
-    const saved = await messages.listForThread(thread.id);
-    return c.json({thread, messages: saved});
+    const [saved, calls] = await Promise.all([
+      messages.listForThread(thread.id),
+      toolCalls.listForThread(thread.id),
+    ]);
+    const withTools = saved.map((message) => {
+      const used = calls
+        .filter((call) => call.messageId === message.id)
+        .map(({messageId: _messageId, ...call}) => call);
+      return used.length > 0 ? {...message, toolCalls: used} : message;
+    });
+    return c.json({thread, messages: withTools});
   });
 
   routes.delete('/:id', async (c) => {
-    const deleted = isUuid(c.req.param('id'))
-      ? await threads.delete(c.get('user').id, c.req.param('id'))
-      : false;
-    if (!deleted) {
-      return c.json(NOT_FOUND, 404);
-    }
+    const {id} = await findThread(c.get('user').id, c.req.param('id'));
+    await threads.delete(c.get('user').id, id);
     return c.body(null, 204);
   });
 
   /**
-   * Send a message and stream the agent's answer back.
+   * Send a message and stream the agent's answer back, including the tools
+   * it uses on the way.
    *
    * Problems found before the model starts (bad input, missing key) are
    * normal JSON errors. Once streaming has begun the status is already 200,
@@ -74,33 +93,24 @@ export function threadRoutes({
   routes.post('/:id/messages', async (c) => {
     const userId = c.get('user').id;
     const thread = await findThread(userId, c.req.param('id'));
-    const agent = thread?.agentId
+    const agent = thread.agentId
       ? await agents.findForUser(userId, thread.agentId)
       : undefined;
-    if (!thread || !agent) {
-      return c.json(NOT_FOUND, 404);
+    if (!agent) {
+      throw new NotFoundError('Chat');
     }
-    const body = sendMessageSchema.safeParse(await c.req.json());
-    if (!body.success) {
-      return c.json({error: body.error.issues[0]?.message}, 400);
-    }
+    const {content} = await parseBody(c, sendMessageSchema);
     // The columns are optional because Chapter 11's CLI engines need neither.
     if (!agent.provider || !agent.model) {
-      return c.json({error: 'Choose a model for this agent first.'}, 400);
+      throw new ValidationError('Choose a model for this agent first.');
     }
+    // A missing key throws MissingProviderKeyError (400) from here.
+    const engine = await engineFactory.create({
+      userId,
+      provider: agent.provider,
+      model: agent.model,
+    });
 
-    let engine;
-    try {
-      engine = await engineFactory.create({
-        userId,
-        provider: agent.provider,
-        model: agent.model,
-      });
-    } catch (error) {
-      return engineErrorResponse(c, error);
-    }
-
-    const {content} = body.data;
     const earlier = await messages.listForThread(thread.id);
     // Tool messages arrive in a later chapter; the model only reads chat.
     const history: ChatTurn[] = earlier
@@ -117,26 +127,46 @@ export function threadRoutes({
       await threads.rename(userId, thread.id, titleFrom(content));
     }
 
+    // Opened now, after every check that could fail, and closed in `finally`.
+    const {toolbox} = await toolboxes.forUser(userId);
+    const log = new ToolCallLog((name) => toolbox.riskOf(name));
+
     c.header('Content-Type', 'application/x-ndjson; charset=utf-8');
     c.header('Cache-Control', 'no-cache');
     return stream(c, async (output) => {
       const send = (event: ChatStreamEvent) =>
         output.writeln(JSON.stringify(event));
+      const sendTool = async (call: ToolCallView | undefined) => {
+        if (call) {
+          await send({type: 'tool', call});
+        }
+      };
       let answer = '';
 
       try {
-        const pieces = engine.stream({
+        const events = engine.stream({
           system: buildSystemPrompt(agent),
           prompt: content,
           history,
+          tools: toolbox.toToolSet(readOnlyPolicy),
         });
-        for await (const text of pieces) {
-          answer += text;
-          await send({type: 'delta', text});
+        for await (const event of events) {
+          if (event.type === 'text') {
+            answer += event.text;
+            await send({type: 'delta', text: event.text});
+          } else if (event.type === 'tool-call') {
+            await sendTool(log.start(event.id, event.name, event.input));
+          } else if (event.type === 'tool-result') {
+            await sendTool(log.finish(event.id, event.output));
+          } else {
+            await sendTool(log.fail(event.id, event.error));
+          }
         }
       } catch (error) {
         await send({type: 'error', error: providerErrorMessage(error)});
         return;
+      } finally {
+        await toolbox.close();
       }
 
       const saved = await messages.add({
@@ -145,11 +175,18 @@ export function threadRoutes({
         authorAgentId: agent.id,
         content: answer,
       });
+      const savedCalls = await toolCalls.addMany(log.toRows(saved.id));
       await threads.touch(thread.id);
-      await send({
-        type: 'done',
-        message: {...saved, createdAt: saved.createdAt.toISOString()},
-      });
+      const message: ChatMessage = {
+        ...saved,
+        createdAt: saved.createdAt.toISOString(),
+      };
+      if (savedCalls.length > 0) {
+        message.toolCalls = savedCalls.map(
+          ({messageId: _messageId, ...call}) => call,
+        );
+      }
+      await send({type: 'done', message});
     });
   });
 
