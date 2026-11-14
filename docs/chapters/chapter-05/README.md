@@ -24,6 +24,9 @@ while Nova talks, reload the page, and the conversation is still there.
 - **The character reacts to the stream itself:** thinking until the first
   word, talking while words arrive, happy when done, oops on errors. A lime
   caret shows where the answer is being written.
+- **Markdown and highlighted code** (part 2): answers render headings,
+  lists, tables, links and Shiki-highlighted code, even mid-stream. See
+  [MARKDOWN.md](MARKDOWN.md).
 - **Failures are honest:** a provider error before or during the answer
   shows the reason. Words that already arrived stay visible. Your question
   is saved; the failed answer is not.
@@ -32,6 +35,7 @@ while Nova talks, reload the page, and the conversation is still there.
 
 | File                                   | What's in it                                        |
 | -------------------------------------- | --------------------------------------------------- |
+| [MARKDOWN.md](MARKDOWN.md)             | Part 2: Streamdown Markdown and code highlighting   |
 | [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions  |
 | [ARCHITECTURE.md](ARCHITECTURE.md)     | Streaming protocol, ownership, API contracts        |
 | [TESTING.md](TESTING.md)               | Tests and results                                   |

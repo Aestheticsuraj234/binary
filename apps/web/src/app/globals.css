@@ -2,6 +2,14 @@
 @import 'tw-animate-css';
 
 /*
+ * Streamdown (chat Markdown) and its Shiki code plugin style themselves with
+ * Tailwind classes, so Tailwind must scan their files. pnpm installs them in
+ * apps/web/node_modules, two folders up from here.
+ */
+@source '../../node_modules/streamdown/dist/*.js';
+@source '../../node_modules/@streamdown/code/dist/*.js';
+
+/*
  * Binary design tokens. See docs/DESIGN_SYSTEM.md.
  * One dark theme: near-black neutrals, with acid lime (#D1FE17) used only
  * for primary actions, focus rings and active states.
@@ -179,7 +187,8 @@
 @media (prefers-reduced-motion: reduce) {
   .character *,
   .animate-rise,
-  .animate-slide-in {
+  .animate-slide-in,
+  [data-sd-animate] {
     animation: none !important;
   }
 }

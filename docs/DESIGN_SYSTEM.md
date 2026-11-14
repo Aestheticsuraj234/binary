@@ -138,6 +138,12 @@ pnpm dlx shadcn@latest add <component>
 - **Recent chats (Ch. 5):** in the sidebar under Your crew: the
   character's face (24px) and the chat title, newest first; the open chat
   gets `bg-secondary`. Crew rows are compact (face 32px and name).
+- **Answers are Markdown (Ch. 5):** model answers render through
+  `components/chat/markdown.tsx` (Streamdown). Code uses Shiki
+  `github-dark-default` with copy and download buttons; links are lime and
+  ask before opening; a block caret follows streaming text. Your own messages
+  stay plain text. Never render model output with `whitespace-pre-wrap`
+  again.
 - **Animate only what is new:** messages written now rise in; a saved chat
   appears at once.
 - **Model badge:** outline, mono: "Anthropic · claude-sonnet-5-5".

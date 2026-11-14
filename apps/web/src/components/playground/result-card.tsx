@@ -6,6 +6,7 @@ import {
 import {LoaderCircle} from 'lucide-react';
 import Link from 'next/link';
 
+import {Markdown} from '@/components/chat/markdown';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {NativeSelect, NativeSelectOption} from '@/components/ui/native-select';
 
@@ -83,9 +84,7 @@ export function ResultCard({
         )}
         {run.result && run.status === 'done' && (
           <>
-            <p className="leading-relaxed whitespace-pre-wrap">
-              {run.result.text}
-            </p>
+            <Markdown>{run.result.text}</Markdown>
             <p className="font-mono text-xs text-muted-foreground">
               {run.result.inputTokens} in · {run.result.outputTokens} out ·{' '}
               {(run.result.durationMs / 1000).toFixed(1)}s
