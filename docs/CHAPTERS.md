@@ -17,7 +17,7 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 4   | Agents and templates                      | Agent CRUD API + web UI: name, role, model, approval mode; create from templates; layers, DTOs, AppError hierarchy       | ✅ Done ¹ |
 | 5   | Real-time chat and threads                | Chat with an agent, streaming replies, threads and history, live updates via Postgres LISTEN/NOTIFY                      | ✅ Done ² |
 | 6   | Tool system and MCP apps                  | Tool registry with risk levels (read / write / computer), connect apps through MCP servers, including Composio           | ✅ Done ³ |
-| 7   | Durable jobs and routines                 | Long-running tasks and scheduled routines (cron, webhook, manual) on Trigger.dev, with run history                       | Planned   |
+| 7   | Durable jobs and routines                 | Long-running tasks and scheduled routines (cron, webhook, manual) on Trigger.dev, with run history                       | ✅ Done ⁴ |
 | 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                 | Planned   |
 | 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | Planned   |
 | 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | Planned   |
@@ -38,6 +38,10 @@ sent the message, but other open tabs and devices only update on reload.
 
 ³ Chapter 6 blocks **write** and **computer** tools: they never run until
 Chapter 8 can ask you first. Read tools run straight away.
+
+⁴ Chapter 7 was verified on a real Trigger.dev project (Run now, a cron
+firing, schedule removal). Without Trigger.dev, routines run inside the API
+and schedules don't fire.
 
 ## Every chapter ships with
 
