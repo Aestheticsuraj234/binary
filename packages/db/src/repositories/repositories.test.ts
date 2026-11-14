@@ -122,6 +122,7 @@ describe('AgentRepository', () => {
     instructions: 'List your sources.',
     provider: 'anthropic' as const,
     model: 'claude-sonnet-5-5',
+    avatar: 'nova',
   };
   let agentId = '';
 

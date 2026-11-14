@@ -8,14 +8,16 @@ export type NewAgent = typeof agents.$inferInsert;
 /** The fields a user can change after hiring an agent. */
 export type AgentChanges = Pick<
   NewAgent,
-  'name' | 'role' | 'instructions' | 'provider' | 'model'
+  'name' | 'role' | 'instructions' | 'provider' | 'model' | 'avatar'
 >;
 
 // The columns the app shows today. `userId` stays on the server, and the
 // columns later chapters use (engine, approvals, computers) are left out.
+// `avatar` holds the id of the character that plays the agent.
 const AGENT_COLUMNS = {
   id: agents.id,
   templateId: agents.templateId,
+  avatar: agents.avatar,
   name: agents.name,
   role: agents.role,
   instructions: agents.instructions,
