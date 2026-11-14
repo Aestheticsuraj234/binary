@@ -1,4 +1,4 @@
-import {PROVIDERS} from '@binary/shared';
+import {PROVIDERS, TOOL_CALL_STATUSES, TOOL_RISKS} from '@binary/shared';
 import {pgEnum} from 'drizzle-orm/pg-core';
 
 // Postgres enums: the database itself rejects any value not in these lists.
@@ -36,16 +36,13 @@ export const messageRoleEnum = pgEnum('message_role', [
   'tool',
 ]);
 
-export const toolRiskEnum = pgEnum('tool_risk', ['read', 'write', 'computer']);
+// Shared with the API and the web app (Chapter 6), like the provider list.
+export const toolRiskEnum = pgEnum('tool_risk', TOOL_RISKS);
 
-export const toolCallStatusEnum = pgEnum('tool_call_status', [
-  'pending',
-  'awaiting_approval',
-  'running',
-  'succeeded',
-  'failed',
-  'rejected',
-]);
+export const toolCallStatusEnum = pgEnum(
+  'tool_call_status',
+  TOOL_CALL_STATUSES,
+);
 
 export const approvalStatusEnum = pgEnum('approval_status', [
   'pending',

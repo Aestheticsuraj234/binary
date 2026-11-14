@@ -6,9 +6,11 @@ import {agentTemplates, users} from '../schema';
 import {createTestUser} from '../test-utils';
 import {AgentRepository} from './agent-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
+import {McpServerRepository} from './mcp-server-repository';
 import {MessageRepository} from './message-repository';
 import {ProviderKeyRepository} from './provider-key-repository';
 import {ThreadRepository} from './thread-repository';
+import {ToolCallRepository} from './tool-call-repository';
 import {UserRepository} from './user-repository';
 
 const db = createDatabase(process.env.DATABASE_URL ?? '');
@@ -239,5 +241,82 @@ describe('ThreadRepository and MessageRepository', () => {
   it('deletes a chat together with its messages', async () => {
     expect(await threadRepository.delete(userId, threadId)).toBe(true);
     expect(await messageRepository.listForThread(threadId)).toEqual([]);
+  });
+});
+
+describe('McpServerRepository', () => {
+  const repository = new McpServerRepository(db);
+  let serverId = '';
+
+  it('saves an app with its encrypted auth', async () => {
+    const saved = await repository.create({
+      userId,
+      name: 'Shop',
+      url: 'https://shop.example/mcp',
+      encryptedAuth: 'ciphertext',
+      iv: 'iv',
+    });
+    serverId = saved.id;
+
+    expect(saved).toMatchObject({name: 'Shop', status: 'active'});
+    expect(await repository.listForUser(userId)).toHaveLength(1);
+  });
+
+  it('records a failed connection', async () => {
+    await repository.setStatus(serverId, 'error');
+
+    const [saved] = await repository.listForUser(userId);
+    expect(saved?.status).toBe('error');
+  });
+
+  it("never lists or deletes another user's app", async () => {
+    expect(await repository.listForUser(otherUserId)).toEqual([]);
+    expect(await repository.delete(otherUserId, serverId)).toBe(false);
+    expect(await repository.delete(userId, serverId)).toBe(true);
+  });
+});
+
+describe('ToolCallRepository', () => {
+  const toolCallRepository = new ToolCallRepository(db);
+
+  it('saves the tools of an answer and lists them in order', async () => {
+    const agent = await new AgentRepository(db).create({
+      userId,
+      name: 'Toolsy',
+      role: 'Uses tools.',
+    });
+    const thread = await new ThreadRepository(db).createForAgent(
+      userId,
+      agent.id,
+    );
+    const message = await new MessageRepository(db).add({
+      threadId: thread.id,
+      role: 'assistant',
+      content: 'Done.',
+    });
+    const startedAt = Date.now();
+
+    await toolCallRepository.addMany(
+      ['first_tool', 'second_tool'].map((toolName, index) => ({
+        messageId: message.id,
+        toolName,
+        risk: 'read' as const,
+        status: 'succeeded' as const,
+        input: {index},
+        output: {ok: true},
+        createdAt: new Date(startedAt + index),
+      })),
+    );
+
+    const saved = await toolCallRepository.listForThread(thread.id);
+    expect(saved.map((call) => call.toolName)).toEqual([
+      'first_tool',
+      'second_tool',
+    ]);
+    expect(saved[1]).toMatchObject({messageId: message.id, input: {index: 1}});
+  });
+
+  it('saves nothing for an answer without tools', async () => {
+    expect(await toolCallRepository.addMany([])).toEqual([]);
   });
 });

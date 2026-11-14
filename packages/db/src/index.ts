@@ -12,6 +12,11 @@ export {
   type NewAgentTemplate,
 } from './repositories/agent-template-repository';
 export {
+  McpServerRepository,
+  type McpServer,
+  type NewMcpServer,
+} from './repositories/mcp-server-repository';
+export {
   MessageRepository,
   type NewMessage,
 } from './repositories/message-repository';
@@ -21,4 +26,8 @@ export {
   type ProviderKey,
 } from './repositories/provider-key-repository';
 export {ThreadRepository} from './repositories/thread-repository';
+export {
+  ToolCallRepository,
+  type NewToolCall,
+} from './repositories/tool-call-repository';
 export {UserRepository, type User} from './repositories/user-repository';
