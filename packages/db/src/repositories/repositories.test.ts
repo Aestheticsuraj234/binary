@@ -4,6 +4,7 @@ import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {createDatabase} from '../client';
 import {agentTemplates, users} from '../schema';
 import {createTestUser} from '../test-utils';
+import {AgentRepository} from './agent-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
 import {ProviderKeyRepository} from './provider-key-repository';
 import {UserRepository} from './user-repository';
@@ -12,15 +13,18 @@ const db = createDatabase(process.env.DATABASE_URL ?? '');
 const TEMPLATE_SLUG = `test-template-${Date.now()}`;
 let userId = '';
 let userEmail = '';
+let otherUserId = '';
 
 beforeAll(async () => {
   const user = await createTestUser(db);
   userId = user.id;
   userEmail = user.email;
+  otherUserId = (await createTestUser(db)).id;
 });
 
 afterAll(async () => {
   await db.delete(users).where(eq(users.id, userId));
+  await db.delete(users).where(eq(users.id, otherUserId));
   await db.delete(agentTemplates).where(eq(agentTemplates.slug, TEMPLATE_SLUG));
   await db.$client.end();
 });
@@ -59,6 +63,12 @@ describe('AgentTemplateRepository', () => {
 
     expect(saved.id).toBeTruthy();
     expect(await repository.findBySlug(TEMPLATE_SLUG)).toMatchObject(template);
+  });
+
+  it('finds a template by id', async () => {
+    const saved = await repository.findBySlug(TEMPLATE_SLUG);
+
+    expect(await repository.findById(saved?.id ?? '')).toMatchObject(template);
   });
 
   it('updates instead of duplicating when the slug exists', async () => {
@@ -101,5 +111,63 @@ describe('ProviderKeyRepository', () => {
     expect(await repository.delete(userId, 'openai')).toBe(true);
     expect(await repository.delete(userId, 'openai')).toBe(false);
     expect(await repository.find(userId, 'openai')).toBeUndefined();
+  });
+});
+
+describe('AgentRepository', () => {
+  const repository = new AgentRepository(db);
+  const agent = {
+    name: 'Researcher',
+    role: 'Finds sources.',
+    instructions: 'List your sources.',
+    provider: 'anthropic' as const,
+    model: 'claude-sonnet-5-5',
+  };
+  let agentId = '';
+
+  it('creates an agent without exposing its owner', async () => {
+    const created = await repository.create({...agent, userId});
+    agentId = created.id;
+
+    expect(created).toMatchObject(agent);
+    expect(created).not.toHaveProperty('userId');
+  });
+
+  it('lists the newest agent first', async () => {
+    const newer = await repository.create({...agent, userId, name: 'Newer'});
+
+    const list = await repository.listForUser(userId);
+    expect(list.map((saved) => saved.id)).toEqual([newer.id, agentId]);
+    await repository.delete(userId, newer.id);
+  });
+
+  it("never returns another user's agent", async () => {
+    expect(await repository.listForUser(otherUserId)).toEqual([]);
+    expect(await repository.findForUser(otherUserId, agentId)).toBeUndefined();
+  });
+
+  it('updates an agent', async () => {
+    const updated = await repository.update(userId, agentId, {
+      ...agent,
+      name: 'Senior Researcher',
+    });
+
+    expect(updated?.name).toBe('Senior Researcher');
+    expect(await repository.findForUser(userId, agentId)).toMatchObject({
+      name: 'Senior Researcher',
+    });
+  });
+
+  it("does not update or delete another user's agent", async () => {
+    expect(
+      await repository.update(otherUserId, agentId, agent),
+    ).toBeUndefined();
+    expect(await repository.delete(otherUserId, agentId)).toBe(false);
+    expect(await repository.findForUser(userId, agentId)).toBeDefined();
+  });
+
+  it('deletes an agent and reports whether one existed', async () => {
+    expect(await repository.delete(userId, agentId)).toBe(true);
+    expect(await repository.delete(userId, agentId)).toBe(false);
   });
 });

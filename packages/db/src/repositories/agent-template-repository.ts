@@ -17,6 +17,14 @@ export class AgentTemplateRepository {
       .orderBy(asc(agentTemplates.name));
   }
 
+  async findById(id: string): Promise<AgentTemplate | undefined> {
+    const [template] = await this.db
+      .select()
+      .from(agentTemplates)
+      .where(eq(agentTemplates.id, id));
+    return template;
+  }
+
   async findBySlug(slug: string): Promise<AgentTemplate | undefined> {
     const [template] = await this.db
       .select()
