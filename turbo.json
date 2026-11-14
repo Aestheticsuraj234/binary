@@ -18,6 +18,10 @@
     },
     "typecheck": {},
     "test": {
+      "cache": false,
+      "dependsOn": ["@binary/db#db:migrate"]
+    },
+    "db:migrate": {
       "cache": false
     }
   }

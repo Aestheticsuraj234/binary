@@ -1,13 +1,13 @@
 {
   "name": "binary",
   "private": true,
-  "description": "Binary — an open-source personal AI assistant you run yourself.",
+  "description": "Binary \u2014 an open-source personal AI assistant you run yourself.",
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "setup": "docker compose up -d && pnpm --filter @binary/api db:migrate",
+    "setup": "docker compose up -d && pnpm db:migrate && pnpm db:seed",
     "dev": "turbo run dev --filter=@binary/api --filter=@binary/web",
     "mobile": "pnpm --filter @binary/mobile start",
     "build": "turbo run build",
@@ -15,7 +15,11 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @binary/db db:migrate",
+    "db:generate": "pnpm --filter @binary/db db:generate",
+    "db:studio": "pnpm --filter @binary/db db:studio",
+    "db:seed": "pnpm --filter @binary/api db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
