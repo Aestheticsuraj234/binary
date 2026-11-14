@@ -1,4 +1,9 @@
-import {PROVIDERS, TOOL_CALL_STATUSES, TOOL_RISKS} from '@binary/shared';
+import {
+  PROVIDERS,
+  RUN_STATUSES,
+  TOOL_CALL_STATUSES,
+  TOOL_RISKS,
+} from '@binary/shared';
 import {pgEnum} from 'drizzle-orm/pg-core';
 
 // Postgres enums: the database itself rejects any value not in these lists.
@@ -72,12 +77,7 @@ export const triggerTypeEnum = pgEnum('trigger_type', [
   'manual',
 ]);
 
-export const runStatusEnum = pgEnum('run_status', [
-  'queued',
-  'running',
-  'succeeded',
-  'failed',
-]);
+export const runStatusEnum = pgEnum('run_status', RUN_STATUSES);
 
 export const mcpServerStatusEnum = pgEnum('mcp_server_status', [
   'active',

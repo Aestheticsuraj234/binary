@@ -9,8 +9,11 @@ import {AgentTemplateRepository} from './agent-template-repository';
 import {McpServerRepository} from './mcp-server-repository';
 import {MessageRepository} from './message-repository';
 import {ProviderKeyRepository} from './provider-key-repository';
+import {RoutineRepository} from './routine-repository';
+import {RoutineRunRepository} from './routine-run-repository';
 import {ThreadRepository} from './thread-repository';
 import {ToolCallRepository} from './tool-call-repository';
+import {TriggerRepository} from './trigger-repository';
 import {UserRepository} from './user-repository';
 
 const db = createDatabase(process.env.DATABASE_URL ?? '');
@@ -318,5 +321,111 @@ describe('ToolCallRepository', () => {
 
   it('saves nothing for an answer without tools', async () => {
     expect(await toolCallRepository.addMany([])).toEqual([]);
+  });
+});
+
+describe('routines, triggers and runs', () => {
+  const routineRepository = new RoutineRepository(db);
+  const triggerRepository = new TriggerRepository(db);
+  const runRepository = new RoutineRunRepository(db);
+  let routineId = '';
+  let scheduleId = '';
+
+  beforeAll(async () => {
+    const agent = await new AgentRepository(db).create({
+      userId,
+      name: 'Sunny',
+      role: 'Plans days.',
+      avatar: 'sunny',
+    });
+    routineId = (
+      await routineRepository.create({
+        agentId: agent.id,
+        name: 'Morning plan',
+        prompt: 'Plan my day.',
+      })
+    ).id;
+  });
+
+  it('lists a routine with its agent, only for the owner', async () => {
+    const [routine] = await routineRepository.listForUser(userId);
+
+    expect(routine).toMatchObject({
+      name: 'Morning plan',
+      agent: {name: 'Sunny'},
+    });
+    expect(await routineRepository.listForUser(otherUserId)).toEqual([]);
+    expect(
+      await routineRepository.findForUser(otherUserId, routineId),
+    ).toBeUndefined();
+  });
+
+  it('gives a job the routine with its owner', async () => {
+    expect(await routineRepository.findForJob(routineId)).toMatchObject({
+      name: 'Morning plan',
+      userId,
+    });
+  });
+
+  it('keeps the schedule id when the schedule changes', async () => {
+    const first = await triggerRepository.setSchedule(
+      routineId,
+      '0 9 * * *',
+      'UTC',
+    );
+    scheduleId = first.trigger?.id ?? '';
+    const second = await triggerRepository.setSchedule(
+      routineId,
+      '0 9 * * 1-5',
+      'Asia/Kolkata',
+    );
+
+    expect(second.trigger).toMatchObject({
+      id: scheduleId,
+      cron: '0 9 * * 1-5',
+      timezone: 'Asia/Kolkata',
+    });
+  });
+
+  it('reports the removed schedule so Trigger.dev can drop it too', async () => {
+    const removed = await triggerRepository.setSchedule(routineId, null, 'UTC');
+
+    expect(removed).toEqual({trigger: undefined, removedId: scheduleId});
+  });
+
+  it('turns a webhook on and off', async () => {
+    const webhook = await triggerRepository.setWebhook(routineId, 'hash-1');
+    expect(
+      await triggerRepository.findWithRoutine(webhook?.id ?? ''),
+    ).toMatchObject({
+      type: 'webhook',
+      webhookSecret: 'hash-1',
+      routineId,
+      enabled: true,
+    });
+
+    await triggerRepository.setWebhook(routineId, null);
+    expect(await triggerRepository.listForRoutines([routineId])).toEqual([]);
+  });
+
+  it('records a run from queued to succeeded, newest first', async () => {
+    const first = await runRepository.create(routineId);
+    await runRepository.finish(first.id, {status: 'failed', error: 'No key.'});
+    const second = await runRepository.create(routineId);
+    expect(second.status).toBe('queued');
+
+    const thread = await new ThreadRepository(db).createForAgent(
+      userId,
+      (await routineRepository.findForJob(routineId))?.agentId ?? '',
+    );
+    await runRepository.markRunning(second.id, thread.id);
+    await runRepository.finish(second.id, {status: 'succeeded'});
+
+    const runs = await runRepository.listForRoutine(routineId, 10);
+    expect(runs.map((run) => run.status)).toEqual(['succeeded', 'failed']);
+    expect(runs[0]).toMatchObject({threadId: thread.id, error: null});
+    expect(runs[1]?.error).toBe('No key.');
+    const [latest] = await runRepository.latestForRoutines([routineId]);
+    expect(latest?.id).toBe(second.id);
   });
 });

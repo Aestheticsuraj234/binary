@@ -5,7 +5,8 @@
   "description": "Binary's database layer: Drizzle schema, migrations, client and repositories.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./test-utils": "./src/test-utils.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
