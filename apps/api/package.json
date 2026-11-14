@@ -10,7 +10,8 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "db:seed": "tsx --env-file=../../.env scripts/seed.ts"
+    "db:seed": "tsx --env-file=../../.env scripts/seed.ts",
+    "trigger:dev": "trigger dev --env-file ../../.env"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.105",
@@ -21,6 +22,7 @@
     "@binary/db": "workspace:*",
     "@binary/shared": "workspace:*",
     "@hono/node-server": "^2.1.8",
+    "@trigger.dev/sdk": "4.8.5",
     "ai": "^7.0.173",
     "better-auth": "^1.7.23",
     "hono": "^4.13.18",
@@ -29,8 +31,9 @@
   "devDependencies": {
     "@binary/config": "workspace:*",
     "@modelcontextprotocol/sdk": "1.32.2",
+    "@trigger.dev/build": "4.8.5",
     "@types/node": "^22.0.0",
-    "drizzle-orm": "^0.45.4",
+    "trigger.dev": "4.8.5",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "vitest": "^5.1.0"

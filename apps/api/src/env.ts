@@ -17,6 +17,12 @@ const envSchema = z.object({
       'ENCRYPTION_KEY must be 32 bytes, base64. Run: openssl rand -base64 32',
     ),
   PORT: z.coerce.number().default(4000),
+  // Optional (Chapter 7). With it, routines run on Trigger.dev; without it,
+  // they run inside the API and schedules don't fire. Empty means unset.
+  TRIGGER_SECRET_KEY: z
+    .string()
+    .optional()
+    .transform((value) => value || undefined),
 });
 
 export const env = envSchema.parse(process.env);

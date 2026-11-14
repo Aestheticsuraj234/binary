@@ -8,9 +8,11 @@ import {env} from './env';
 import {AppError} from './errors';
 import {agentTemplateRoutes} from './routes/agent-templates';
 import {appRoutes} from './routes/apps';
+import {hookRoutes} from './routes/hooks';
 import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
+import {routineRoutes} from './routes/routines';
 import {threadRoutes} from './routes/threads';
 
 /** Builds the API. Dependencies come in from the composition root. */
@@ -58,6 +60,8 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/agent-templates', agentTemplateRoutes(dependencies));
   app.route('/api/threads', threadRoutes(dependencies));
   app.route('/api/apps', appRoutes(dependencies));
+  app.route('/api/routines', routineRoutes(dependencies));
+  app.route('/api/hooks', hookRoutes(dependencies));
 
   return app;
 }

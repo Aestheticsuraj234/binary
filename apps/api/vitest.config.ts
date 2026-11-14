@@ -15,6 +15,8 @@ export default defineConfig({
       WEB_URL: 'http://localhost:3000',
       // A fixed test-only key (32 zero bytes). Never use it outside tests.
       ENCRYPTION_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+      // Routines run in-process in tests, never on a real Trigger.dev project.
+      TRIGGER_SECRET_KEY: '',
     },
   },
 });

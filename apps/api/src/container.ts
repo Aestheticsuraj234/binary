@@ -4,8 +4,11 @@ import {
   McpServerRepository,
   MessageRepository,
   ProviderKeyRepository,
+  RoutineRepository,
+  RoutineRunRepository,
   ThreadRepository,
   ToolCallRepository,
+  TriggerRepository,
 } from '@binary/db';
 
 import {db} from './db';
@@ -15,7 +18,10 @@ import {
   type LanguageModelFactory,
 } from './engines/language-models';
 import {env} from './env';
+import {InProcessRunner, type JobRunner} from './jobs/job-runner';
+import {TriggerDevRunner} from './jobs/trigger-dev-runner';
 import {KeyVault} from './keys/key-vault';
+import {runRoutine, type RoutineDependencies} from './routines/run-routine';
 import {connectApp, type AppConnector} from './tools/mcp';
 import {ToolboxFactory} from './tools/toolbox-factory';
 
@@ -28,9 +34,13 @@ export interface AppDependencies {
   messages: MessageRepository;
   toolCalls: ToolCallRepository;
   mcpServers: McpServerRepository;
+  routines: RoutineRepository;
+  triggers: TriggerRepository;
+  routineRuns: RoutineRunRepository;
   keyVault: KeyVault;
   engineFactory: EngineFactory;
   toolboxes: ToolboxFactory;
+  jobs: JobRunner;
 }
 
 /**
@@ -41,6 +51,7 @@ export interface AppDependencies {
 export function createDependencies(
   createModel: LanguageModelFactory = createLanguageModel,
   connect: AppConnector = connectApp,
+  makeJobs: (deps: RoutineDependencies) => JobRunner = defaultJobs,
 ): AppDependencies {
   const agents = new AgentRepository(db);
   const agentTemplates = new AgentTemplateRepository(db);
@@ -52,7 +63,7 @@ export function createDependencies(
   const keyVault = new KeyVault(env.ENCRYPTION_KEY);
   const engineFactory = new EngineFactory(providerKeys, keyVault, createModel);
   const toolboxes = new ToolboxFactory(mcpServers, keyVault, connect);
-  return {
+  const base = {
     agents,
     agentTemplates,
     providerKeys,
@@ -60,8 +71,19 @@ export function createDependencies(
     messages,
     toolCalls,
     mcpServers,
+    routines: new RoutineRepository(db),
+    triggers: new TriggerRepository(db),
+    routineRuns: new RoutineRunRepository(db),
     keyVault,
     engineFactory,
     toolboxes,
   };
+  return {...base, jobs: makeJobs(base)};
+}
+
+/** Trigger.dev when it is set up; otherwise runs happen inside the API. */
+function defaultJobs(deps: RoutineDependencies): JobRunner {
+  return env.TRIGGER_SECRET_KEY
+    ? new TriggerDevRunner(env.TRIGGER_SECRET_KEY)
+    : new InProcessRunner((job) => runRoutine(deps, job));
 }
