@@ -2,7 +2,6 @@ import {randomUUID} from 'node:crypto';
 
 import {AgentTemplateRepository, schema} from '@binary/db';
 import type {Agent, AgentTemplate} from '@binary/shared';
-import {MockLanguageModelV4} from 'ai/test';
 import {eq, inArray} from 'drizzle-orm';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
@@ -14,33 +13,8 @@ import {readJson, signUpTestUser} from '../test-helpers';
 const ANTHROPIC_KEY = 'sk-ant-test-1234567890wxyz';
 const TEMPLATE_SLUG = `test-template-${randomUUID()}`;
 const createdEmails: string[] = [];
-const models: MockLanguageModelV4[] = [];
-const apiKeys: string[] = [];
-
-/** A fake model that answers instantly; tests read what it was sent. */
-function fakeModel(_provider: string, _model: string, apiKey: string) {
-  apiKeys.push(apiKey);
-  const model = new MockLanguageModelV4({
-    doGenerate: {
-      content: [{type: 'text', text: 'Here are three sources.'}],
-      finishReason: {unified: 'stop', raw: 'stop'},
-      usage: {
-        inputTokens: {
-          total: 30,
-          noCache: 30,
-          cacheRead: undefined,
-          cacheWrite: undefined,
-        },
-        outputTokens: {total: 8, text: 8, reasoning: undefined},
-      },
-      warnings: [],
-    },
-  });
-  models.push(model);
-  return model;
-}
-
-const app = createApp(createDependencies(fakeModel));
+// These tests never reach a model; chat is tested in threads.test.ts.
+const app = createApp(createDependencies());
 const NEW_AGENT = {
   name: 'Researcher',
   role: 'Finds and summarizes sources.',
@@ -186,22 +160,22 @@ describe("another user's agent", () => {
     expect(one.status).toBe(404);
   });
 
-  it('cannot be edited, run or deleted', async () => {
+  it('cannot be edited, chatted with or deleted', async () => {
     const path = `/api/agents/${agentId}`;
     const edit = await request('PUT', path, NEW_AGENT, otherCookie);
-    const run = await request(
+    const chat = await request(
       'POST',
-      `${path}/run`,
-      {prompt: 'Hi'},
+      `${path}/threads`,
+      undefined,
       otherCookie,
     );
     const remove = await request('DELETE', path, undefined, otherCookie);
 
-    expect([edit.status, run.status, remove.status]).toEqual([404, 404, 404]);
+    expect([edit.status, chat.status, remove.status]).toEqual([404, 404, 404]);
   });
 });
 
-describe('editing and running an agent', () => {
+describe('editing an agent', () => {
   it('updates the agent, including its character', async () => {
     const response = await request('PUT', `/api/agents/${agentId}`, {
       ...NEW_AGENT,
@@ -220,70 +194,6 @@ describe('editing and running an agent', () => {
       ...NEW_AGENT,
       provider: 'google',
       model: 'gemini-flash-latest',
-    });
-
-    expect(response.status).toBe(400);
-  });
-
-  it('answers in character with the decrypted key', async () => {
-    const response = await request('POST', `/api/agents/${agentId}/run`, {
-      prompt: 'Find me three sources on pgvector.',
-    });
-
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
-      text: 'Here are three sources.',
-      inputTokens: 30,
-      outputTokens: 8,
-    });
-    expect(apiKeys.at(-1)).toBe(ANTHROPIC_KEY);
-
-    const [system, user] = models.at(-1)?.doGenerateCalls[0]?.prompt ?? [];
-    expect(system).toMatchObject({
-      role: 'system',
-      content: expect.stringContaining('You are Senior Researcher'),
-    });
-    expect(system?.content).toContain('Always list your sources.');
-    expect(system?.content).toContain('Dreamy and creative.');
-    expect(JSON.stringify(user)).toContain('three sources on pgvector');
-  });
-
-  it('sends the earlier conversation before the new message', async () => {
-    const response = await request('POST', `/api/agents/${agentId}/run`, {
-      prompt: 'And a fourth?',
-      history: [
-        {role: 'user', content: 'Find three sources.'},
-        {role: 'assistant', content: 'Here are three sources.'},
-      ],
-    });
-
-    expect(response.status).toBe(200);
-    const prompt = models.at(-1)?.doGenerateCalls[0]?.prompt ?? [];
-    expect(prompt.map((message) => message.role)).toEqual([
-      'system',
-      'user',
-      'assistant',
-      'user',
-    ]);
-    expect(JSON.stringify(prompt.at(-1))).toContain('And a fourth?');
-  });
-
-  it('rejects a history that is too long', async () => {
-    const history = Array.from({length: 21}, () => ({
-      role: 'user',
-      content: 'Hi',
-    }));
-    const response = await request('POST', `/api/agents/${agentId}/run`, {
-      prompt: 'Hi',
-      history,
-    });
-
-    expect(response.status).toBe(400);
-  });
-
-  it('validates the message', async () => {
-    const response = await request('POST', `/api/agents/${agentId}/run`, {
-      prompt: '  ',
     });
 
     expect(response.status).toBe(400);

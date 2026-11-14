@@ -1,26 +1,19 @@
-import {
-  agentInputSchema,
-  runAgentSchema,
-  type AgentRunResult,
-  type Provider,
-} from '@binary/shared';
+import {agentInputSchema, type Provider} from '@binary/shared';
 import {Hono} from 'hono';
-import {z} from 'zod';
 
-import {buildSystemPrompt} from '../agents/system-prompt';
 import {requireUser, type AppEnv} from '../app-env';
 import type {AppDependencies} from '../container';
 import {MissingProviderKeyError} from '../engines/engine-factory';
-import {engineErrorResponse} from './engine-errors';
+import {isUuid} from './ids';
 
 const NOT_FOUND = {error: 'Agent not found.'};
 
-/** List, hire, edit, fire and talk to the signed-in user's agents. */
+/** List, hire, edit and fire the signed-in user's agents, and start chats. */
 export function agentRoutes({
   agents,
   agentTemplates,
   providerKeys,
-  engineFactory,
+  threads,
 }: AppDependencies) {
   const routes = new Hono<AppEnv>();
   routes.use(requireUser);
@@ -31,15 +24,9 @@ export function agentRoutes({
     return key ? undefined : new MissingProviderKeyError(provider).message;
   }
 
-  /**
-   * Finds one of the user's agents. A malformed id is just "not found":
-   * checking it first keeps Postgres from rejecting a non-uuid value.
-   */
+  /** Finds one of the user's agents; a malformed id is just "not found". */
   function findAgent(userId: string, id: string) {
-    if (!z.uuid().safeParse(id).success) {
-      return undefined;
-    }
-    return agents.findForUser(userId, id);
+    return isUuid(id) ? agents.findForUser(userId, id) : undefined;
   }
 
   routes.get('/', async (c) => {
@@ -116,43 +103,15 @@ export function agentRoutes({
     return c.body(null, 204);
   });
 
-  // Send the agent one message. It answers in character, through the same
-  // EngineFactory the playground uses.
-  routes.post('/:id/run', async (c) => {
+  // Start a new, empty chat with the agent. Messages go to /api/threads.
+  routes.post('/:id/threads', async (c) => {
     const userId = c.get('user').id;
     const agent = await findAgent(userId, c.req.param('id'));
     if (!agent) {
       return c.json(NOT_FOUND, 404);
     }
-    const body = runAgentSchema.safeParse(await c.req.json());
-    if (!body.success) {
-      return c.json({error: body.error.issues[0]?.message}, 400);
-    }
-    // The columns are optional because Chapter 11's CLI engines need neither.
-    if (!agent.provider || !agent.model) {
-      return c.json({error: 'Choose a model for this agent first.'}, 400);
-    }
-    const startedAt = Date.now();
-
-    try {
-      const engine = await engineFactory.create({
-        userId,
-        provider: agent.provider,
-        model: agent.model,
-      });
-      const answer = await engine.generate({
-        system: buildSystemPrompt(agent),
-        prompt: body.data.prompt,
-        history: body.data.history,
-      });
-      const result: AgentRunResult = {
-        ...answer,
-        durationMs: Date.now() - startedAt,
-      };
-      return c.json(result);
-    } catch (error) {
-      return engineErrorResponse(c, error);
-    }
+    const thread = await threads.createForAgent(userId, agent.id);
+    return c.json({thread}, 201);
   });
 
   return routes;

@@ -22,5 +22,11 @@ export interface GenerateResult {
  * Gemini). Chapter 11 adds engines that run Claude Code and Codex.
  */
 export interface AgentEngine {
+  /** The whole answer at once (the playground). */
   generate(request: GenerateRequest): Promise<GenerateResult>;
+  /**
+   * The answer piece by piece, as the model writes it (chat). Throws if the
+   * provider fails part-way.
+   */
+  stream(request: GenerateRequest): AsyncIterable<string>;
 }
