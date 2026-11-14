@@ -13,6 +13,8 @@ export default defineConfig({
       BETTER_AUTH_SECRET: 'test-secret-that-is-at-least-32-characters-long',
       BETTER_AUTH_URL: 'http://localhost:4000',
       WEB_URL: 'http://localhost:3000',
+      // A fixed test-only key (32 zero bytes). Never use it outside tests.
+      ENCRYPTION_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
     },
   },
 });

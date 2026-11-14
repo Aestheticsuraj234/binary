@@ -2,13 +2,15 @@ import {schema} from '@binary/db';
 import {eq} from 'drizzle-orm';
 import {afterAll, describe, expect, it} from 'vitest';
 
-import {app} from './app';
+import {createApp} from './app';
+import {createDependencies} from './container';
 import {db} from './db';
+import {cookieFrom, WEB_ORIGIN} from './test-helpers';
 
 // A fresh email per run keeps the tests independent of earlier runs.
 const email = `test-${Date.now()}@example.com`;
 const password = 'correct-horse-battery';
-const WEB_ORIGIN = 'http://localhost:3000';
+const app = createApp(createDependencies());
 
 function postJson(path: string, body: unknown) {
   return app.request(path, {
@@ -16,14 +18,6 @@ function postJson(path: string, body: unknown) {
     headers: {'Content-Type': 'application/json', Origin: WEB_ORIGIN},
     body: JSON.stringify(body),
   });
-}
-
-/** Turns `Set-Cookie` response headers into a `Cookie` request header. */
-function cookieFrom(response: Response) {
-  return response.headers
-    .getSetCookie()
-    .map((cookie) => cookie.split(';')[0])
-    .join('; ');
 }
 
 afterAll(async () => {
