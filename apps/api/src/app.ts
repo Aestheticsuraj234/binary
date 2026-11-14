@@ -5,6 +5,8 @@ import {requireUser, type AppEnv} from './app-env';
 import {auth} from './auth';
 import type {AppDependencies} from './container';
 import {env} from './env';
+import {agentTemplateRoutes} from './routes/agent-templates';
+import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
 
@@ -39,6 +41,8 @@ export function createApp(dependencies: AppDependencies) {
 
   app.route('/api/provider-keys', providerKeyRoutes(dependencies));
   app.route('/api/playground', playgroundRoutes(dependencies));
+  app.route('/api/agents', agentRoutes(dependencies));
+  app.route('/api/agent-templates', agentTemplateRoutes(dependencies));
 
   return app;
 }

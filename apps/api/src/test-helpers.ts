@@ -24,3 +24,8 @@ export async function signUpTestUser(app: Hono<AppEnv>) {
   });
   return {email, cookie: cookieFrom(response)};
 }
+
+/** Reads a JSON body as the shape our own API promises to send. */
+export function readJson<T>(response: Response): Promise<T> {
+  return response.json() as Promise<T>;
+}
