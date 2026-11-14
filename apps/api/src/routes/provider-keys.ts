@@ -3,6 +3,7 @@ import {Hono} from 'hono';
 
 import {requireUser, type AppEnv} from '../app-env';
 import type {AppDependencies} from '../container';
+import {NotFoundError, parseBody} from '../errors';
 
 /** GET, PUT and DELETE the signed-in user's LLM API keys. */
 export function providerKeyRoutes({providerKeys, keyVault}: AppDependencies) {
@@ -20,12 +21,7 @@ export function providerKeyRoutes({providerKeys, keyVault}: AppDependencies) {
     if (!provider.success) {
       return c.json({error: 'Unknown provider.'}, 404);
     }
-    const body = saveProviderKeySchema.safeParse(await c.req.json());
-    if (!body.success) {
-      return c.json({error: body.error.issues[0]?.message}, 400);
-    }
-
-    const {apiKey} = body.data;
+    const {apiKey} = await parseBody(c, saveProviderKeySchema);
     const {ciphertext, iv} = keyVault.encrypt(apiKey);
     const saved = await providerKeys.save({
       userId: c.get('user').id,
@@ -44,7 +40,7 @@ export function providerKeyRoutes({providerKeys, keyVault}: AppDependencies) {
     }
     const deleted = await providerKeys.delete(c.get('user').id, provider.data);
     if (!deleted) {
-      return c.json({error: 'No key saved for this provider.'}, 404);
+      throw new NotFoundError('Key');
     }
     return c.body(null, 204);
   });

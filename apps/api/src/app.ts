@@ -5,7 +5,9 @@ import {requireUser, type AppEnv} from './app-env';
 import {auth} from './auth';
 import type {AppDependencies} from './container';
 import {env} from './env';
+import {AppError} from './errors';
 import {agentTemplateRoutes} from './routes/agent-templates';
+import {appRoutes} from './routes/apps';
 import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
@@ -36,6 +38,16 @@ export function createApp(dependencies: AppDependencies) {
     await next();
   });
 
+  // Routes throw AppErrors for problems the user can fix; anything else is a
+  // bug, logged here and hidden behind a plain message.
+  app.onError((error, c) => {
+    if (error instanceof AppError) {
+      return c.json({error: error.message}, error.status);
+    }
+    console.error(error);
+    return c.json({error: 'Something went wrong on the server.'}, 500);
+  });
+
   app.get('/health', (c) => c.json({status: 'ok'}));
 
   app.get('/api/me', requireUser, (c) => c.json({user: c.get('user')}));
@@ -45,6 +57,7 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/agents', agentRoutes(dependencies));
   app.route('/api/agent-templates', agentTemplateRoutes(dependencies));
   app.route('/api/threads', threadRoutes(dependencies));
+  app.route('/api/apps', appRoutes(dependencies));
 
   return app;
 }

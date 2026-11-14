@@ -8,6 +8,7 @@ import {
   type ChatMessage,
   type ChatStreamEvent,
   type Thread,
+  type ToolCallView,
 } from '@binary/shared';
 import {ArrowUp, Pencil, Plus, Trash2} from 'lucide-react';
 import Link from 'next/link';
@@ -16,6 +17,7 @@ import {useEffect, useRef, useState} from 'react';
 
 import {ModelBadge} from '@/components/agents/model-badge';
 import {Markdown} from '@/components/chat/markdown';
+import {ToolCall} from '@/components/chat/tool-call';
 import {
   Character,
   CharacterAvatar,
@@ -37,6 +39,20 @@ interface Message {
   error?: string;
   /** True while the answer is still streaming in. */
   isStreaming?: boolean;
+  /** Tools the agent used for this answer, in order. */
+  toolCalls?: ToolCallView[];
+}
+
+/** Adds a tool call to a reply, or updates it when it was already there. */
+function withToolCall(message: Message, call: ToolCallView): Message {
+  const calls = message.toolCalls ?? [];
+  const known = calls.some((existing) => existing.id === call.id);
+  return {
+    ...message,
+    toolCalls: known
+      ? calls.map((existing) => (existing.id === call.id ? call : existing))
+      : [...calls, call],
+  };
 }
 
 interface AgentChatProps {
@@ -206,7 +222,13 @@ export function AgentChat({
 
     try {
       for await (const event of readNdjson<ChatStreamEvent>(response)) {
-        if (event.type === 'delta') {
+        if (event.type === 'tool') {
+          // The character "thinks" while a tool works, then talks again.
+          setMood(event.call.status === 'running' ? 'thinking' : 'talking');
+          updateMessage(replyId, (message) =>
+            withToolCall(message, event.call),
+          );
+        } else if (event.type === 'delta') {
           setMood('talking');
           updateMessage(replyId, (message) => ({
             ...message,
@@ -417,7 +439,9 @@ export function AgentChat({
                     mood={message.error ? 'oops' : 'idle'}
                     size={36}
                   />
-                  {message.isStreaming && !message.content ? (
+                  {message.isStreaming &&
+                  !message.content &&
+                  !message.toolCalls ? (
                     <div
                       className="flex gap-1.5 rounded-3xl rounded-tl-md border bg-card px-4 py-4"
                       aria-label={`${agent.name} is thinking`}
@@ -434,6 +458,13 @@ export function AgentChat({
                         message.error && 'border-destructive/50',
                       )}
                     >
+                      {message.toolCalls && (
+                        <div className="space-y-1.5">
+                          {message.toolCalls.map((call) => (
+                            <ToolCall key={call.id} call={call} />
+                          ))}
+                        </div>
+                      )}
                       {message.content && (
                         <Markdown isStreaming={message.isStreaming}>
                           {message.content}

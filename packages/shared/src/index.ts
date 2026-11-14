@@ -30,6 +30,17 @@ export {
   type SignUpInput,
 } from './auth-schemas';
 export {
+  connectAppSchema,
+  TOOL_CALL_STATUSES,
+  TOOL_RISKS,
+  type ConnectAppInput,
+  type ConnectedApp,
+  type ToolCallStatus,
+  type ToolCallView,
+  type ToolInfo,
+  type ToolRisk,
+} from './tools';
+export {
   PROVIDER_INFO,
   PROVIDERS,
   playgroundRequestSchema,

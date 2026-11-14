@@ -1,19 +1,11 @@
 import type {ProviderKeyRepository} from '@binary/db';
-import {PROVIDER_INFO, type Provider} from '@binary/shared';
+import type {Provider} from '@binary/shared';
 
+import {MissingProviderKeyError} from '../errors';
 import type {KeyVault} from '../keys/key-vault';
 import type {AgentEngine} from './agent-engine';
 import {ApiEngine} from './api-engine';
 import type {LanguageModelFactory} from './language-models';
-
-/** Thrown when a user asks for a provider they have not added a key for. */
-export class MissingProviderKeyError extends Error {
-  constructor(provider: Provider) {
-    super(
-      `Add your ${PROVIDER_INFO[provider].label} API key in Settings first.`,
-    );
-  }
-}
 
 interface EngineRequest {
   userId: string;

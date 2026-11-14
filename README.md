@@ -8,9 +8,11 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 5 of 15. Accounts work on web and mobile, you can
-> connect your own OpenAI, Anthropic or Gemini key, hire cartoon characters
-> as agents, and chat with them: answers stream in and every chat is saved.
+> **Status:** Chapter 6 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> cartoon characters as agents, chat with them (streamed, saved, Markdown),
+> and give them tools: built-in ones and any app you connect through MCP,
+> including Composio. Tools that change things are blocked until approvals
+> arrive in Chapter 8.
 
 ## What's inside
 
@@ -128,9 +130,11 @@ short functions, early returns, and no clever abstractions.
 
 ## Docs
 
+- [The 15 chapters](docs/CHAPTERS.md)
 - [Design system](docs/DESIGN_SYSTEM.md)
 - [Chapter 1: Project init and authentication](docs/chapters/chapter-01/README.md)
 - [Chapter 2: Database and ORM layer](docs/chapters/chapter-02/README.md)
 - [Chapter 3: AI engine layer and API key vault](docs/chapters/chapter-03/README.md)
 - [Chapter 4: Agents](docs/chapters/chapter-04/README.md)
 - [Chapter 5: Chat](docs/chapters/chapter-05/README.md)
+- [Chapter 6: Tool system and MCP apps](docs/chapters/chapter-06/README.md)

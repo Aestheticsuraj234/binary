@@ -1,7 +1,15 @@
 'use client';
 
 import {characterOf, type Agent, type ThreadSummary} from '@binary/shared';
-import {Compass, FlaskConical, KeyRound, Menu, Plus, X} from 'lucide-react';
+import {
+  Compass,
+  FlaskConical,
+  KeyRound,
+  Menu,
+  Plug,
+  Plus,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import {usePathname, useSearchParams} from 'next/navigation';
 import {useState} from 'react';
@@ -14,6 +22,7 @@ import {cn} from '@/lib/utils';
 
 const LINKS = [
   {href: '/', label: 'Discover', icon: Compass},
+  {href: '/apps', label: 'Apps & tools', icon: Plug},
   {href: '/playground', label: 'Playground', icon: FlaskConical},
   {href: '/settings', label: 'API keys', icon: KeyRound},
 ];
