@@ -26,9 +26,14 @@ export function SignInForm() {
     }
 
     setIsPending(true);
-    const result = await authClient.signIn.email(parsed.data);
+    // `.catch(() => null)` turns "the server is down" into a normal failure.
+    const result = await authClient.signIn.email(parsed.data).catch(() => null);
     setIsPending(false);
 
+    if (!result) {
+      setError('Could not reach the server. Is the API running?');
+      return;
+    }
     if (result.error) {
       setError(result.error.message ?? 'Could not sign in.');
       return;
