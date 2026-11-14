@@ -1,12 +1,8 @@
 export {
   agentInputSchema,
-  chatTurnSchema,
-  runAgentSchema,
   type Agent,
   type AgentInput,
-  type AgentRunResult,
   type AgentTemplate,
-  type ChatTurn,
 } from './agents';
 export {
   CHARACTER_IDS,
@@ -17,6 +13,15 @@ export {
   type CharacterId,
   type CharacterInfo,
 } from './characters';
+export {
+  sendMessageSchema,
+  type ChatMessage,
+  type ChatStreamEvent,
+  type ChatTurn,
+  type SendMessageInput,
+  type Thread,
+  type ThreadSummary,
+} from './chat';
 export {APP_NAME, APP_SCHEME, APP_TAGLINE} from './constants';
 export {
   signInSchema,
