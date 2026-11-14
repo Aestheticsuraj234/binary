@@ -1,9 +1,9 @@
-import {getMigrations} from 'better-auth/db/migration';
-import {afterAll, beforeAll, describe, expect, it} from 'vitest';
+import {schema} from '@binary/db';
+import {eq} from 'drizzle-orm';
+import {afterAll, describe, expect, it} from 'vitest';
 
 import {app} from './app';
-import {auth} from './auth';
-import {pool} from './db';
+import {db} from './db';
 
 // A fresh email per run keeps the tests independent of earlier runs.
 const email = `test-${Date.now()}@example.com`;
@@ -26,14 +26,9 @@ function cookieFrom(response: Response) {
     .join('; ');
 }
 
-beforeAll(async () => {
-  const {runMigrations} = await getMigrations(auth.options);
-  await runMigrations();
-});
-
 afterAll(async () => {
-  await pool.query('DELETE FROM "user" WHERE email = $1', [email]);
-  await pool.end();
+  await db.delete(schema.users).where(eq(schema.users.email, email));
+  await db.$client.end();
 });
 
 describe('health check', () => {

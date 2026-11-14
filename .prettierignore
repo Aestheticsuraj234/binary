@@ -3,3 +3,4 @@ pnpm-lock.yaml
 .expo
 dist
 node_modules
+packages/db/drizzle
