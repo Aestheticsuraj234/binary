@@ -8,8 +8,9 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 1 of 15. Sign-up, sign-in and sessions work on web and
-> mobile. Agents arrive in later chapters.
+> **Status:** Chapter 2 of 15. Sign-up, sign-in and sessions work on web and
+> mobile, and the full database schema is in place. Agents arrive in later
+> chapters.
 
 ## What's inside
 
@@ -18,6 +19,7 @@ feature and is documented in [`docs/chapters`](docs/chapters).
 | `apps/api`        | Hono API server with Better Auth (port 4000)                |
 | `apps/web`        | Next.js web app with shadcn/ui and Tailwind CSS (port 3000) |
 | `apps/mobile`     | Expo (React Native) app with Expo Router                    |
+| `packages/db`     | Drizzle schema, migrations, client and repositories         |
 | `packages/shared` | Validation schemas and constants used by every app          |
 | `packages/config` | Shared TypeScript settings                                  |
 | `docs`            | Design system and per-chapter documentation                 |
@@ -53,7 +55,9 @@ The API refuses to start until you do. That's on purpose.
 pnpm setup
 ```
 
-This starts Postgres in Docker and creates the auth tables.
+This starts Postgres in Docker, creates every table and adds starter data:
+four agent templates and a demo account (`demo@binary.dev` /
+`binary-demo-password`).
 
 ### 4. Start the API and web app
 
@@ -61,8 +65,8 @@ This starts Postgres in Docker and creates the auth tables.
 pnpm dev
 ```
 
-Open http://localhost:3000, create an account and you'll land on your
-workspace.
+Open http://localhost:3000, sign in with the demo account or create your
+own, and you'll land on your workspace.
 
 ### 5. Run the mobile app (optional)
 
@@ -80,15 +84,19 @@ laptop must be on the same Wi-Fi.
 
 ## Everyday commands
 
-| Command          | What it does                               |
-| ---------------- | ------------------------------------------ |
-| `pnpm dev`       | Start the API and web app                  |
-| `pnpm mobile`    | Start the Expo dev server                  |
-| `pnpm test`      | Run all tests (needs Postgres running)     |
-| `pnpm lint`      | Check code style (Google TypeScript Style) |
-| `pnpm typecheck` | Type-check every app and package           |
-| `pnpm format`    | Format every file with Prettier            |
-| `pnpm build`     | Production build                           |
+| Command            | What it does                                 |
+| ------------------ | -------------------------------------------- |
+| `pnpm dev`         | Start the API and web app                    |
+| `pnpm mobile`      | Start the Expo dev server                    |
+| `pnpm test`        | Migrate, then run all tests (needs Postgres) |
+| `pnpm db:migrate`  | Apply pending database migrations            |
+| `pnpm db:generate` | Create a migration after changing the schema |
+| `pnpm db:studio`   | Browse the database in Drizzle Studio        |
+| `pnpm db:seed`     | Add the templates and demo account again     |
+| `pnpm lint`        | Check code style (Google TypeScript Style)   |
+| `pnpm typecheck`   | Type-check every app and package             |
+| `pnpm format`      | Format every file with Prettier              |
+| `pnpm build`       | Production build                             |
 
 ## Troubleshooting
 
@@ -98,6 +106,9 @@ laptop must be on the same Wi-Fi.
   `pnpm dev` again.
 - **The web app shows `NEXT_PUBLIC_API_URL` errors.** Check that `.env` exists
   in the repo root and contains `NEXT_PUBLIC_API_URL=http://localhost:4000`.
+- **Coming from Chapter 1?** Chapter 2 moved to new, plural table names, so
+  old accounts are gone. Run `pnpm setup` again and sign up or use the demo
+  account. See [Chapter 2](docs/chapters/chapter-02/README.md#coming-from-chapter-1).
 - **The phone can't sign in.** Check `apps/mobile/.env` uses your laptop's IP,
   not `localhost`, and that the API is running.
 
@@ -111,3 +122,4 @@ short functions, early returns, and no clever abstractions.
 
 - [Design system](docs/DESIGN_SYSTEM.md)
 - [Chapter 1: Project init and authentication](docs/chapters/chapter-01/README.md)
+- [Chapter 2: Database and ORM layer](docs/chapters/chapter-02/README.md)
