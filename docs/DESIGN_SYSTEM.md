@@ -33,6 +33,7 @@ for React Native in `apps/mobile/src/lib/theme.ts`.
 | `primary`            | `#d1fe17` | Primary buttons, focus rings, active states |
 | `primary-foreground` | `#0a0a0a` | Text on lime                                |
 | `destructive`        | `#f87171` | Error text and destructive actions          |
+| `warning`            | `#fcd34d` | Things that need care: risky tools (Ch. 6)  |
 
 ### Rules for lime
 
@@ -144,6 +145,16 @@ pnpm dlx shadcn@latest add <component>
   ask before opening; a block caret follows streaming text. Your own messages
   stay plain text. Never render model output with `whitespace-pre-wrap`
   again.
+- **Risk badges (Ch. 6):** `RiskBadge` is an outline pill with an icon
+  (book = read, pen = write, monitor = computer). Read is muted; write
+  and computer use `warning`. Never use lime for risk.
+- **Tool calls in replies (Ch. 6):** a collapsible row inside the answer
+  bubble, reading "Using / Used / Blocked / Could not use <tool>" with a risk
+  badge and a status icon (lime spinner or check, warning shield,
+  destructive x). Open it to see the input and result as mono JSON.
+- **Apps page (Ch. 6):** a risk legend first, so users learn the words
+  before they see them on tools. Show only the app's host, never its full
+  URL; a lock icon means a token is stored.
 - **Animate only what is new:** messages written now rise in; a saved chat
   appears at once.
 - **Model badge:** outline, mono: "Anthropic · claude-sonnet-5-5".
