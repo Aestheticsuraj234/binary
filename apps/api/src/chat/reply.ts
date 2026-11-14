@@ -1,14 +1,20 @@
 import type {
+  ApprovalRepository,
   MessageRepository,
   ThreadRepository,
   ToolCallRepository,
 } from '@binary/db';
-import type {ChatMessage, ChatStreamEvent, ChatTurn} from '@binary/shared';
+import type {
+  ApprovalMode,
+  ChatMessage,
+  ChatStreamEvent,
+  ChatTurn,
+} from '@binary/shared';
 
 import {buildSystemPrompt} from '../agents/system-prompt';
 import type {AgentEngine} from '../engines/agent-engine';
 import {ProviderError} from '../errors';
-import {readOnlyPolicy} from '../tools/policy';
+import {approvalPolicy} from '../tools/policy';
 import type {ToolboxFactory} from '../tools/toolbox-factory';
 import {titleFrom} from './title';
 import {ToolCallLog} from './tool-call-log';
@@ -17,10 +23,18 @@ import {ToolCallLog} from './tool-call-log';
 // shown; they just stop costing tokens on every reply.
 const HISTORY_LIMIT = 20;
 
+/** "shop refund order {"orderId":"A1"}": what the inbox shows. */
+export function toolSummary(toolName: string, input: unknown): string {
+  const details = JSON.stringify(input ?? {});
+  const summary = `${toolName.replaceAll('_', ' ')} ${details}`;
+  return summary.length > 200 ? `${summary.slice(0, 199)}…` : summary;
+}
+
 export interface ReplyDependencies {
   messages: MessageRepository;
   threads: ThreadRepository;
   toolCalls: ToolCallRepository;
+  approvals: ApprovalRepository;
   toolboxes: ToolboxFactory;
 }
 
@@ -32,10 +46,18 @@ export interface ReplyRequest {
     role: string;
     instructions: string;
     avatar: string | null;
+    approvalMode: ApprovalMode;
   };
   engine: AgentEngine;
   threadId: string;
   content: string;
+  /**
+   * Who the saved message is from. "tool" is a note about an approval
+   * ("You approved …"), shown in the chat as a line rather than a bubble.
+   */
+  savedAs?: 'user' | 'tool';
+  /** Extra words for the model only, after `content`. */
+  instruction?: string;
   /** The title a new thread gets. Defaults to its first message. */
   title?: string;
   /** Hears every piece of text and tool update as it happens. */
@@ -50,8 +72,18 @@ export interface ReplyRequest {
  * Throws ProviderError if the model fails; the question stays saved.
  */
 export async function writeReply(
-  {messages, threads, toolCalls, toolboxes}: ReplyDependencies,
-  {userId, agent, engine, threadId, content, title, onEvent}: ReplyRequest,
+  {messages, threads, toolCalls, approvals, toolboxes}: ReplyDependencies,
+  {
+    userId,
+    agent,
+    engine,
+    threadId,
+    content,
+    title,
+    onEvent,
+    savedAs = 'user',
+    instruction,
+  }: ReplyRequest,
 ): Promise<ChatMessage> {
   const emit = async (event: ChatStreamEvent) => {
     await onEvent?.(event);
@@ -68,7 +100,7 @@ export async function writeReply(
     );
 
   // Save the question first, so it is kept even if the answer fails.
-  await messages.add({threadId, role: 'user', content});
+  await messages.add({threadId, role: savedAs, content});
   if (earlier.length === 0) {
     await threads.rename(userId, threadId, title ?? titleFrom(content));
   }
@@ -87,9 +119,9 @@ export async function writeReply(
   try {
     const events = engine.stream({
       system: buildSystemPrompt(agent),
-      prompt: content,
+      prompt: instruction ? `${content}\n\n${instruction}` : content,
       history,
-      tools: toolbox.toToolSet(readOnlyPolicy),
+      tools: toolbox.toToolSet(approvalPolicy(agent.approvalMode)),
     });
     for await (const event of events) {
       if (event.type === 'text') {
@@ -116,6 +148,16 @@ export async function writeReply(
     content: answer,
   });
   const savedCalls = await toolCalls.addMany(log.toRows(saved.id));
+  // Every call that is waiting gets a request in the user's inbox.
+  const requests = await approvals.createMany(
+    userId,
+    savedCalls
+      .filter((call) => call.status === 'awaiting_approval')
+      .map((call) => ({
+        toolCallId: call.id,
+        summary: toolSummary(call.toolName, call.input),
+      })),
+  );
   await threads.touch(threadId);
 
   const message: ChatMessage = {
@@ -123,9 +165,10 @@ export async function writeReply(
     createdAt: saved.createdAt.toISOString(),
   };
   if (savedCalls.length > 0) {
-    message.toolCalls = savedCalls.map(
-      ({messageId: _messageId, ...call}) => call,
-    );
+    message.toolCalls = savedCalls.map(({messageId: _messageId, ...call}) => {
+      const request = requests.find((item) => item.toolCallId === call.id);
+      return request ? {...call, approvalId: request.id} : call;
+    });
   }
   return message;
 }

@@ -106,6 +106,7 @@ beforeAll(async () => {
     provider: 'anthropic',
     model: 'claude-sonnet-5-5',
     avatar: 'nova',
+    approvalMode: 'auto_approve_reads',
   });
   agent = (await readJson<{agent: Agent}>(created)).agent;
 });

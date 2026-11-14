@@ -1,7 +1,7 @@
 import type {NewToolCall} from '@binary/db';
 import type {ToolCallStatus, ToolCallView, ToolRisk} from '@binary/shared';
 
-import {isBlockedResult} from '../tools/policy';
+import {isAwaitingApproval, isBlockedResult} from '../tools/policy';
 
 interface TrackedCall extends ToolCallView {
   startedAt: Date;
@@ -21,6 +21,9 @@ function reportsError(output: unknown): boolean {
 function statusOf(output: unknown): ToolCallStatus {
   if (isBlockedResult(output)) {
     return 'rejected';
+  }
+  if (isAwaitingApproval(output)) {
+    return 'awaiting_approval';
   }
   return reportsError(output) ? 'failed' : 'succeeded';
 }

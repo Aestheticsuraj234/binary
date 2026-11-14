@@ -6,7 +6,11 @@ import {startTestMcpServer, TEST_MCP_TOKEN} from '../test-mcp-server';
 import type {AgentTool} from './agent-tool';
 import {builtInTools} from './built-in';
 import {connectApp, riskFromHints, toolPrefix} from './mcp';
-import {BLOCKED_RESULT, readOnlyPolicy} from './policy';
+import {
+  approvalPolicy,
+  AWAITING_APPROVAL_RESULT,
+  BLOCKED_RESULT,
+} from './policy';
 import {Toolbox} from './toolbox';
 
 // What the AI SDK passes to a tool's execute function.
@@ -33,24 +37,75 @@ function fakeTool(
   };
 }
 
-describe('Toolbox with the read-only policy', () => {
-  it('runs read tools and blocks write and computer tools', async () => {
-    const runs: string[] = [];
-    const toolbox = new Toolbox([
+describe('Toolbox with approval policies', () => {
+  function toolsFor(
+    mode: Parameters<typeof approvalPolicy>[0],
+    runs: string[],
+  ) {
+    return new Toolbox([
       fakeTool('look', 'read', runs),
       fakeTool('send', 'write', runs),
       fakeTool('click', 'computer', runs),
-    ]);
-    const tools = toolbox.toToolSet(readOnlyPolicy);
+    ]).toToolSet(approvalPolicy(mode));
+  }
+
+  it('auto-approve reads: reads run, the rest wait for approval', async () => {
+    const runs: string[] = [];
+    const tools = toolsFor('auto_approve_reads', runs);
 
     expect(await tools.look?.execute?.({}, CALL_OPTIONS)).toEqual({ok: true});
     expect(await tools.send?.execute?.({}, CALL_OPTIONS)).toEqual(
-      BLOCKED_RESULT,
+      AWAITING_APPROVAL_RESULT,
     );
     expect(await tools.click?.execute?.({}, CALL_OPTIONS)).toEqual(
-      BLOCKED_RESULT,
+      AWAITING_APPROVAL_RESULT,
     );
     expect(runs).toEqual(['look']);
+  });
+
+  it('ask first: even reads wait', async () => {
+    const runs: string[] = [];
+
+    expect(
+      await toolsFor('ask_first', runs).look?.execute?.({}, CALL_OPTIONS),
+    ).toEqual(AWAITING_APPROVAL_RESULT);
+    expect(runs).toEqual([]);
+  });
+
+  it('accept edits: reads and writes run, computer still waits', async () => {
+    const runs: string[] = [];
+    const tools = toolsFor('accept_edits', runs);
+    await tools.look?.execute?.({}, CALL_OPTIONS);
+    await tools.send?.execute?.({}, CALL_OPTIONS);
+
+    expect(await tools.click?.execute?.({}, CALL_OPTIONS)).toEqual(
+      AWAITING_APPROVAL_RESULT,
+    );
+    expect(runs).toEqual(['look', 'send']);
+  });
+
+  it('plan only: nothing runs', async () => {
+    const runs: string[] = [];
+    const tools = toolsFor('plan_only', runs);
+
+    expect(await tools.look?.execute?.({}, CALL_OPTIONS)).toEqual(
+      BLOCKED_RESULT,
+    );
+    expect(await tools.send?.execute?.({}, CALL_OPTIONS)).toEqual(
+      BLOCKED_RESULT,
+    );
+    expect(runs).toEqual([]);
+  });
+
+  it('runs an approved call without asking the policy again', async () => {
+    const runs: string[] = [];
+    const toolbox = new Toolbox([fakeTool('send', 'write', runs)]);
+
+    expect(await toolbox.runApproved('send', {})).toEqual({ok: true});
+    expect(runs).toEqual(['send']);
+    await expect(toolbox.runApproved('gone', {})).rejects.toThrow(
+      'The tool gone is no longer available.',
+    );
   });
 
   it('keeps the first tool when two share a name', () => {

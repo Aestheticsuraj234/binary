@@ -1,5 +1,6 @@
 import {
   AgentRepository,
+  ApprovalRepository,
   AgentTemplateRepository,
   McpServerRepository,
   MessageRepository,
@@ -33,6 +34,7 @@ export interface AppDependencies {
   threads: ThreadRepository;
   messages: MessageRepository;
   toolCalls: ToolCallRepository;
+  approvals: ApprovalRepository;
   mcpServers: McpServerRepository;
   routines: RoutineRepository;
   triggers: TriggerRepository;
@@ -70,6 +72,7 @@ export function createDependencies(
     threads,
     messages,
     toolCalls,
+    approvals: new ApprovalRepository(db),
     mcpServers,
     routines: new RoutineRepository(db),
     triggers: new TriggerRepository(db),

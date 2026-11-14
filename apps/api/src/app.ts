@@ -7,6 +7,7 @@ import type {AppDependencies} from './container';
 import {env} from './env';
 import {AppError} from './errors';
 import {agentTemplateRoutes} from './routes/agent-templates';
+import {approvalRoutes, todayRoutes} from './routes/approvals';
 import {appRoutes} from './routes/apps';
 import {hookRoutes} from './routes/hooks';
 import {agentRoutes} from './routes/agents';
@@ -62,6 +63,8 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/apps', appRoutes(dependencies));
   app.route('/api/routines', routineRoutes(dependencies));
   app.route('/api/hooks', hookRoutes(dependencies));
+  app.route('/api/approvals', approvalRoutes(dependencies));
+  app.route('/api/today', todayRoutes(dependencies));
 
   return app;
 }

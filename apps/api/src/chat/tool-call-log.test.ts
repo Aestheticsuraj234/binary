@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {BLOCKED_RESULT} from '../tools/policy';
+import {AWAITING_APPROVAL_RESULT, BLOCKED_RESULT} from '../tools/policy';
 import {ToolCallLog} from './tool-call-log';
 
 const riskOf = (name: string) => (name.startsWith('read') ? 'read' : 'write');
@@ -48,6 +48,15 @@ describe('ToolCallLog', () => {
       {toolName: 'read_b', status: 'failed'},
     ]);
     expect(rows[0]?.messageId).toBe('message-1');
+  });
+
+  it('marks a call that waits for approval', () => {
+    const log = new ToolCallLog(riskOf);
+    log.start('1', 'send', {});
+
+    expect(log.finish('1', AWAITING_APPROVAL_RESULT)?.status).toBe(
+      'awaiting_approval',
+    );
   });
 
   it('ignores results for calls it never saw', () => {
