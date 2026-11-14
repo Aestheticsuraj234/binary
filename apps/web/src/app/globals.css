@@ -35,6 +35,8 @@
   --accent-foreground: #fafafa;
 
   --destructive: #f87171;
+  /* Things that need care, like tools that can change your data (Ch. 6). */
+  --warning: #fcd34d;
   --border: #27272a;
   --input: #27272a;
   --ring: #d1fe17;
@@ -64,6 +66,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
