@@ -15,6 +15,7 @@ import {useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
 
 import {ModelBadge} from '@/components/agents/model-badge';
+import {Markdown} from '@/components/chat/markdown';
 import {
   Character,
   CharacterAvatar,
@@ -32,7 +33,8 @@ interface Message {
   id: string;
   role: ChatMessage['role'];
   content: string;
-  isError?: boolean;
+  /** Why the answer failed. Shown under any words that did arrive. */
+  error?: string;
   /** True while the answer is still streaming in. */
   isStreaming?: boolean;
 }
@@ -144,16 +146,11 @@ export function AgentChat({
 
   /** Shows a failure in the reply bubble, keeping any words that arrived. */
   function showFailure(replyId: string, reason: string) {
-    updateMessage(replyId, (message) =>
-      message.content
-        ? {
-            ...message,
-            content: `${message.content}\n\n${reason}`,
-            isError: true,
-            isStreaming: false,
-          }
-        : {...message, content: reason, isError: true, isStreaming: false},
-    );
+    updateMessage(replyId, (message) => ({
+      ...message,
+      error: reason,
+      isStreaming: false,
+    }));
     playMoods([['oops', 0]]);
   }
 
@@ -417,7 +414,7 @@ export function AgentChat({
                 >
                   <CharacterAvatar
                     id={id}
-                    mood={message.isError ? 'oops' : 'idle'}
+                    mood={message.error ? 'oops' : 'idle'}
                     size={36}
                   />
                   {message.isStreaming && !message.content ? (
@@ -431,22 +428,23 @@ export function AgentChat({
                       <span className="size-2 animate-pulse rounded-full bg-muted-foreground [animation-delay:300ms]" />
                     </div>
                   ) : (
-                    <p
-                      role={message.isError ? 'alert' : undefined}
+                    <div
                       className={cn(
-                        'max-w-[85%] min-w-0 rounded-3xl rounded-tl-md border bg-card px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap',
-                        message.isError &&
-                          'border-destructive/50 text-destructive',
+                        'max-w-[85%] min-w-0 space-y-3 rounded-3xl rounded-tl-md border bg-card px-4 py-3',
+                        message.error && 'border-destructive/50',
                       )}
                     >
-                      {message.content}
-                      {message.isStreaming && (
-                        <span
-                          aria-hidden
-                          className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-full bg-primary"
-                        />
+                      {message.content && (
+                        <Markdown isStreaming={message.isStreaming}>
+                          {message.content}
+                        </Markdown>
                       )}
-                    </p>
+                      {message.error && (
+                        <p role="alert" className="text-sm text-destructive">
+                          {message.error}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               ),
