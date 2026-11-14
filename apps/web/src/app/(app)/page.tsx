@@ -1,74 +1,84 @@
-import {Bot, Sparkles} from 'lucide-react';
-import {redirect} from 'next/navigation';
+import type {ProviderKeySummary} from '@binary/shared';
+import {ArrowRight, Bot, FlaskConical, KeyRound, Sparkles} from 'lucide-react';
+import Link from 'next/link';
 
-import {Logo} from '@/components/brand/logo';
-import {SignOutButton} from '@/components/home/sign-out-button';
-import {Avatar, AvatarFallback} from '@/components/ui/avatar';
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {getFromApi} from '@/lib/server-api';
 import {getSession} from '@/lib/session';
+
+const ADD_KEY = {
+  href: '/settings',
+  icon: KeyRound,
+  title: 'Add your first API key',
+  description:
+    'Binary uses your own OpenAI, Anthropic or Gemini key. It is encrypted before it is stored.',
+};
+
+const TRY_PLAYGROUND = {
+  href: '/playground',
+  icon: FlaskConical,
+  title: 'Try the playground',
+  description:
+    'Ask one question and compare OpenAI, Anthropic and Gemini side by side.',
+};
 
 export default async function HomePage() {
   const session = await getSession();
-  if (!session) {
-    redirect('/sign-in');
-  }
-
-  const {user} = session;
-  const nameParts = user.name.split(' ');
-  const firstName = nameParts[0];
-  const initials = nameParts
-    .map((part) => part.charAt(0))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const data = await getFromApi<{keys: ProviderKeySummary[]}>(
+    '/api/provider-keys',
+  );
+  const firstName = session?.user.name.split(' ')[0];
+  const hasKeys = (data?.keys.length ?? 0) > 0;
+  const nextStep = hasKeys ? TRY_PLAYGROUND : ADD_KEY;
+  const NextStepIcon = nextStep.icon;
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="flex h-16 items-center justify-between border-b px-6">
-        <Logo />
-        <div className="flex items-center gap-3">
-          <Avatar className="size-8">
-            <AvatarFallback className="bg-secondary text-xs">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <span className="hidden text-sm sm:inline">{user.email}</span>
-          <SignOutButton />
-        </div>
-      </header>
+    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-6 py-16">
+      <div className="space-y-3">
+        <p className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-muted-foreground">
+          <Sparkles className="size-3.5 text-primary" />
+          You&apos;re signed in
+        </p>
+        <h1 className="text-4xl font-semibold tracking-tight">
+          Welcome, {firstName}.
+        </h1>
+        <p className="text-muted-foreground">
+          Your workspace is ready. Your AI coworkers will appear here soon.
+        </p>
+      </div>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-6 py-16">
-        <div className="space-y-3">
-          <p className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-muted-foreground">
-            <Sparkles className="size-3.5 text-primary" />
-            You&apos;re signed in
-          </p>
-          <h1 className="text-4xl font-semibold tracking-tight">
-            Welcome, {firstName}.
-          </h1>
-          <p className="text-muted-foreground">
-            Your workspace is ready. Your AI coworkers will appear here soon.
-          </p>
-        </div>
-
-        <Card className="border-dashed bg-transparent">
-          <CardHeader>
-            <div className="mb-2 grid size-10 place-items-center rounded-lg bg-secondary">
-              <Bot className="size-5 text-primary" />
+      <Link href={nextStep.href} className="block">
+        <Card className="transition-colors hover:border-primary/60">
+          <CardHeader className="flex flex-row items-center gap-4">
+            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary">
+              <NextStepIcon className="size-5 text-primary" />
             </div>
-            <CardTitle>No agents yet</CardTitle>
-            <CardDescription>
-              Agents arrive in a later chapter. For now, your account and
-              session are working end to end.
-            </CardDescription>
+            <div className="flex-1 space-y-1">
+              <CardTitle>{nextStep.title}</CardTitle>
+              <CardDescription>{nextStep.description}</CardDescription>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground" />
           </CardHeader>
         </Card>
-      </main>
-    </div>
+      </Link>
+
+      <Card className="border-dashed bg-transparent">
+        <CardHeader>
+          <div className="mb-2 grid size-10 place-items-center rounded-lg bg-secondary">
+            <Bot className="size-5 text-primary" />
+          </div>
+          <CardTitle>No agents yet</CardTitle>
+          <CardDescription>
+            Agents arrive in the next chapter. They will think with the models
+            you connect here.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </main>
   );
 }
