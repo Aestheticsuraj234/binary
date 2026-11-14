@@ -8,10 +8,10 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 3 of 15. Accounts work on web and mobile, the full
-> database schema is in place, and you can connect your own OpenAI,
-> Anthropic or Gemini key and compare them in the Playground. Agents arrive
-> in Chapter 4.
+> **Status:** Chapter 4 of 15. Accounts work on web and mobile, the full
+> database schema is in place, you can connect your own OpenAI, Anthropic
+> or Gemini key, and you can hire agents with a role and instructions and
+> give them tasks. Chat arrives in Chapter 5.
 
 ## What's inside
 
@@ -70,7 +70,8 @@ pnpm dev
 ```
 
 Open http://localhost:3000, sign in with the demo account or create your
-own, add an API key under **API keys**, and try the **Playground**.
+own, add an API key under **API keys**, then hire an agent under **Agents**
+or try the **Playground**.
 
 ### 5. Run the mobile app (optional)
 
@@ -132,3 +133,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 1: Project init and authentication](docs/chapters/chapter-01/README.md)
 - [Chapter 2: Database and ORM layer](docs/chapters/chapter-02/README.md)
 - [Chapter 3: AI engine layer and API key vault](docs/chapters/chapter-03/README.md)
+- [Chapter 4: Agents](docs/chapters/chapter-04/README.md)
