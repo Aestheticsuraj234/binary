@@ -1,0 +1,91 @@
+import {pgEnum} from 'drizzle-orm/pg-core';
+
+// Postgres enums: the database itself rejects any value not in these lists.
+
+export const providerEnum = pgEnum('provider', [
+  'openai',
+  'anthropic',
+  'google',
+]);
+
+export const agentEngineEnum = pgEnum('agent_engine', [
+  'api',
+  'claude_code',
+  'codex',
+]);
+
+export const approvalModeEnum = pgEnum('approval_mode', [
+  'ask_first',
+  'accept_edits',
+  'auto_approve_reads',
+  'plan_only',
+]);
+
+export const computerKindEnum = pgEnum('computer_kind', [
+  'runner',
+  'sandbox',
+  'desktop',
+  'browser',
+]);
+
+export const deviceStatusEnum = pgEnum('device_status', ['online', 'offline']);
+
+export const routingModeEnum = pgEnum('routing_mode', ['mention', 'auto']);
+
+export const messageRoleEnum = pgEnum('message_role', [
+  'user',
+  'assistant',
+  'tool',
+]);
+
+export const toolRiskEnum = pgEnum('tool_risk', ['read', 'write', 'computer']);
+
+export const toolCallStatusEnum = pgEnum('tool_call_status', [
+  'pending',
+  'awaiting_approval',
+  'running',
+  'succeeded',
+  'failed',
+  'rejected',
+]);
+
+export const approvalStatusEnum = pgEnum('approval_status', [
+  'pending',
+  'approved',
+  'rejected',
+  'expired',
+  'executed',
+]);
+
+export const clientEnum = pgEnum('client', ['web', 'mobile']);
+
+export const computerSessionStatusEnum = pgEnum('computer_session_status', [
+  'running',
+  'paused',
+  'closed',
+]);
+
+export const taskStatusEnum = pgEnum('task_status', [
+  'todo',
+  'in_progress',
+  'done',
+]);
+
+export const triggerTypeEnum = pgEnum('trigger_type', [
+  'cron',
+  'webhook',
+  'manual',
+]);
+
+export const runStatusEnum = pgEnum('run_status', [
+  'queued',
+  'running',
+  'succeeded',
+  'failed',
+]);
+
+export const mcpServerStatusEnum = pgEnum('mcp_server_status', [
+  'active',
+  'error',
+  'disabled',
+]);
