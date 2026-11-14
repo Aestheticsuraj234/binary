@@ -18,12 +18,13 @@ export function SignOutButton() {
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size="icon-sm"
+      className="rounded-full text-muted-foreground"
       onClick={handleSignOut}
       aria-label="Sign out"
+      title="Sign out"
     >
       <LogOut />
-      <span className="hidden sm:inline">Sign out</span>
     </Button>
   );
 }
