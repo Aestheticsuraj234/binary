@@ -62,4 +62,6 @@ export interface Approval {
   agent: {id: string; name: string; avatar: string | null};
   /** The chat it came from, to read the context. */
   threadId: string;
+  /** Set when the chat is in a room. */
+  roomId: string | null;
 }
