@@ -61,10 +61,34 @@ describe('agentInputSchema', () => {
       agentInputSchema.safeParse({...VALID_AGENT, defaultComputer: 'laptop'})
         .success,
     ).toBe(false);
-    // Your own computer arrives with the Runner (Chapter 11).
+    // Your own computer, through the Runner (Chapter 11).
     expect(
-      agentInputSchema.safeParse({...VALID_AGENT, defaultComputer: 'runner'})
-        .success,
+      agentInputSchema.parse({...VALID_AGENT, defaultComputer: 'runner'})
+        .defaultComputer,
+    ).toBe('runner');
+  });
+
+  it('thinks with the API by default, which needs a provider and model', () => {
+    expect(agentInputSchema.parse(VALID_AGENT).engine).toBe('api');
+
+    const result = agentInputSchema.safeParse({...VALID_AGENT, model: ''});
+    expect(result.error?.issues[0]?.message).toBe('Choose a model.');
+  });
+
+  it('lets a CLI engine go without a provider or model', () => {
+    const rest = {
+      name: VALID_AGENT.name,
+      role: VALID_AGENT.role,
+      instructions: VALID_AGENT.instructions,
+      avatar: VALID_AGENT.avatar,
+      approvalMode: VALID_AGENT.approvalMode,
+    };
+
+    expect(
+      agentInputSchema.parse({...rest, engine: 'claude_code'}),
+    ).toMatchObject({engine: 'claude_code'});
+    expect(
+      agentInputSchema.safeParse({...rest, engine: 'gemini_cli'}).success,
     ).toBe(false);
   });
 

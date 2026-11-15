@@ -21,7 +21,29 @@ export {
   type AgentComputer,
   type ComputerKind,
   type ComputerView,
+  type SessionComputer,
 } from './computers';
+export {
+  AGENT_ENGINE_INFO,
+  AGENT_ENGINES,
+  type AgentEngine,
+  type CliEngine,
+} from './engines';
+export {
+  addDeviceSchema,
+  pairRunnerSchema,
+  RUNNER_VERSION,
+  runnerEventSchema,
+  runnerEventsSchema,
+  runnerHelloSchema,
+  runnerJobSchema,
+  runnerResultSchema,
+  updateDeviceSchema,
+  type DeviceView,
+  type RunnerEvent,
+  type RunnerJob,
+  type RunnerResult,
+} from './devices';
 export {
   CODE_LANGUAGES,
   type CodeLanguage,
