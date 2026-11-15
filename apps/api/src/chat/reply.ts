@@ -13,7 +13,7 @@ import type {
 } from '@binary/shared';
 
 import {buildSystemPrompt} from '../agents/system-prompt';
-import type {AgentEngine} from '../engines/agent-engine';
+import type {AgentEngine, PromptImage} from '../engines/agent-engine';
 import {ProviderError} from '../errors';
 import {approvalPolicy} from '../tools/policy';
 import type {ToolboxFactory} from '../tools/toolbox-factory';
@@ -60,6 +60,8 @@ export interface ReplyRequest {
   savedAs?: 'user' | 'tool';
   /** Extra words for the model only, after `content`. */
   instruction?: string;
+  /** Pictures for the model only, with `content`. */
+  images?: PromptImage[];
   /** The title a new thread gets. Defaults to its first message. */
   title?: string;
   /** Hears every piece of text and tool update as it happens. */
@@ -85,6 +87,7 @@ export async function writeReply(
     onEvent,
     savedAs = 'user',
     instruction,
+    images,
   }: ReplyRequest,
 ): Promise<ChatMessage> {
   const emit = async (event: ChatStreamEvent) => {
@@ -128,6 +131,7 @@ export async function writeReply(
     const events = engine.stream({
       system: buildSystemPrompt(agent),
       prompt: instruction ? `${content}\n\n${instruction}` : content,
+      images,
       history,
       tools: toolbox.toToolSet(approvalPolicy(agent.approvalMode)),
     });
@@ -142,7 +146,9 @@ export async function writeReply(
         await emit({type: 'delta', text});
       } else if (event.type === 'tool-call') {
         afterTool = true;
-        await emitTool(log.start(event.id, event.name, event.input));
+        await emitTool(
+          log.start(event.id, event.name, event.input, event.risk),
+        );
       } else if (event.type === 'tool-result') {
         await emitTool(log.finish(event.id, event.output));
       } else {

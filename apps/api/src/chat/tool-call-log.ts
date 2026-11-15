@@ -38,11 +38,17 @@ export class ToolCallLog {
 
   constructor(private readonly riskOf: (toolName: string) => ToolRisk) {}
 
-  start(id: string, toolName: string, input: unknown): ToolCallView {
+  /** `risk` is given by engines whose tools Binary does not know. */
+  start(
+    id: string,
+    toolName: string,
+    input: unknown,
+    risk?: ToolRisk,
+  ): ToolCallView {
     const call: TrackedCall = {
       id,
       toolName,
-      risk: this.riskOf(toolName),
+      risk: risk ?? this.riskOf(toolName),
       status: 'running',
       input,
       output: null,

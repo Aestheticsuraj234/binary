@@ -7,7 +7,7 @@ import type {
 
 import {writeReply, type ReplyDependencies} from '../chat/reply';
 import type {EngineFactory} from '../engines/engine-factory';
-import {AppError, ValidationError} from '../errors';
+import {AppError} from '../errors';
 
 export interface RoutineDependencies extends ReplyDependencies {
   agents: AgentRepository;
@@ -88,15 +88,7 @@ export async function runRoutine(
   }
 
   try {
-    // The columns are optional because Chapter 11's CLI engines need neither.
-    if (!agent.provider || !agent.model) {
-      throw new ValidationError('Choose a model for this agent first.');
-    }
-    const engine = await deps.engineFactory.create({
-      userId: routine.userId,
-      provider: agent.provider,
-      model: agent.model,
-    });
+    const engine = await deps.engineFactory.forAgent(routine.userId, agent);
     const thread = await deps.threads.createForAgent(routine.userId, agent.id);
     const schedule = (await deps.triggers.listForRoutines([routine.id])).find(
       (trigger) => trigger.type === 'cron',

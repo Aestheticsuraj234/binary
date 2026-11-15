@@ -7,6 +7,8 @@ import type {
 } from '@binary/shared';
 
 import type {BrowserSessions} from '../browsers/browser-sessions';
+import type {DesktopSessions} from '../desktops/cloud-desktop';
+import type {YourComputers} from '../runner/your-computers';
 
 import {AppConnectionError} from '../errors';
 import type {KeyVault} from '../keys/key-vault';
@@ -20,6 +22,8 @@ import {
   type AppConnector,
 } from './mcp';
 import {browserTools} from './browser-tools';
+import {desktopTools} from './desktop-tools';
+import {runnerTools} from './runner-tools';
 import {sandboxTools} from './sandbox-tools';
 import {Toolbox} from './toolbox';
 
@@ -36,6 +40,10 @@ export interface ToolboxOptions {
   sandboxes?: SandboxSessions;
   /** Undefined when Playwright's Chromium is not installed. */
   browsers?: BrowserSessions;
+  /** Undefined when E2B is not set up. */
+  desktops?: DesktopSessions;
+  /** The user's own computers, through the Runner. */
+  yourComputers?: YourComputers;
   builtIns?: AgentTool[];
 }
 
@@ -65,6 +73,8 @@ export class ToolboxFactory {
   private readonly connect: AppConnector;
   private readonly sandboxes?: SandboxSessions;
   private readonly browsers?: BrowserSessions;
+  private readonly desktops?: DesktopSessions;
+  private readonly yourComputers?: YourComputers;
   private readonly builtIns: AgentTool[];
 
   constructor(
@@ -75,6 +85,8 @@ export class ToolboxFactory {
     this.connect = options.connect ?? connectApp;
     this.sandboxes = options.sandboxes;
     this.browsers = options.browsers;
+    this.desktops = options.desktops;
+    this.yourComputers = options.yourComputers;
     this.builtIns = options.builtIns ?? builtInTools();
   }
 
@@ -98,6 +110,20 @@ export class ToolboxFactory {
           ? browserTools(this.browsers.forThread('', '')).map(toToolInfo)
           : [],
       },
+      {
+        kind: 'desktop',
+        available: this.desktops !== undefined,
+        tools: this.desktops
+          ? desktopTools(this.desktops.forThread('', '')).map(toToolInfo)
+          : [],
+      },
+      {
+        kind: 'runner',
+        available: this.yourComputers !== undefined,
+        tools: this.yourComputers
+          ? runnerTools(this.yourComputers, '').map(toToolInfo)
+          : [],
+      },
     ];
   }
 
@@ -112,7 +138,7 @@ export class ToolboxFactory {
       connection ? [connection] : [],
     );
     const appTools = connections.flatMap((connection) => connection.tools);
-    const computerTools = scope ? this.computerTools(userId, scope) : [];
+    const computerTools = scope ? await this.computerTools(userId, scope) : [];
     return {
       toolbox: new Toolbox(
         [...this.builtIns, ...computerTools, ...appTools],
@@ -140,12 +166,22 @@ export class ToolboxFactory {
     return {encryptedAuth: ciphertext, iv};
   }
 
-  private computerTools(userId: string, {threadId, computer}: ToolScope) {
+  private async computerTools(
+    userId: string,
+    {threadId, computer}: ToolScope,
+  ): Promise<AgentTool[]> {
     if (computer === 'sandbox' && this.sandboxes) {
       return sandboxTools(this.sandboxes.forThread(userId, threadId));
     }
     if (computer === 'browser' && this.browsers) {
       return browserTools(this.browsers.forThread(userId, threadId));
+    }
+    if (computer === 'desktop' && this.desktops) {
+      return desktopTools(this.desktops.forThread(userId, threadId));
+    }
+    if (computer === 'runner' && this.yourComputers) {
+      const about = await this.yourComputers.describe(userId);
+      return runnerTools(this.yourComputers, userId, about);
     }
     return [];
   }

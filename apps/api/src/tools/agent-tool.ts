@@ -13,6 +13,11 @@ export interface AgentTool extends ToolInfo {
    * a sandbox chart is a short note for the model, a picture for the user.
    */
   forModel?: (output: unknown) => unknown;
+  /**
+   * The model sees the result's `screenshot` as an image (a desktop agent
+   * must see the screen to know where to click). Wins over forModel.
+   */
+  showsImage?: boolean;
 }
 
 /** The public description of a tool, without its code. */

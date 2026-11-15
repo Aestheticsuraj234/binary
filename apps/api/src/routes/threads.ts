@@ -5,7 +5,7 @@ import {stream} from 'hono/streaming';
 import {requireUser, type AppEnv} from '../app-env';
 import {writeReply} from '../chat/reply';
 import type {AppDependencies} from '../container';
-import {AppError, NotFoundError, parseBody, ValidationError} from '../errors';
+import {AppError, NotFoundError, parseBody} from '../errors';
 import {isUuid} from './ids';
 
 // How many chats the sidebar lists.
@@ -89,16 +89,8 @@ export function threadRoutes({
       throw new NotFoundError('Chat');
     }
     const {content} = await parseBody(c, sendMessageSchema);
-    // The columns are optional because Chapter 11's CLI engines need neither.
-    if (!agent.provider || !agent.model) {
-      throw new ValidationError('Choose a model for this agent first.');
-    }
-    // A missing key throws MissingProviderKeyError (400) from here.
-    const engine = await engineFactory.create({
-      userId,
-      provider: agent.provider,
-      model: agent.model,
-    });
+    // A missing key or model is a 400 from here, before streaming starts.
+    const engine = await engineFactory.forAgent(userId, agent);
 
     c.header('Content-Type', 'application/x-ndjson; charset=utf-8');
     c.header('Cache-Control', 'no-cache');
