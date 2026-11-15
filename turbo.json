@@ -18,7 +18,9 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
-    "typecheck": {},
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
     "test": {
       "cache": false,
       "dependsOn": ["@binary/db#db:migrate"]
