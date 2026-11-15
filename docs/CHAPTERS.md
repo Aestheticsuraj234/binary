@@ -19,7 +19,7 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 6   | Tool system and MCP apps                  | Tool registry with risk levels (read / write / computer), connect apps through MCP servers, including Composio           | ✅ Done ³ |
 | 7   | Durable jobs and routines                 | Long-running tasks and scheduled routines (cron, webhook, manual) on Trigger.dev, with run history                       | ✅ Done ⁴ |
 | 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                 | ✅ Done ⁵ |
-| 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | Planned   |
+| 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | ✅ Done ⁶ |
 | 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | Planned   |
 | 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | Planned   |
 | 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                           | Planned   |
@@ -49,6 +49,11 @@ once, and the agent follows up in its chat. Agents hired before it keep the
 database default, **Ask first**; new ones start on **Auto-approve reads**.
 Requests don't expire yet, and the Today count updates on page load (still
 no LISTEN/NOTIFY).
+
+⁶ Chapter 9 gives each chat its own E2B sandbox, started on the first
+approved run and stopped after 10 idle minutes. It is optional: without
+`E2B_API_KEY`, characters have no sandbox. Verified on real E2B (code,
+charts, files, stop) with a scripted model.
 
 ## Every chapter ships with
 

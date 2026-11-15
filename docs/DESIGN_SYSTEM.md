@@ -67,23 +67,25 @@ for React Native in `apps/mobile/src/lib/theme.ts`.
 
 ## Components in use
 
-| Component                  | Source                                      |
-| -------------------------- | ------------------------------------------- |
-| Button                     | shadcn/ui `button`                          |
-| Input, Label               | shadcn/ui `input`, `label`                  |
-| Card                       | shadcn/ui `card`                            |
-| Avatar                     | shadcn/ui `avatar`                          |
-| Logo                       | `components/brand/logo.tsx`                 |
-| FormField                  | `components/auth/form-field.tsx`            |
-| Icons                      | `lucide-react`                              |
-| Badge                      | shadcn/ui `badge` (Ch. 3)                   |
-| Textarea                   | shadcn/ui `textarea` (Ch. 3)                |
-| NativeSelect               | shadcn/ui `native-select` (Ch. 3)           |
-| AppSidebar                 | `components/app/app-sidebar.tsx` (Ch. 4)    |
-| Character, CharacterAvatar | `components/characters/character.tsx`       |
-| CrewCard, CastCard         | `components/characters/character-cards.tsx` |
-| SpeechBubble               | `components/characters/speech-bubble.tsx`   |
-| ModelBadge                 | `components/agents/model-badge.tsx`         |
+| Component                     | Source                                       |
+| ----------------------------- | -------------------------------------------- |
+| Button                        | shadcn/ui `button`                           |
+| Input, Label                  | shadcn/ui `input`, `label`                   |
+| Card                          | shadcn/ui `card`                             |
+| Avatar                        | shadcn/ui `avatar`                           |
+| Logo                          | `components/brand/logo.tsx`                  |
+| FormField                     | `components/auth/form-field.tsx`             |
+| Icons                         | `lucide-react`                               |
+| Badge                         | shadcn/ui `badge` (Ch. 3)                    |
+| Textarea                      | shadcn/ui `textarea` (Ch. 3)                 |
+| NativeSelect                  | shadcn/ui `native-select` (Ch. 3)            |
+| AppSidebar                    | `components/app/app-sidebar.tsx` (Ch. 4)     |
+| Character, CharacterAvatar    | `components/characters/character.tsx`        |
+| CrewCard, CastCard            | `components/characters/character-cards.tsx`  |
+| SpeechBubble                  | `components/characters/speech-bubble.tsx`    |
+| ModelBadge                    | `components/agents/model-badge.tsx`          |
+| SandboxChip, SandboxSection   | `components/sandboxes/` (Ch. 9)              |
+| SandboxCharts, TerminalOutput | `components/chat/sandbox-output.tsx` (Ch. 9) |
 
 Add new shadcn components with:
 
@@ -177,6 +179,23 @@ pnpm dlx shadcn@latest add <component>
   for you".
 - **Permissions select (Ch. 8):** a `NativeSelect` of the four modes, most
   careful first, with the chosen mode's one-line description below it.
+- **Show what you approve (Ch. 9):** a tool row waiting for approval
+  starts open. Code and commands show as themselves (`$ ls -la`), never as
+  JSON.
+- **Terminal output (Ch. 9):** sandbox results are a small terminal (zinc
+  950, bordered, mono): stdout in the default colour, stderr in amber,
+  values in lime, errors in red, then "Made a chart." and the exit code
+  (muted for 0, `warning` otherwise).
+- **Charts (Ch. 9):** PNGs from the sandbox show below the tool row
+  without opening it, on white with `rounded-xl`. One chart spans the row
+  (up to `max-w-xl`); several go two per row.
+- **Running computers stay visible (Ch. 9):** while a chat's sandbox runs,
+  its header shows an outline pill ("● Sandbox on") with a pulsing lime dot
+  and an icon-only Stop. The Apps page lists every running sandbox with
+  Chat and Stop.
+- **Computer select (Ch. 9):** None or Cloud sandbox, with a one-line
+  description. When E2B isn't set up, the option is disabled "(not set up)"
+  and a `warning` line says the one step that fixes it.
 - **Missing setup notices:** when a feature works only partly (for example
   schedules without Trigger.dev), a `warning` note at the top of the page
   says what works, what doesn't, and the one step that fixes it.
