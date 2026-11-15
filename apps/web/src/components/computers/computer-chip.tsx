@@ -1,14 +1,14 @@
 'use client';
 
-import type {AgentComputer, ComputerView} from '@binary/shared';
-import {Square} from 'lucide-react';
+import type {ComputerView, SessionComputer} from '@binary/shared';
+import {Eye, Square} from 'lucide-react';
 import {useEffect, useState} from 'react';
 
 import {Button} from '@/components/ui/button';
 import {listComputers, stopComputer} from '@/lib/computers';
 
 const COPY: Record<
-  AgentComputer,
+  SessionComputer,
   {label: string; stop: string; confirm: string}
 > = {
   sandbox: {
@@ -21,11 +21,16 @@ const COPY: Record<
     stop: 'Close browser',
     confirm: 'Close the browser? Its tabs and sign-ins are lost.',
   },
+  desktop: {
+    label: 'Desktop on',
+    stop: 'Stop desktop',
+    confirm: 'Stop the desktop? Everything open on it is lost.',
+  },
 };
 
 interface ComputerChipProps {
   threadId: string;
-  kind: AgentComputer;
+  kind: SessionComputer;
   /** Changes after each reply or decision, so the chip checks again. */
   checkKey: number;
 }
@@ -78,6 +83,24 @@ export function ComputerChip({threadId, kind, checkKey}: ComputerChipProps) {
     >
       <span className="size-1.5 animate-pulse rounded-full bg-primary" />
       <span className="text-muted-foreground">{copy.label}</span>
+      {computer.watchUrl && (
+        <Button
+          asChild
+          variant="ghost"
+          size="icon-sm"
+          className="size-6 rounded-full text-muted-foreground hover:text-foreground"
+        >
+          <a
+            href={computer.watchUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Watch live"
+            title="Watch live (view only)"
+          >
+            <Eye className="size-3" />
+          </a>
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon-sm"

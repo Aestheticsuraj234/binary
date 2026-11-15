@@ -6,7 +6,7 @@ import {
   type ComputerView,
   type ToolInfo,
 } from '@binary/shared';
-import {Box, Globe, Square} from 'lucide-react';
+import {Box, Eye, Globe, Laptop, Monitor, Square} from 'lucide-react';
 import Link from 'next/link';
 import {useState} from 'react';
 
@@ -61,6 +61,33 @@ const COPY: Record<
     empty:
       'No browser is open. One opens when a character first visits a page in a chat.',
     stop: 'Close',
+  },
+  desktop: {
+    title: 'Cloud desktop',
+    about:
+      'A full Linux desktop from E2B, one per chat, that you can watch live. The character sees screenshots; it asks before every click, key and word it types. It stops after 10 idle minutes.',
+    off: 'Cloud desktops are off.',
+    setup: (
+      <>
+        Get an API key at e2b.dev, add{' '}
+        <code className="font-mono">E2B_API_KEY</code> to{' '}
+        <code className="font-mono">.env</code> and restart the API.
+      </>
+    ),
+    icon: Monitor,
+    empty:
+      'No desktop is running. One starts when a character first looks at it in a chat.',
+    stop: 'Stop',
+  },
+  runner: {
+    title: 'Your computer',
+    about:
+      'Your own computer, through the Runner app, only inside the folders you share when you start it. Reading asks nothing; commands and writes ask first. Claude Code and Codex run here too.',
+    off: '',
+    setup: null,
+    icon: Laptop,
+    empty: '',
+    stop: '',
   },
 };
 
@@ -129,7 +156,22 @@ export function ComputerSection({
         </ul>
       )}
 
-      {available && (
+      {kind === 'runner' && (
+        <Link
+          href="/computers"
+          className="flex items-center gap-4 rounded-3xl border border-dashed p-5 hover:border-primary/50"
+        >
+          <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary">
+            <Laptop className="size-5 text-primary" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Pair a computer, see whether it is online, or pause it, under{' '}
+            <span className="font-medium text-foreground">Your computers</span>.
+          </p>
+        </Link>
+      )}
+
+      {available && kind !== 'runner' && (
         <div className="space-y-2">
           <h3 className="font-semibold">Running now</h3>
           {computers.length === 0 ? (
@@ -161,6 +203,23 @@ export function ComputerSection({
                       About {computer.minutesUsed} min so far
                     </p>
                   </div>
+                  {computer.watchUrl && (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full"
+                    >
+                      <a
+                        href={computer.watchUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <Eye />
+                        Watch
+                      </a>
+                    </Button>
+                  )}
                   {computer.agent && computer.threadId && (
                     <Button
                       asChild

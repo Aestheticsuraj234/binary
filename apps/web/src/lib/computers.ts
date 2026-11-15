@@ -1,15 +1,15 @@
-import type {AgentComputer, ComputerView} from '@binary/shared';
+import type {ComputerView, SessionComputer} from '@binary/shared';
 
 import {API_URL} from '@/lib/env';
 
 export interface ComputerList {
   /** Which computers this server can give agents (E2B key, Chromium). */
-  available: Record<AgentComputer, boolean>;
+  available: Record<SessionComputer, boolean>;
   computers: ComputerView[];
 }
 
 const NONE: ComputerList = {
-  available: {sandbox: false, browser: false},
+  available: {sandbox: false, browser: false, desktop: false},
   computers: [],
 };
 

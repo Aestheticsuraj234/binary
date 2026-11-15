@@ -6,6 +6,7 @@ import {
   FlaskConical,
   Inbox,
   KeyRound,
+  Laptop,
   Menu,
   Plug,
   Plus,
@@ -27,6 +28,7 @@ const LINKS = [
   {href: '/', label: 'Discover', icon: Compass},
   {href: '/routines', label: 'Routines', icon: Repeat},
   {href: '/apps', label: 'Apps & tools', icon: Plug},
+  {href: '/computers', label: 'Your computers', icon: Laptop},
   {href: '/playground', label: 'Playground', icon: FlaskConical},
   {href: '/settings', label: 'API keys', icon: KeyRound},
 ];

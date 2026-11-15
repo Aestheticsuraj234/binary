@@ -16,16 +16,17 @@ export function chartsOf(output: unknown): string[] {
   });
 }
 
-/** The code or command a sandbox call ran, to show instead of JSON. */
+/**
+ * The code or command a call ran, to show instead of JSON: a sandbox's
+ * code, and any tool's shell command (sandbox, your computer, or a CLI
+ * engine's Bash).
+ */
 export function sandboxInput(call: ToolCallView): string | undefined {
   if (call.toolName === 'run_code') {
     return text(field(call.input, 'code')) || undefined;
   }
-  if (call.toolName === 'run_command') {
-    const command = text(field(call.input, 'command'));
-    return command ? `$ ${command}` : undefined;
-  }
-  return undefined;
+  const command = text(field(call.input, 'command'));
+  return command ? `$ ${command}` : undefined;
 }
 
 /** Whether a result is a code run or a command, which read like a terminal. */

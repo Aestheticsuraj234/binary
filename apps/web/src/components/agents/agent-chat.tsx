@@ -402,13 +402,15 @@ export function AgentChat({
             {(threadId && title) || 'New chat'}
           </h2>
           <div className="flex shrink-0 items-center gap-1">
-            {threadId && agent.defaultComputer && (
-              <ComputerChip
-                threadId={threadId}
-                kind={agent.defaultComputer}
-                checkKey={computerCheck}
-              />
-            )}
+            {threadId &&
+              agent.defaultComputer &&
+              agent.defaultComputer !== 'runner' && (
+                <ComputerChip
+                  threadId={threadId}
+                  kind={agent.defaultComputer}
+                  checkKey={computerCheck}
+                />
+              )}
             <Button
               variant="ghost"
               size="sm"
