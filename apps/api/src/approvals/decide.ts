@@ -78,6 +78,7 @@ export async function decideApproval(
     // The same tools the agent had in that chat, sandbox included.
     const {toolbox} = await deps.toolboxes.forUser(userId, {
       threadId: approval.threadId,
+      agentId: approval.agent.id,
       computer: agent?.defaultComputer ?? null,
     });
     let output: unknown;

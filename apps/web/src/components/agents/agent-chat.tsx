@@ -10,7 +10,7 @@ import {
   type Thread,
   type ToolCallView,
 } from '@binary/shared';
-import {ArrowUp, Pencil, Plus, Trash2} from 'lucide-react';
+import {ArrowUp, Brain, Pencil, Plus, Trash2} from 'lucide-react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
@@ -382,7 +382,7 @@ export function AgentChat({
           {character.personality}
         </p>
 
-        <div className="flex lg:justify-center">
+        <div className="flex gap-2 lg:justify-center">
           <Button asChild variant="outline" size="sm" className="rounded-full">
             <Link
               href={`/agents/${agent.id}/edit`}
@@ -390,6 +390,15 @@ export function AgentChat({
             >
               <Pencil />
               <span className="hidden sm:inline">Edit</span>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="rounded-full">
+            <Link
+              href={`/agents/${agent.id}/memory`}
+              aria-label={`${agent.name}'s memory`}
+            >
+              <Brain />
+              <span className="hidden sm:inline">Memory</span>
             </Link>
           </Button>
         </div>

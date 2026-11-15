@@ -22,7 +22,7 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | ✅ Done ⁶ |
 | 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | ✅ Done ⁷ |
 | 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | ✅ Done ⁸ |
-| 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                           | Planned   |
+| 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                           | ✅ Done ⁹ |
 | 13  | Multi-agent teams and rooms               | Several agents working together in rooms, routed by @mention or automatically                                            | Planned   |
 | 14  | Mobile app and voice                      | The full experience on the Expo app, plus voice input                                                                    | Planned   |
 | 15  | Usage tracking, testing and deployment    | Token and cost tracking, end-to-end tests, final setup README so anyone can run it locally                               | Planned   |
@@ -68,6 +68,12 @@ your computer. Its jobs live in the API's memory, so routines on the
 Trigger.dev worker can't reach your computer yet. Claude Code and Codex are
 covered with stand-in CLIs. The cloud desktop was verified on real E2B with
 Claude Sonnet. Adds one migration (`devices.token_hash`).
+
+⁹ Chapter 12 embeds with OpenAI's `text-embedding-3-small` (or Google's
+`gemini-embedding-001`) into pgvector; Anthropic-only users have no memory
+or knowledge until they add one of those keys. Memories are per character,
+knowledge per user. Verified with real embeddings and Claude Sonnet.
+Adds one migration (`0004_knowledge`).
 
 ## Every chapter ships with
 

@@ -204,6 +204,19 @@ pnpm dlx shadcn@latest add <component>
   "Close browser"). The Apps page has one section per computer, each with
   a Set up / Not set up badge, its tools, and what is running now (Chat,
   Stop or Close).
+- **Memory (Ch. 12):** a character's memories are a divided list: the
+  fact, an outline badge ("From a chat" / "Added by you"), the date, and an
+  icon-only Forget. Adding is one input and a secondary "Remember"; a
+  duplicate gets a muted line, not an error. The chat aside has a Memory
+  button next to Edit.
+- **Knowledge (Ch. 12):** three ways to add (Paste text, Upload a file,
+  Web page) as pill tabs (secondary when chosen). Documents are rows with
+  a source badge, size and passage count. Search results (on the page and
+  in tool rows) are small cards: the document title, "NN% match" in mono,
+  and four lines of the passage.
+- **A missing key (Ch. 12):** when a feature needs a key the user hasn't
+  added, a `warning` box says what is off, which keys turn it on, and
+  links to API keys.
 - **Your computers (Ch. 11):** each paired computer is a card: laptop icon,
   name and OS, a status pill (Online with a pulsing lime dot, Offline
   muted, Waiting for pairing or Paused in `warning`), its shared folders in
