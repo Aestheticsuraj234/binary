@@ -1,6 +1,9 @@
 'use client';
 
+import {normalizeMath} from '@binary/shared';
 import {createCodePlugin} from '@streamdown/code';
+import {createMathPlugin} from '@streamdown/math';
+import 'katex/dist/katex.min.css';
 import {Streamdown} from 'streamdown';
 import 'streamdown/styles.css';
 
@@ -11,6 +14,8 @@ import {cn} from '@/lib/utils';
 const code = createCodePlugin({
   themes: ['github-light-default', 'github-dark-default'],
 });
+// KaTeX for $$…$$ (and LaTeX's \(…\) and \[…\], via normalizeMath).
+const math = createMathPlugin();
 
 interface MarkdownProps {
   children: string;
@@ -21,7 +26,7 @@ interface MarkdownProps {
 
 /**
  * Renders a model's answer as Markdown with Streamdown: headings, lists,
- * tables, links and highlighted code with a copy button.
+ * tables, links, math and highlighted code with a copy button.
  *
  * Streamdown is built for streaming: it closes half-written Markdown (an
  * open code fence, a lone `**`) while the answer is still arriving, so the
@@ -35,13 +40,13 @@ export function Markdown({
 }: MarkdownProps) {
   return (
     <Streamdown
-      plugins={{code}}
+      plugins={{code, math}}
       isAnimating={isStreaming}
       animated
       caret="block"
       className={cn('min-w-0 space-y-3 text-sm leading-relaxed', className)}
     >
-      {children}
+      {normalizeMath(children)}
     </Streamdown>
   );
 }

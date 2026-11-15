@@ -85,9 +85,11 @@ class RecordingRunner implements JobRunner {
 }
 
 let runner: RecordingRunner;
-const deps = createDependencies(fakeModel, undefined, (base) => {
-  runner = new RecordingRunner((job) => runRoutine(base, job));
-  return runner;
+const deps = createDependencies(fakeModel, {
+  makeJobs: (base) => {
+    runner = new RecordingRunner((job) => runRoutine(base, job));
+    return runner;
+  },
 });
 const app = createApp(deps);
 const createdEmails: string[] = [];

@@ -7,7 +7,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "setup": "docker compose up -d && pnpm db:migrate && pnpm db:seed",
+    "setup": "docker compose up -d && pnpm db:migrate && pnpm db:seed && pnpm browsers:install",
+    "browsers:install": "pnpm --filter @binary/api exec playwright install chromium",
     "dev": "turbo run dev --filter=@binary/api --filter=@binary/web",
     "mobile": "pnpm --filter @binary/mobile start",
     "trigger:dev": "pnpm --filter @binary/api trigger:dev",

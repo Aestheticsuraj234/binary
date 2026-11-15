@@ -8,7 +8,7 @@ import {toConnectedApp} from '../tools/toolbox-factory';
 import {isUuid} from './ids';
 
 /**
- * The Apps page: built-in tools, the cloud sandbox's tools, and apps
+ * The Apps page: built-in tools, each computer's tools, and apps
  * connected through MCP servers.
  */
 export function appRoutes({mcpServers, toolboxes}: AppDependencies) {
@@ -21,11 +21,7 @@ export function appRoutes({mcpServers, toolboxes}: AppDependencies) {
     const {toolbox, apps} = await toolboxes.forUser(c.get('user').id);
     await toolbox.close();
     const builtIn = toolbox.list().filter((tool) => tool.source === 'Binary');
-    const sandbox = {
-      available: toolboxes.sandboxesAvailable,
-      tools: toolboxes.sandboxToolInfo(),
-    };
-    return c.json({builtIn, sandbox, apps});
+    return c.json({builtIn, computers: toolboxes.computers(), apps});
   });
 
   // An app is only saved after Binary could connect and list its tools.

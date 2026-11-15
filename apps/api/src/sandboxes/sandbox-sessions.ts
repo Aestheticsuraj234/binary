@@ -1,6 +1,6 @@
 import type {ComputerSessionRepository} from '@binary/db';
-import type {SandboxView} from '@binary/shared';
 
+import {ComputerSessions} from '../computers/computer-sessions';
 import type {CloudSandbox, SandboxProvider} from './cloud-sandbox';
 
 export interface OpenedSandbox {
@@ -87,67 +87,26 @@ export class ChatSandbox {
 
 /**
  * Sandboxes across all of a user's chats: open one for a chat, list the
- * ones running, and stop them.
+ * ones running, and stop them (listing and stopping come from
+ * ComputerSessions).
  */
-export class SandboxSessions {
+export class SandboxSessions extends ComputerSessions {
   constructor(
-    private readonly sessions: ComputerSessionRepository,
+    sessions: ComputerSessionRepository,
     private readonly provider: SandboxProvider,
-  ) {}
+  ) {
+    super(sessions, 'sandbox');
+  }
 
   forThread(userId: string, threadId: string): ChatSandbox {
     return new ChatSandbox(this.sessions, this.provider, userId, threadId);
   }
 
-  /**
-   * Running sandboxes, oldest first. One that timed out on its own is
-   * marked closed here, the first time anyone looks.
-   */
-  async listRunning(userId: string): Promise<SandboxView[]> {
-    const saved = await this.sessions.listRunningForUser(userId, 'sandbox');
-    const checked = await Promise.all(
-      saved.map(async (session) => {
-        const running = session.providerId
-          ? await this.provider.isRunning(session.providerId)
-          : false;
-        if (!running) {
-          await this.sessions.close(session.id, {stillRunning: false});
-        }
-        return running ? [session] : [];
-      }),
-    );
-    return checked.flat().map((session) => ({
-      id: session.id,
-      threadId: session.threadId,
-      threadTitle: session.threadTitle,
-      agent: session.agent,
-      startedAt: session.createdAt.toISOString(),
-      minutesUsed: session.minutesUsed,
-    }));
+  protected isRunning(providerId: string) {
+    return this.provider.isRunning(providerId);
   }
 
-  /** Stops one sandbox; false if the user has no such running sandbox. */
-  async stop(userId: string, sessionId: string): Promise<boolean> {
-    const session = await this.sessions.findForUser(userId, sessionId);
-    if (session?.status !== 'running') {
-      return false;
-    }
-    if (session.providerId) {
-      await this.provider.kill(session.providerId);
-    }
-    await this.sessions.close(session.id, {stillRunning: true});
-    return true;
-  }
-
-  /** Stops the chat's sandbox, if it has one (before the chat is deleted). */
-  async stopForThread(userId: string, threadId: string) {
-    const session = await this.sessions.findRunningForThread(
-      userId,
-      threadId,
-      'sandbox',
-    );
-    if (session) {
-      await this.stop(userId, session.id);
-    }
+  protected kill(providerId: string) {
+    return this.provider.kill(providerId);
   }
 }

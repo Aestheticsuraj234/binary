@@ -1,30 +1,32 @@
 import {
   TOOL_RISKS,
+  type AgentComputer,
   type ConnectedApp,
-  type SandboxView,
   type ToolInfo,
 } from '@binary/shared';
 import {Plug} from 'lucide-react';
 import type {Metadata} from 'next';
 
-import {SandboxSection} from '@/components/sandboxes/sandbox-section';
+import {ComputerSection} from '@/components/computers/computer-section';
 import {AppCard} from '@/components/tools/app-card';
 import {ConnectAppForm} from '@/components/tools/connect-app-form';
 import {RISK_INFO, RiskBadge} from '@/components/tools/risk-badge';
 import {ToolRow} from '@/components/tools/tool-row';
+import type {ComputerList} from '@/lib/computers';
 import {getFromApi} from '@/lib/server-api';
 
 export const metadata: Metadata = {title: 'Apps & tools · Binary'};
 
 export default async function AppsPage() {
-  const [data, sandboxData] = await Promise.all([
+  const [data, computerData] = await Promise.all([
     getFromApi<{
       builtIn: ToolInfo[];
-      sandbox: {available: boolean; tools: ToolInfo[]};
+      computers: {kind: AgentComputer; available: boolean; tools: ToolInfo[]}[];
       apps: ConnectedApp[];
     }>('/api/apps'),
-    getFromApi<{sandboxes: SandboxView[]}>('/api/sandboxes'),
+    getFromApi<ComputerList>('/api/computers'),
   ]);
+  const running = computerData?.computers ?? [];
   const builtIn = data?.builtIn ?? [];
   const apps = data?.apps ?? [];
 
@@ -37,7 +39,7 @@ export default async function AppsPage() {
         <p className="max-w-2xl text-muted-foreground">
           Tools let your characters look things up and act for you. Every
           character can use the built-in tools and your apps; characters with a
-          cloud sandbox can also run code.
+          computer (a cloud sandbox or a browser) get its tools too.
         </p>
       </div>
 
@@ -63,11 +65,15 @@ export default async function AppsPage() {
         </ul>
       </section>
 
-      <SandboxSection
-        available={data?.sandbox.available ?? false}
-        tools={data?.sandbox.tools ?? []}
-        running={sandboxData?.sandboxes ?? []}
-      />
+      {(data?.computers ?? []).map((computer) => (
+        <ComputerSection
+          key={computer.kind}
+          kind={computer.kind}
+          available={computer.available}
+          tools={computer.tools}
+          running={running.filter((item) => item.kind === computer.kind)}
+        />
+      ))}
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">

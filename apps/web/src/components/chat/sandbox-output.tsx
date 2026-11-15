@@ -2,19 +2,10 @@ import type {ToolCallView} from '@binary/shared';
 
 import {cn} from '@/lib/utils';
 
-/** Reads a field of an unknown object, or undefined. */
-function field(value: unknown, key: string): unknown {
-  return typeof value === 'object' && value !== null
-    ? Reflect.get(value, key)
-    : undefined;
-}
-
-function text(value: unknown): string {
-  return typeof value === 'string' ? value : '';
-}
+import {field, text} from './output-fields';
 
 /** The PNG charts of a run_code result, base64. */
-function chartsOf(output: unknown): string[] {
+export function chartsOf(output: unknown): string[] {
   const results = field(output, 'results');
   if (!Array.isArray(results)) {
     return [];
@@ -40,35 +31,6 @@ export function sandboxInput(call: ToolCallView): string | undefined {
 /** Whether a result is a code run or a command, which read like a terminal. */
 export function isTerminalOutput(output: unknown): boolean {
   return typeof field(output, 'stdout') === 'string';
-}
-
-/**
- * Charts a code run made, shown under the tool row without opening it:
- * they are usually the point of the run.
- */
-export function SandboxCharts({call}: {call: ToolCallView}) {
-  const charts = call.status === 'succeeded' ? chartsOf(call.output) : [];
-  if (charts.length === 0) {
-    return null;
-  }
-  return (
-    <div
-      className={cn(
-        'grid gap-2 border-t p-2',
-        charts.length > 1 ? 'sm:grid-cols-2' : 'max-w-xl',
-      )}
-    >
-      {charts.map((png, index) => (
-        // A data URL from our own API; next/image adds nothing here.
-        <img
-          key={index}
-          src={`data:image/png;base64,${png}`}
-          alt={`Chart ${index + 1} from the sandbox`}
-          className="w-full rounded-xl bg-white"
-        />
-      ))}
-    </div>
-  );
 }
 
 /** A code run's or command's output as a small terminal. */

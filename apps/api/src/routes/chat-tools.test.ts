@@ -37,8 +37,8 @@ const prompts: unknown[][] = [];
 
 /**
  * A fake model that behaves like a real one with tools: on the first step
- * it calls a tool, on the second (once the tool's result is in the prompt)
- * it answers with text that quotes the result.
+ * it says "Let me check." and calls a tool, on the second (once the tool's
+ * result is in the prompt) it answers with text that quotes the result.
  */
 function fakeModel() {
   return new MockLanguageModelV4({
@@ -53,6 +53,13 @@ function fakeModel() {
       const parts =
         !toolMessage && chosen
           ? [
+              {type: 'text-start' as const, id: 'before'},
+              {
+                type: 'text-delta' as const,
+                id: 'before',
+                delta: 'Let me check.',
+              },
+              {type: 'text-end' as const, id: 'before'},
               {
                 type: 'tool-call' as const,
                 toolCallId: `call-${prompts.length}`,
@@ -168,6 +175,20 @@ describe('an agent using a read tool from an app', () => {
     const done = events.at(-1);
     expect(done?.type).toBe('done');
     expect(JSON.stringify(done)).toContain('Answer using');
+  });
+
+  it('starts the text after a tool call on a new paragraph', async () => {
+    const {events} = await ask('Is order A1 on its way?');
+    const done = events.at(-1);
+
+    expect(done?.type === 'done' && done.message.content).toMatch(
+      /^Let me check\.\n\nAnswer using/,
+    );
+    // The streamed pieces add up to exactly what was saved.
+    const streamed = events
+      .map((event) => (event.type === 'delta' ? event.text : ''))
+      .join('');
+    expect(done?.type === 'done' && done.message.content).toBe(streamed);
   });
 
   it('gives the tool result back to the model', () => {

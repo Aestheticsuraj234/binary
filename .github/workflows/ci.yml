@@ -34,6 +34,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Chromium (and the system libraries it needs) for the browser tests.
+      - run: pnpm --filter @binary/api exec playwright install --with-deps chromium
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

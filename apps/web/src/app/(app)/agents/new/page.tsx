@@ -10,6 +10,7 @@ import Link from 'next/link';
 import {redirect} from 'next/navigation';
 
 import {AgentForm} from '@/components/agents/agent-form';
+import type {ComputerList} from '@/lib/computers';
 import {getFromApi} from '@/lib/server-api';
 
 export const metadata: Metadata = {title: 'Hire a character · Binary'};
@@ -20,10 +21,10 @@ interface NewAgentPageProps {
 
 export default async function NewAgentPage({searchParams}: NewAgentPageProps) {
   const {template: slug} = await searchParams;
-  const [keyData, templateData, sandboxData] = await Promise.all([
+  const [keyData, templateData, computerData] = await Promise.all([
     getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
     getFromApi<{templates: AgentTemplate[]}>('/api/agent-templates'),
-    getFromApi<{available: boolean}>('/api/sandboxes'),
+    getFromApi<ComputerList>('/api/computers'),
   ]);
   const connectedProviders = (keyData?.keys ?? []).map((key) => key.provider);
   // A character needs a model to think with, and a model needs a key.
@@ -55,7 +56,9 @@ export default async function NewAgentPage({searchParams}: NewAgentPageProps) {
       <AgentForm
         connectedProviders={connectedProviders}
         template={template}
-        sandboxAvailable={sandboxData?.available ?? false}
+        availableComputers={
+          computerData?.available ?? {sandbox: false, browser: false}
+        }
       />
     </main>
   );

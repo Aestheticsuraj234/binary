@@ -45,9 +45,17 @@ interface AgentFormProps {
   agent?: Agent;
   /** Pre-fills a new agent from a ready-made template. */
   template?: AgentTemplate;
-  /** Whether the API can start cloud sandboxes (E2B is set up). */
-  sandboxAvailable: boolean;
+  /** Which computers the API can provide (E2B key, Chromium installed). */
+  availableComputers: Record<AgentComputer, boolean>;
 }
+
+/** The one step that turns on a computer this server can't provide yet. */
+const SETUP_HINTS: Record<AgentComputer, string> = {
+  sandbox:
+    'Cloud sandboxes need an E2B key: add E2B_API_KEY to .env and restart the API.',
+  browser:
+    'Browsers need Chromium: run pnpm browsers:install and restart the API.',
+};
 
 /** The suggested models, plus the agent's own model if it is not listed. */
 function modelOptions(provider: Provider, currentModel: string) {
@@ -74,7 +82,7 @@ export function AgentForm({
   connectedProviders,
   agent,
   template,
-  sandboxAvailable,
+  availableComputers,
 }: AgentFormProps) {
   const router = useRouter();
   const [avatar, setAvatar] = useState<CharacterId>(
@@ -92,13 +100,13 @@ export function AgentForm({
   const [approvalMode, setApprovalMode] = useState<ApprovalMode>(
     agent?.approvalMode ?? DEFAULT_APPROVAL_MODE,
   );
-  const [computer, setComputer] = useState<AgentComputer | null>(
-    agent
-      ? agent.defaultComputer
-      : sandboxAvailable
-        ? (TEMPLATE_COMPUTERS[template?.slug ?? ''] ?? null)
-        : null,
-  );
+  const [computer, setComputer] = useState<AgentComputer | null>(() => {
+    if (agent) {
+      return agent.defaultComputer;
+    }
+    const suggested = TEMPLATE_COMPUTERS[template?.slug ?? ''];
+    return suggested && availableComputers[suggested] ? suggested : null;
+  });
   const [model, setModel] = useState(
     agent?.model ?? PROVIDER_INFO[provider].models[0] ?? '',
   );
@@ -343,23 +351,24 @@ export function AgentForm({
               <NativeSelectOption
                 key={kind}
                 value={kind}
-                disabled={!sandboxAvailable && computer !== kind}
+                disabled={!availableComputers[kind] && computer !== kind}
               >
                 {AGENT_COMPUTER_INFO[kind].label}
-                {!sandboxAvailable && ' (not set up)'}
+                {!availableComputers[kind] && ' (not set up)'}
               </NativeSelectOption>
             ))}
           </NativeSelect>
           <p className="text-xs text-muted-foreground">
             {computer
-              ? `${AGENT_COMPUTER_INFO[computer].description} Running code always asks you first.`
+              ? AGENT_COMPUTER_INFO[computer].description
               : 'Uses its tools and apps only.'}
           </p>
-          {!sandboxAvailable && (
-            <p className="text-xs text-warning">
-              Cloud sandboxes need an E2B key: add E2B_API_KEY to the API&apos;s
-              .env and restart it.
-            </p>
+          {AGENT_COMPUTERS.filter((kind) => !availableComputers[kind]).map(
+            (kind) => (
+              <p key={kind} className="text-xs text-warning">
+                {SETUP_HINTS[kind]}
+              </p>
+            ),
           )}
         </div>
 
