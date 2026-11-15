@@ -8,13 +8,15 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 9 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 10 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
 > give them tools and MCP apps, and set up routines they run on a schedule,
 > by webhook or on demand, on Trigger.dev. Each character has a permission
 > level: tools that change things ask first, and you approve or reject them
 > in the chat or in the **Today** inbox. Characters with a cloud sandbox
 > (E2B) run code, commands and files, and charts show up in the chat.
+> Characters with a browser (Playwright) open, read, click and type on the
+> public web, with a screenshot of every step.
 
 ## What's inside
 
@@ -80,7 +82,9 @@ Two services are optional, each turned on by one key in `.env`:
 `TRIGGER_SECRET_KEY` runs routines on Trigger.dev
 ([Chapter 7](docs/chapters/chapter-07/README.md)), and `E2B_API_KEY` gives
 characters a cloud sandbox to run code in
-([Chapter 9](docs/chapters/chapter-09/README.md)).
+([Chapter 9](docs/chapters/chapter-09/README.md)). Characters' browsers
+([Chapter 10](docs/chapters/chapter-10/README.md)) need Chromium, which
+`pnpm setup` downloads; on an older checkout, run `pnpm browsers:install`.
 
 ### 5. Run the mobile app (optional)
 
@@ -98,20 +102,21 @@ laptop must be on the same Wi-Fi.
 
 ## Everyday commands
 
-| Command            | What it does                                  |
-| ------------------ | --------------------------------------------- |
-| `pnpm dev`         | Start the API and web app                     |
-| `pnpm mobile`      | Start the Expo dev server                     |
-| `pnpm trigger:dev` | Run routines on Trigger.dev (optional, Ch. 7) |
-| `pnpm test`        | Migrate, then run all tests (needs Postgres)  |
-| `pnpm db:migrate`  | Apply pending database migrations             |
-| `pnpm db:generate` | Create a migration after changing the schema  |
-| `pnpm db:studio`   | Browse the database in Drizzle Studio         |
-| `pnpm db:seed`     | Add the templates and demo account again      |
-| `pnpm lint`        | Check code style (Google TypeScript Style)    |
-| `pnpm typecheck`   | Type-check every app and package              |
-| `pnpm format`      | Format every file with Prettier               |
-| `pnpm build`       | Production build                              |
+| Command                 | What it does                                        |
+| ----------------------- | --------------------------------------------------- |
+| `pnpm dev`              | Start the API and web app                           |
+| `pnpm mobile`           | Start the Expo dev server                           |
+| `pnpm trigger:dev`      | Run routines on Trigger.dev (optional, Ch. 7)       |
+| `pnpm browsers:install` | Download Chromium for characters' browsers (Ch. 10) |
+| `pnpm test`             | Migrate, then run all tests (needs Postgres)        |
+| `pnpm db:migrate`       | Apply pending database migrations                   |
+| `pnpm db:generate`      | Create a migration after changing the schema        |
+| `pnpm db:studio`        | Browse the database in Drizzle Studio               |
+| `pnpm db:seed`          | Add the templates and demo account again            |
+| `pnpm lint`             | Check code style (Google TypeScript Style)          |
+| `pnpm typecheck`        | Type-check every app and package                    |
+| `pnpm format`           | Format every file with Prettier                     |
+| `pnpm build`            | Production build                                    |
 
 ## Troubleshooting
 
@@ -150,3 +155,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 7: Durable jobs and routines](docs/chapters/chapter-07/README.md)
 - [Chapter 8: Approvals, permissions and Today](docs/chapters/chapter-08/README.md)
 - [Chapter 9: Cloud sandboxes with E2B](docs/chapters/chapter-09/README.md)
+- [Chapter 10: Browser automation with Playwright](docs/chapters/chapter-10/README.md)

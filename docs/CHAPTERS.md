@@ -20,7 +20,7 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 7   | Durable jobs and routines                 | Long-running tasks and scheduled routines (cron, webhook, manual) on Trigger.dev, with run history                       | ✅ Done ⁴ |
 | 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                 | ✅ Done ⁵ |
 | 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | ✅ Done ⁶ |
-| 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | Planned   |
+| 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | ✅ Done ⁷ |
 | 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | Planned   |
 | 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                           | Planned   |
 | 13  | Multi-agent teams and rooms               | Several agents working together in rooms, routed by @mention or automatically                                            | Planned   |
@@ -54,6 +54,14 @@ no LISTEN/NOTIFY).
 approved run and stopped after 10 idle minutes. It is optional: without
 `E2B_API_KEY`, characters have no sandbox. Verified on real E2B (code,
 charts, files, stop) with a scripted model.
+
+⁷ Chapter 10 runs Playwright Chromium inside the API, one context per chat.
+Opening and reading pages run on their own; clicking and typing ask first.
+Every request the browser makes is limited to public addresses. Browsers
+live in memory, so a restart closes them. Chapter 9's `/api/sandboxes`
+became `/api/computers`, for sandboxes and browsers alike. Verified with
+real models (Claude Sonnet 5.5 in the browser, GPT-5.5 in an E2B sandbox),
+which also added math rendering to chat answers.
 
 ## Every chapter ships with
 

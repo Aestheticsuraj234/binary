@@ -84,8 +84,9 @@ for React Native in `apps/mobile/src/lib/theme.ts`.
 | CrewCard, CastCard            | `components/characters/character-cards.tsx`  |
 | SpeechBubble                  | `components/characters/speech-bubble.tsx`    |
 | ModelBadge                    | `components/agents/model-badge.tsx`          |
-| SandboxChip, SandboxSection   | `components/sandboxes/` (Ch. 9)              |
-| SandboxCharts, TerminalOutput | `components/chat/sandbox-output.tsx` (Ch. 9) |
+| ComputerChip, ComputerSection | `components/computers/` (Ch. 9, 10)          |
+| TerminalOutput                | `components/chat/sandbox-output.tsx` (Ch. 9) |
+| ToolImages, BrowserOutput     | `components/chat/` (Ch. 10)                  |
 
 Add new shadcn components with:
 
@@ -146,7 +147,8 @@ pnpm dlx shadcn@latest add <component>
   `github-dark-default` with copy and download buttons; links are lime and
   ask before opening; a block caret follows streaming text. Your own messages
   stay plain text. Never render model output with `whitespace-pre-wrap`
-  again.
+  again. Math (Ch. 10) renders with KaTeX: `$$…$$`, and LaTeX's `\(…\)`
+  and `\[…\]` through `normalizeMath`. A single `$` is never math.
 - **Risk badges (Ch. 6):** `RiskBadge` is an outline pill with an icon
   (book = read, pen = write, monitor = computer). Read is muted; write
   and computer use `warning`. Never use lime for risk.
@@ -186,16 +188,25 @@ pnpm dlx shadcn@latest add <component>
   950, bordered, mono): stdout in the default colour, stderr in amber,
   values in lime, errors in red, then "Made a chart." and the exit code
   (muted for 0, `warning` otherwise).
-- **Charts (Ch. 9):** PNGs from the sandbox show below the tool row
-  without opening it, on white with `rounded-xl`. One chart spans the row
-  (up to `max-w-xl`); several go two per row.
-- **Running computers stay visible (Ch. 9):** while a chat's sandbox runs,
-  its header shows an outline pill ("● Sandbox on") with a pulsing lime dot
-  and an icon-only Stop. The Apps page lists every running sandbox with
-  Chat and Stop.
-- **Computer select (Ch. 9):** None or Cloud sandbox, with a one-line
-  description. When E2B isn't set up, the option is disabled "(not set up)"
-  and a `warning` line says the one step that fixes it.
+- **Pictures under the row (Ch. 9, 10):** sandbox charts and browser
+  screenshots show below the tool row without opening it, on white with a
+  border and `rounded-xl`. One image spans the row (up to `max-w-xl`);
+  several go two per row. Alt text names them ("Screenshot of Example
+  Domain").
+- **Browser results (Ch. 10):** the open row shows the page's title in
+  medium weight, its address in mono and muted, the start of its text in a
+  `muted` box, and "N things to click or type into". A blocked navigation
+  is one `warning` line on top.
+- **Running computers stay visible (Ch. 9, 10):** while a chat's computer
+  runs, its header shows an outline pill ("● Sandbox on" / "● Browser
+  open") with a pulsing lime dot and an icon-only stop ("Stop sandbox" /
+  "Close browser"). The Apps page has one section per computer, each with
+  a Set up / Not set up badge, its tools, and what is running now (Chat,
+  Stop or Close).
+- **Computer select (Ch. 9, 10):** None, Cloud sandbox or Browser, with the
+  chosen one's one-line description. A computer this server can't provide
+  is disabled "(not set up)", with one `warning` line per missing computer
+  saying the one step that fixes it.
 - **Missing setup notices:** when a feature works only partly (for example
   schedules without Trigger.dev), a `warning` note at the top of the page
   says what works, what doesn't, and the one step that fixes it.
