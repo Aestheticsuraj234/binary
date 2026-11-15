@@ -1,5 +1,6 @@
 import {
   APPROVAL_STATUSES,
+  COMPUTER_KINDS,
   PROVIDERS,
   RUN_STATUSES,
   TOOL_CALL_STATUSES,
@@ -28,12 +29,8 @@ export const approvalModeEnum = pgEnum('approval_mode', [
   'plan_only',
 ]);
 
-export const computerKindEnum = pgEnum('computer_kind', [
-  'runner',
-  'sandbox',
-  'desktop',
-  'browser',
-]);
+// Shared with the API and the web app (Chapter 9), in the original order.
+export const computerKindEnum = pgEnum('computer_kind', COMPUTER_KINDS);
 
 export const deviceStatusEnum = pgEnum('device_status', ['online', 'offline']);
 

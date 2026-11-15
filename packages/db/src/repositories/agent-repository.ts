@@ -15,10 +15,11 @@ export type AgentChanges = Pick<
   | 'model'
   | 'avatar'
   | 'approvalMode'
+  | 'defaultComputer'
 >;
 
 // The columns the app shows today. `userId` stays on the server, and the
-// columns later chapters use (engine, approvals, computers) are left out.
+// engine column (Chapter 11) is left out.
 // `avatar` holds the id of the character that plays the agent.
 const AGENT_COLUMNS = {
   id: agents.id,
@@ -30,6 +31,7 @@ const AGENT_COLUMNS = {
   provider: agents.provider,
   model: agents.model,
   approvalMode: agents.approvalMode,
+  defaultComputer: agents.defaultComputer,
   createdAt: agents.createdAt,
   updatedAt: agents.updatedAt,
 };

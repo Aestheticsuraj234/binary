@@ -6,6 +6,7 @@ import {agentTemplates, users} from '../schema';
 import {createTestUser} from '../test-utils';
 import {AgentRepository} from './agent-repository';
 import {ApprovalRepository} from './approval-repository';
+import {ComputerSessionRepository} from './computer-session-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
 import {McpServerRepository} from './mcp-server-repository';
 import {MessageRepository} from './message-repository';
@@ -510,5 +511,75 @@ describe('ApprovalRepository', () => {
       status: 'executed',
       toolCall: {status: 'succeeded', output: {ok: true}},
     });
+  });
+});
+
+describe('ComputerSessionRepository', () => {
+  const sessions = new ComputerSessionRepository(db);
+  let threadId = '';
+  let sessionId = '';
+
+  beforeAll(async () => {
+    const agent = await new AgentRepository(db).create({
+      userId,
+      name: 'Ada',
+      role: 'Analyses data.',
+      avatar: 'ada',
+      approvalMode: 'auto_approve_reads',
+      defaultComputer: 'sandbox',
+    });
+    expect(agent.defaultComputer).toBe('sandbox');
+    threadId = (await new ThreadRepository(db).createForAgent(userId, agent.id))
+      .id;
+  });
+
+  it("creates a session and finds it as the chat's running sandbox", async () => {
+    const created = await sessions.create({
+      userId,
+      kind: 'sandbox',
+      providerId: 'sbx-1',
+      threadId,
+    });
+    sessionId = created.id;
+
+    const found = await sessions.findRunningForThread(
+      userId,
+      threadId,
+      'sandbox',
+    );
+    expect(found).toMatchObject({id: sessionId, providerId: 'sbx-1'});
+  });
+
+  it('lists running sessions with their chat and agent', async () => {
+    await sessions.touch(sessionId);
+
+    const [running] = await sessions.listRunningForUser(userId, 'sandbox');
+    expect(running).toMatchObject({
+      id: sessionId,
+      threadId,
+      agent: {name: 'Ada'},
+      minutesUsed: 1,
+    });
+  });
+
+  it('is invisible to another user', async () => {
+    expect(await sessions.findForUser(otherUserId, sessionId)).toBeUndefined();
+    expect(
+      await sessions.findRunningForThread(otherUserId, threadId, 'sandbox'),
+    ).toBeUndefined();
+    expect(await sessions.listRunningForUser(otherUserId, 'sandbox')).toEqual(
+      [],
+    );
+  });
+
+  it('closes a session, after which the chat has none running', async () => {
+    await sessions.close(sessionId, {stillRunning: true});
+
+    const closed = await sessions.findForUser(userId, sessionId);
+    expect(closed?.status).toBe('closed');
+    expect(closed?.closedAt).toBeInstanceOf(Date);
+    expect(
+      await sessions.findRunningForThread(userId, threadId, 'sandbox'),
+    ).toBeUndefined();
   });
 });
