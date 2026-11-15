@@ -47,6 +47,11 @@ import {SandboxSessions} from './sandboxes/sandbox-sessions';
 import type {AppConnector} from './tools/mcp';
 import {ToolboxFactory} from './tools/toolbox-factory';
 import {publicUrlsOnly, type UrlGuard} from './tools/web-page';
+import {
+  createTranscriber,
+  Voice,
+  type TranscriberMaker,
+} from './voice/transcriber';
 
 /** Everything the routes need, created once and passed in. */
 export interface AppDependencies {
@@ -76,6 +81,8 @@ export interface AppDependencies {
   knowledge: KnowledgeBase;
   /** Rooms of several agents (Chapter 13). */
   rooms: RoomRepository;
+  /** Voice input for the mobile app (Chapter 14). */
+  voice: Voice;
   jobs: JobRunner;
 }
 
@@ -96,6 +103,8 @@ export interface DependencyOptions {
   createEmbedder?: EmbedderMaker;
   /** Which pages knowledge may fetch. Default: public addresses only. */
   pageGuard?: UrlGuard;
+  /** Builds transcribers; tests pass one that needs no network. */
+  createTranscriber?: TranscriberMaker;
 }
 
 /**
@@ -114,6 +123,7 @@ export function createDependencies(
     browserGuard = chromiumInstalled() ? publicUrlsOnly : null,
     createEmbedder: makeEmbedder = createEmbedder,
     pageGuard = publicUrlsOnly,
+    createTranscriber: makeTranscriber = createTranscriber,
   }: DependencyOptions = {},
 ): AppDependencies {
   const agents = new AgentRepository(db);
@@ -183,6 +193,7 @@ export function createDependencies(
     memory,
     knowledge,
     rooms: new RoomRepository(db),
+    voice: new Voice(providerKeys, keyVault, makeTranscriber),
   };
   return {...base, jobs: makeJobs(base)};
 }

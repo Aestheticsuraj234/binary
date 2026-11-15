@@ -1,5 +1,5 @@
 import type {AgentRepository, RoomRepository} from '@binary/db';
-import type {ChatMessage} from '@binary/shared';
+import type {ChatMessage, Client} from '@binary/shared';
 
 import {writeReply, type ReplyDependencies} from '../chat/reply';
 import type {PromptImage} from '../engines/agent-engine';
@@ -16,6 +16,8 @@ export interface Decision {
   userId: string;
   approvalId: string;
   decision: 'approved' | 'rejected';
+  /** Which app the user decided in. Default: the web app. */
+  from?: Client;
 }
 
 export interface DecisionResult {
@@ -57,13 +59,13 @@ function asText(output: unknown): string {
  */
 export async function decideApproval(
   deps: DecideDependencies,
-  {userId, approvalId, decision}: Decision,
+  {userId, approvalId, decision, from}: Decision,
 ): Promise<DecisionResult> {
   const approval = await deps.approvals.findForUser(userId, approvalId);
   if (!approval) {
     throw new NotFoundError('Request');
   }
-  if (!(await deps.approvals.decide(approval.id, decision))) {
+  if (!(await deps.approvals.decide(approval.id, decision, from))) {
     throw new AppError('This request was already decided.', 409);
   }
 

@@ -1,4 +1,4 @@
-import type {Approval} from '@binary/shared';
+import {CLIENT_HEADER, type Approval, type Client} from '@binary/shared';
 import {Hono} from 'hono';
 
 import {decideApproval} from '../approvals/decide';
@@ -18,6 +18,11 @@ export function toApprovalView(row: ApprovalRow): Approval {
     createdAt: row.createdAt.toISOString(),
     decidedAt: row.decidedAt?.toISOString() ?? null,
   };
+}
+
+/** The app a request came from: the mobile app says so in a header. */
+export function clientOf(header: string | undefined): Client {
+  return header === 'mobile' ? 'mobile' : 'web';
 }
 
 /** What agents asked to do, and the user's answers. */
@@ -43,6 +48,7 @@ export function approvalRoutes(deps: AppDependencies) {
         userId,
         approvalId: id,
         decision,
+        from: clientOf(c.req.header(CLIENT_HEADER)),
       });
       const approval = await approvals.findForUser(userId, id);
       return c.json({
