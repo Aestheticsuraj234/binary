@@ -20,9 +20,10 @@ interface NewAgentPageProps {
 
 export default async function NewAgentPage({searchParams}: NewAgentPageProps) {
   const {template: slug} = await searchParams;
-  const [keyData, templateData] = await Promise.all([
+  const [keyData, templateData, sandboxData] = await Promise.all([
     getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
     getFromApi<{templates: AgentTemplate[]}>('/api/agent-templates'),
+    getFromApi<{available: boolean}>('/api/sandboxes'),
   ]);
   const connectedProviders = (keyData?.keys ?? []).map((key) => key.provider);
   // A character needs a model to think with, and a model needs a key.
@@ -51,7 +52,11 @@ export default async function NewAgentPage({searchParams}: NewAgentPageProps) {
             : 'Pick who plays the part, then give them a job and a model.'}
         </p>
       </div>
-      <AgentForm connectedProviders={connectedProviders} template={template} />
+      <AgentForm
+        connectedProviders={connectedProviders}
+        template={template}
+        sandboxAvailable={sandboxData?.available ?? false}
+      />
     </main>
   );
 }

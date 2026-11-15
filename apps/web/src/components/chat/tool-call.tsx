@@ -12,6 +12,12 @@ import {
 
 import {useState} from 'react';
 
+import {
+  isTerminalOutput,
+  sandboxInput,
+  SandboxCharts,
+  TerminalOutput,
+} from '@/components/chat/sandbox-output';
 import {RiskBadge} from '@/components/tools/risk-badge';
 import {Button} from '@/components/ui/button';
 import {cn} from '@/lib/utils';
@@ -86,6 +92,8 @@ export function ToolCall({call, onDecide}: ToolCallProps) {
   const waiting = call.status === 'awaiting_approval';
   const finished =
     !waiting && call.status !== 'running' && call.status !== 'pending';
+  // Code and commands read better as themselves than as JSON.
+  const code = sandboxInput(call);
 
   async function handleDecide(decision: 'approve' | 'reject') {
     if (!call.approvalId || !onDecide) {
@@ -103,7 +111,8 @@ export function ToolCall({call, onDecide}: ToolCallProps) {
         waiting && 'border-warning/40',
       )}
     >
-      <details className="group/tool">
+      {/* A waiting call starts open: see what you approve before you do. */}
+      <details className="group/tool" open={waiting}>
         <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 [&::-webkit-details-marker]:hidden">
           <Wrench className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate">
@@ -124,19 +133,24 @@ export function ToolCall({call, onDecide}: ToolCallProps) {
             </p>
           )}
           <p className="text-muted-foreground">Input</p>
-          <pre className="max-h-40 overflow-auto rounded-lg bg-muted p-2 font-mono">
-            {asJson(call.input)}
+          <pre className="max-h-40 overflow-auto rounded-lg bg-muted p-2 font-mono whitespace-pre-wrap">
+            {code ?? asJson(call.input)}
           </pre>
           {finished && (
             <>
               <p className="text-muted-foreground">Result</p>
-              <pre className="max-h-60 overflow-auto rounded-lg bg-muted p-2 font-mono whitespace-pre-wrap">
-                {asJson(call.output)}
-              </pre>
+              {isTerminalOutput(call.output) ? (
+                <TerminalOutput output={call.output} />
+              ) : (
+                <pre className="max-h-60 overflow-auto rounded-lg bg-muted p-2 font-mono whitespace-pre-wrap">
+                  {asJson(call.output)}
+                </pre>
+              )}
             </>
           )}
         </div>
       </details>
+      <SandboxCharts call={call} />
       {waiting && call.approvalId && onDecide && (
         <div className="flex flex-wrap items-center gap-2 border-t px-3 py-2">
           <span className="mr-auto text-warning">Needs your OK</span>

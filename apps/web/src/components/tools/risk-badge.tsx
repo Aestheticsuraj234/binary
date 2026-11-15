@@ -17,13 +17,13 @@ export const RISK_INFO: Record<
     label: 'Write',
     icon: PenLine,
     explanation:
-      'Changes something outside Binary, like sending or deleting. Blocked until approvals arrive.',
+      'Changes something outside Binary, like sending or deleting. Asks first, unless the character may accept edits.',
   },
   computer: {
     label: 'Computer',
     icon: Monitor,
     explanation:
-      'Controls a sandbox, a browser or your computer. Comes in later chapters.',
+      'Controls a computer, like running code in a cloud sandbox. Always asks first.',
   },
 };
 

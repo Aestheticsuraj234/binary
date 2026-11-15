@@ -23,6 +23,7 @@ import {
   CharacterAvatar,
   type Mood,
 } from '@/components/characters/character';
+import {SandboxChip} from '@/components/sandboxes/sandbox-chip';
 import {SpeechBubble} from '@/components/characters/speech-bubble';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
@@ -108,6 +109,8 @@ export function AgentChat({
   const [error, setError] = useState('');
   const [mood, setMood] = useState<Mood>('idle');
   const [isRunning, setIsRunning] = useState(false);
+  // Bumped after each reply and decision: the sandbox may have started.
+  const [sandboxCheck, setSandboxCheck] = useState(0);
   const nextLocalId = useRef(0);
   const moodTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const endOfChat = useRef<HTMLDivElement>(null);
@@ -252,6 +255,7 @@ export function AgentChat({
       );
     }
     setIsRunning(false);
+    setSandboxCheck((count) => count + 1);
     // Reload the sidebar so this chat moves to the top of Recent chats.
     router.refresh();
   }
@@ -318,6 +322,7 @@ export function AgentChat({
         ['idle', 0],
       ]);
     }
+    setSandboxCheck((count) => count + 1);
     // The sidebar's count of waiting requests just changed.
     router.refresh();
   }
@@ -395,16 +400,20 @@ export function AgentChat({
             {/* A new chat gets its title from the first message once saved. */}
             {(threadId && title) || 'New chat'}
           </h2>
-          <div className="flex shrink-0 gap-1">
+          <div className="flex shrink-0 items-center gap-1">
+            {threadId && agent.defaultComputer === 'sandbox' && (
+              <SandboxChip threadId={threadId} checkKey={sandboxCheck} />
+            )}
             <Button
               variant="ghost"
               size="sm"
               className="rounded-full"
               onClick={handleNewChat}
               disabled={isRunning || !threadId}
+              aria-label="New chat"
             >
               <Plus />
-              New chat
+              <span className="hidden sm:inline">New chat</span>
             </Button>
             {threadId && (
               <Button
