@@ -12,6 +12,7 @@
     "dev": "turbo run dev --filter=@binary/api --filter=@binary/web",
     "mobile": "pnpm --filter @binary/mobile start",
     "trigger:dev": "pnpm --filter @binary/api trigger:dev",
+    "runner": "pnpm --silent --filter @binary/runner runner",
     "build": "turbo run build",
     "lint": "eslint .",
     "typecheck": "turbo run typecheck",
