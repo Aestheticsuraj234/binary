@@ -13,6 +13,7 @@ import {
 import {useState} from 'react';
 
 import {BrowserOutput, isBrowserOutput} from '@/components/chat/browser-output';
+import {isMemoryOutput, MemoryOutput} from '@/components/chat/memory-output';
 import {
   isTerminalOutput,
   sandboxInput,
@@ -144,6 +145,8 @@ export function ToolCall({call, onDecide}: ToolCallProps) {
                 <TerminalOutput output={call.output} />
               ) : isBrowserOutput(call.output) ? (
                 <BrowserOutput output={call.output} />
+              ) : isMemoryOutput(call.output) ? (
+                <MemoryOutput output={call.output} />
               ) : (
                 <pre className="max-h-60 overflow-auto rounded-lg bg-muted p-2 font-mono whitespace-pre-wrap">
                   {asJson(call.output)}
