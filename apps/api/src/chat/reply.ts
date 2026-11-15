@@ -32,6 +32,45 @@ export function toolSummary(toolName: string, input: unknown): string {
   return summary.length > 200 ? `${summary.slice(0, 199)}…` : summary;
 }
 
+/** The room an agent is answering in, for its prompt and its history. */
+export interface RoomContext {
+  name: string;
+  members: {id: string; name: string; role: string}[];
+}
+
+/**
+ * Earlier messages as the model reads them. Tool notes are not chat. In a
+ * room, what another agent said is shown to this one as "[Name]: …", so it
+ * can tell its own words from its teammates'.
+ */
+export function historyFor(
+  earlier: {
+    role: ChatMessage['role'];
+    content: string;
+    authorAgentId?: string | null;
+  }[],
+  agentId: string,
+  room?: RoomContext,
+): ChatTurn[] {
+  return earlier.flatMap((message): ChatTurn[] => {
+    if (message.role === 'tool') {
+      return [];
+    }
+    if (
+      room &&
+      message.role === 'assistant' &&
+      message.authorAgentId &&
+      message.authorAgentId !== agentId
+    ) {
+      const name =
+        room.members.find((member) => member.id === message.authorAgentId)
+          ?.name ?? 'Another agent';
+      return [{role: 'user', content: `[${name}]: ${message.content}`}];
+    }
+    return [{role: message.role, content: message.content}];
+  });
+}
+
 export interface ReplyDependencies {
   messages: MessageRepository;
   threads: ThreadRepository;
@@ -67,6 +106,14 @@ export interface ReplyRequest {
   images?: PromptImage[];
   /** The title a new thread gets. Defaults to its first message. */
   title?: string;
+  /**
+   * False when `content` is only a prompt for the model and must not be
+   * saved: in a room, the user's message is saved once, then each agent is
+   * told it's their turn.
+   */
+  saveContent?: boolean;
+  /** In a room: who else is there (Chapter 13). */
+  room?: RoomContext;
   /** Hears every piece of text and tool update as it happens. */
   onEvent?: (event: ChatStreamEvent) => Promise<unknown>;
 }
@@ -98,6 +145,8 @@ export async function writeReply(
     savedAs = 'user',
     instruction,
     images,
+    saveContent = true,
+    room,
   }: ReplyRequest,
 ): Promise<ChatMessage> {
   const emit = async (event: ChatStreamEvent) => {
@@ -105,19 +154,14 @@ export async function writeReply(
   };
 
   const earlier = await messages.listForThread(threadId);
-  // Tool messages are not chat; the model only reads user and agent turns.
-  const history: ChatTurn[] = earlier
-    .slice(-HISTORY_LIMIT)
-    .flatMap((message) =>
-      message.role === 'tool'
-        ? []
-        : [{role: message.role, content: message.content}],
-    );
+  const history = historyFor(earlier.slice(-HISTORY_LIMIT), agent.id, room);
 
   // Save the question first, so it is kept even if the answer fails.
-  await messages.add({threadId, role: savedAs, content});
-  if (earlier.length === 0) {
-    await threads.rename(userId, threadId, title ?? titleFrom(content));
+  if (saveContent) {
+    await messages.add({threadId, role: savedAs, content});
+    if (earlier.length === 0) {
+      await threads.rename(userId, threadId, title ?? titleFrom(content));
+    }
   }
 
   const {toolbox} = await toolboxes.forUser(userId, {
@@ -126,8 +170,15 @@ export async function writeReply(
     computer: agent.defaultComputer,
   });
   // What the agent remembers that bears on this message.
+  const lastUserMessage = earlier.findLast(
+    (message) => message.role === 'user',
+  );
   const remembered = memory
-    ? await memory.forPrompt(userId, agent.id, content)
+    ? await memory.forPrompt(
+        userId,
+        agent.id,
+        saveContent ? content : (lastUserMessage?.content ?? content),
+      )
     : [];
   const log = new ToolCallLog((name) => toolbox.riskOf(name));
   const emitTool = async (
@@ -144,7 +195,7 @@ export async function writeReply(
 
   try {
     const events = engine.stream({
-      system: buildSystemPrompt(agent, remembered),
+      system: buildSystemPrompt(agent, remembered, room),
       prompt: instruction ? `${content}\n\n${instruction}` : content,
       images,
       history,

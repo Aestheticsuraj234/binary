@@ -7,6 +7,7 @@ import {
   KnowledgeRepository,
   McpServerRepository,
   MemoryRepository,
+  RoomRepository,
   MessageRepository,
   ProviderKeyRepository,
   RoutineRepository,
@@ -73,6 +74,8 @@ export interface AppDependencies {
   /** Long-term memory and knowledge (Chapter 12). */
   memory: AgentMemory;
   knowledge: KnowledgeBase;
+  /** Rooms of several agents (Chapter 13). */
+  rooms: RoomRepository;
   jobs: JobRunner;
 }
 
@@ -179,6 +182,7 @@ export function createDependencies(
     runnerHub,
     memory,
     knowledge,
+    rooms: new RoomRepository(db),
   };
   return {...base, jobs: makeJobs(base)};
 }

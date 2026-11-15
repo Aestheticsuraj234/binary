@@ -14,6 +14,7 @@ import {knowledgeRoutes, memoryRoutes} from './routes/memory';
 import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
+import {roomRoutes} from './routes/rooms';
 import {routineRoutes} from './routes/routines';
 import {runnerRoutes} from './routes/runner';
 import {computerRoutes} from './routes/computers';
@@ -64,6 +65,7 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/agents', agentRoutes(dependencies));
   app.route('/api/agents', memoryRoutes(dependencies));
   app.route('/api/knowledge', knowledgeRoutes(dependencies));
+  app.route('/api/rooms', roomRoutes(dependencies));
   app.route('/api/agent-templates', agentTemplateRoutes(dependencies));
   app.route('/api/threads', threadRoutes(dependencies));
   app.route('/api/apps', appRoutes(dependencies));
