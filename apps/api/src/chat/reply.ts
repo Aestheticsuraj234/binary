@@ -13,6 +13,7 @@ import type {
 } from '@binary/shared';
 
 import {buildSystemPrompt} from '../agents/system-prompt';
+import type {AgentMemory} from '../memory/agent-memory';
 import type {AgentEngine, PromptImage} from '../engines/agent-engine';
 import {ProviderError} from '../errors';
 import {approvalPolicy} from '../tools/policy';
@@ -37,6 +38,8 @@ export interface ReplyDependencies {
   toolCalls: ToolCallRepository;
   approvals: ApprovalRepository;
   toolboxes: ToolboxFactory;
+  /** Long-term memory (Chapter 12); its closest memories join the prompt. */
+  memory?: AgentMemory;
 }
 
 export interface ReplyRequest {
@@ -76,7 +79,14 @@ export interface ReplyRequest {
  * Throws ProviderError if the model fails; the question stays saved.
  */
 export async function writeReply(
-  {messages, threads, toolCalls, approvals, toolboxes}: ReplyDependencies,
+  {
+    messages,
+    threads,
+    toolCalls,
+    approvals,
+    toolboxes,
+    memory,
+  }: ReplyDependencies,
   {
     userId,
     agent,
@@ -112,8 +122,13 @@ export async function writeReply(
 
   const {toolbox} = await toolboxes.forUser(userId, {
     threadId,
+    agentId: agent.id,
     computer: agent.defaultComputer,
   });
+  // What the agent remembers that bears on this message.
+  const remembered = memory
+    ? await memory.forPrompt(userId, agent.id, content)
+    : [];
   const log = new ToolCallLog((name) => toolbox.riskOf(name));
   const emitTool = async (
     call: ReturnType<ToolCallLog['start']> | undefined,
@@ -129,7 +144,7 @@ export async function writeReply(
 
   try {
     const events = engine.stream({
-      system: buildSystemPrompt(agent),
+      system: buildSystemPrompt(agent, remembered),
       prompt: instruction ? `${content}\n\n${instruction}` : content,
       images,
       history,

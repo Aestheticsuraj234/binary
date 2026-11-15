@@ -8,6 +8,8 @@ import type {
 
 import type {BrowserSessions} from '../browsers/browser-sessions';
 import type {DesktopSessions} from '../desktops/cloud-desktop';
+import type {AgentMemory} from '../memory/agent-memory';
+import type {KnowledgeBase} from '../memory/knowledge-base';
 import type {YourComputers} from '../runner/your-computers';
 
 import {AppConnectionError} from '../errors';
@@ -23,13 +25,15 @@ import {
 } from './mcp';
 import {browserTools} from './browser-tools';
 import {desktopTools} from './desktop-tools';
+import {memoryTools} from './memory-tools';
 import {runnerTools} from './runner-tools';
 import {sandboxTools} from './sandbox-tools';
 import {Toolbox} from './toolbox';
 
-/** Which chat the tools are for, and the computer its agent uses. */
+/** Which chat the tools are for, its agent, and the computer it uses. */
 export interface ToolScope {
   threadId: string;
+  agentId: string;
   computer: ComputerKind | null;
 }
 
@@ -44,6 +48,9 @@ export interface ToolboxOptions {
   desktops?: DesktopSessions;
   /** The user's own computers, through the Runner. */
   yourComputers?: YourComputers;
+  /** Memory and knowledge (Chapter 12), for users with an embedding key. */
+  memory?: AgentMemory;
+  knowledge?: KnowledgeBase;
   builtIns?: AgentTool[];
 }
 
@@ -75,6 +82,8 @@ export class ToolboxFactory {
   private readonly browsers?: BrowserSessions;
   private readonly desktops?: DesktopSessions;
   private readonly yourComputers?: YourComputers;
+  private readonly memory?: AgentMemory;
+  private readonly knowledge?: KnowledgeBase;
   private readonly builtIns: AgentTool[];
 
   constructor(
@@ -87,6 +96,8 @@ export class ToolboxFactory {
     this.browsers = options.browsers;
     this.desktops = options.desktops;
     this.yourComputers = options.yourComputers;
+    this.memory = options.memory;
+    this.knowledge = options.knowledge;
     this.builtIns = options.builtIns ?? builtInTools();
   }
 
@@ -139,9 +150,10 @@ export class ToolboxFactory {
     );
     const appTools = connections.flatMap((connection) => connection.tools);
     const computerTools = scope ? await this.computerTools(userId, scope) : [];
+    const rememberingTools = scope ? await this.memoryTools(userId, scope) : [];
     return {
       toolbox: new Toolbox(
-        [...this.builtIns, ...computerTools, ...appTools],
+        [...this.builtIns, ...rememberingTools, ...computerTools, ...appTools],
         connections,
       ),
       apps: opened.map(({app}) => app),
@@ -164,6 +176,22 @@ export class ToolboxFactory {
     }
     const {ciphertext, iv} = this.keyVault.encrypt(authorization);
     return {encryptedAuth: ciphertext, iv};
+  }
+
+  /** Memory and knowledge tools, when the user has a key to embed with. */
+  private async memoryTools(userId: string, {threadId, agentId}: ToolScope) {
+    if (
+      !this.memory ||
+      !this.knowledge ||
+      !(await this.memory.available(userId))
+    ) {
+      return [];
+    }
+    return memoryTools(this.memory, this.knowledge, {
+      userId,
+      agentId,
+      threadId,
+    });
   }
 
   private async computerTools(

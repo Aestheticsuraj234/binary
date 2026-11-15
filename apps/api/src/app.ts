@@ -10,6 +10,7 @@ import {agentTemplateRoutes} from './routes/agent-templates';
 import {approvalRoutes, todayRoutes} from './routes/approvals';
 import {appRoutes} from './routes/apps';
 import {hookRoutes} from './routes/hooks';
+import {knowledgeRoutes, memoryRoutes} from './routes/memory';
 import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
@@ -61,6 +62,8 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/provider-keys', providerKeyRoutes(dependencies));
   app.route('/api/playground', playgroundRoutes(dependencies));
   app.route('/api/agents', agentRoutes(dependencies));
+  app.route('/api/agents', memoryRoutes(dependencies));
+  app.route('/api/knowledge', knowledgeRoutes(dependencies));
   app.route('/api/agent-templates', agentTemplateRoutes(dependencies));
   app.route('/api/threads', threadRoutes(dependencies));
   app.route('/api/apps', appRoutes(dependencies));

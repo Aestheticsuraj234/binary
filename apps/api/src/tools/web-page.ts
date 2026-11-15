@@ -80,7 +80,11 @@ export function htmlToText(html: string): string {
  * Fetches a page and returns its title and readable text. Redirects are
  * followed by hand, so every hop passes the guard again.
  */
-export async function fetchPageText(rawUrl: string, guard: UrlGuard) {
+export async function fetchPageText(
+  rawUrl: string,
+  guard: UrlGuard,
+  maxLength = MAX_TEXT_LENGTH,
+) {
   let url = new URL(rawUrl);
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     await guard(url);
@@ -109,8 +113,8 @@ export async function fetchPageText(rawUrl: string, guard: UrlGuard) {
     return {
       url: url.toString(),
       title,
-      text: text.slice(0, MAX_TEXT_LENGTH),
-      truncated: text.length > MAX_TEXT_LENGTH,
+      text: text.slice(0, maxLength),
+      truncated: text.length > maxLength,
     };
   }
   throw new Error('The page redirected too many times.');

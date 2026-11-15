@@ -4,7 +4,9 @@ import {
   AgentTemplateRepository,
   ComputerSessionRepository,
   DeviceRepository,
+  KnowledgeRepository,
   McpServerRepository,
+  MemoryRepository,
   MessageRepository,
   ProviderKeyRepository,
   RoutineRepository,
@@ -31,6 +33,13 @@ import {BrowserSessions, chromiumInstalled} from './browsers/browser-sessions';
 import type {ComputerSessions} from './computers/computer-sessions';
 import {DesktopSessions, type DesktopProvider} from './desktops/cloud-desktop';
 import {E2BDesktopProvider} from './desktops/e2b-desktop-provider';
+import {AgentMemory} from './memory/agent-memory';
+import {
+  createEmbedder,
+  EmbedderFactory,
+  type EmbedderMaker,
+} from './memory/embedder';
+import {KnowledgeBase} from './memory/knowledge-base';
 import type {SandboxProvider} from './sandboxes/cloud-sandbox';
 import {E2BSandboxProvider} from './sandboxes/e2b-sandbox-provider';
 import {SandboxSessions} from './sandboxes/sandbox-sessions';
@@ -61,6 +70,9 @@ export interface AppDependencies {
   /** The user's own computers and the Runners on them (Chapter 11). */
   devices: DeviceRepository;
   runnerHub: RunnerHub;
+  /** Long-term memory and knowledge (Chapter 12). */
+  memory: AgentMemory;
+  knowledge: KnowledgeBase;
   jobs: JobRunner;
 }
 
@@ -77,6 +89,10 @@ export interface DependencyOptions {
    * public addresses only. Tests pass a guard that allows their local site.
    */
   browserGuard?: UrlGuard | null;
+  /** Builds embedders; tests pass one that needs no network. */
+  createEmbedder?: EmbedderMaker;
+  /** Which pages knowledge may fetch. Default: public addresses only. */
+  pageGuard?: UrlGuard;
 }
 
 /**
@@ -93,6 +109,8 @@ export function createDependencies(
     sandboxProvider = defaultSandboxes(),
     desktopProvider = defaultDesktops(),
     browserGuard = chromiumInstalled() ? publicUrlsOnly : null,
+    createEmbedder: makeEmbedder = createEmbedder,
+    pageGuard = publicUrlsOnly,
   }: DependencyOptions = {},
 ): AppDependencies {
   const agents = new AgentRepository(db);
@@ -122,12 +140,21 @@ export function createDependencies(
   const desktops = desktopProvider
     ? new DesktopSessions(computerSessions, desktopProvider)
     : undefined;
+  const embedders = new EmbedderFactory(providerKeys, keyVault, makeEmbedder);
+  const memory = new AgentMemory(new MemoryRepository(db), embedders);
+  const knowledge = new KnowledgeBase(
+    new KnowledgeRepository(db),
+    embedders,
+    pageGuard,
+  );
   const toolboxes = new ToolboxFactory(mcpServers, keyVault, {
     connect,
     sandboxes,
     browsers,
     desktops,
     yourComputers,
+    memory,
+    knowledge,
   });
   const base = {
     agents,
@@ -150,6 +177,8 @@ export function createDependencies(
     browsers,
     devices,
     runnerHub,
+    memory,
+    knowledge,
   };
   return {...base, jobs: makeJobs(base)};
 }
