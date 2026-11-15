@@ -8,7 +8,7 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 11 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 12 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
 > give them tools and MCP apps, and set up routines they run on a schedule,
 > by webhook or on demand, on Trigger.dev. Each character has a permission
@@ -18,7 +18,8 @@ feature and is documented in [`docs/chapters`](docs/chapters).
 > Characters with a browser (Playwright) open, read, click and type on the
 > public web, with a screenshot of every step. Pair your own computer with the
 > Runner to let characters work in folders you share, think with Claude Code
-> or Codex, or use a cloud desktop you can watch live.
+> or Codex, or use a cloud desktop you can watch live. Characters remember
+> you across chats, and search your documents (Knowledge) and cite them.
 
 ## What's inside
 
@@ -160,3 +161,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 9: Cloud sandboxes with E2B](docs/chapters/chapter-09/README.md)
 - [Chapter 10: Browser automation with Playwright](docs/chapters/chapter-10/README.md)
 - [Chapter 11: Controlling your computer with the Runner](docs/chapters/chapter-11/README.md)
+- [Chapter 12: Memory and knowledge](docs/chapters/chapter-12/README.md)
