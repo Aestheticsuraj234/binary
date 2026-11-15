@@ -9,23 +9,23 @@ Playwright for browsers, Trigger.dev for long-running jobs, Postgres +
 pgvector + LISTEN/NOTIFY (no Redis), MCP for apps (including Composio),
 Vercel AI SDK for OpenAI / Anthropic / Gemini.
 
-| #   | Chapter                                   | What it adds                                                                                                             | Status     |
-| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| 1   | Project init and authentication setup     | Turborepo + pnpm monorepo, Hono API, Better Auth (email/password), sign-up/sign-in on web and mobile, design system, CI  | ✅ Done    |
-| 2   | Database and ORM layer setup              | Drizzle ORM, full schema (24 tables, 16 enums), pgvector, migrations, Repository pattern, seed data                      | ✅ Done    |
-| 3   | AI engine layer and API key vault         | Encrypted API keys (AES-256-GCM), AgentEngine (Strategy) + EngineFactory (Factory), multi-provider playground, app shell | ✅ Done    |
-| 4   | Agents and templates                      | Agent CRUD API + web UI: name, role, model, approval mode; create from templates; layers, DTOs, AppError hierarchy       | ✅ Done ¹  |
-| 5   | Real-time chat and threads                | Chat with an agent, streaming replies, threads and history, live updates via Postgres LISTEN/NOTIFY                      | ✅ Done ²  |
-| 6   | Tool system and MCP apps                  | Tool registry with risk levels (read / write / computer), connect apps through MCP servers, including Composio           | ✅ Done ³  |
-| 7   | Durable jobs and routines                 | Long-running tasks and scheduled routines (cron, webhook, manual) on Trigger.dev, with run history                       | ✅ Done ⁴  |
-| 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                 | ✅ Done ⁵  |
-| 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | ✅ Done ⁶  |
-| 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | ✅ Done ⁷  |
-| 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | ✅ Done ⁸  |
-| 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                           | ✅ Done ⁹  |
-| 13  | Multi-agent teams and rooms               | Several agents working together in rooms, routed by @mention or automatically                                            | ✅ Done ¹⁰ |
-| 14  | Mobile app and voice                      | The full experience on the Expo app, plus voice input                                                                    | ✅ Done ¹¹ |
-| 15  | Usage tracking, testing and deployment    | Token and cost tracking, end-to-end tests, final setup README so anyone can run it locally                               | Planned    |
+| #   | Chapter                                   | What it adds                                                                                                              | Status     |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1   | Project init and authentication setup     | Turborepo + pnpm monorepo, Hono API, Better Auth (email/password), sign-up/sign-in on web and mobile, design system, CI   | ✅ Done    |
+| 2   | Database and ORM layer setup              | Drizzle ORM, full schema (24 tables, 16 enums), pgvector, migrations, Repository pattern, seed data                       | ✅ Done    |
+| 3   | AI engine layer and API key vault         | Encrypted API keys (AES-256-GCM), AgentEngine (Strategy) + EngineFactory (Factory), multi-provider playground, app shell  | ✅ Done    |
+| 4   | Agents and templates                      | Agent CRUD API + web UI: name, role, model, approval mode; create from templates; layers, DTOs, AppError hierarchy        | ✅ Done ¹  |
+| 5   | Real-time chat and threads                | Chat with an agent, streaming replies, threads and history, live updates via Postgres LISTEN/NOTIFY                       | ✅ Done ²  |
+| 6   | Tool system and MCP apps                  | Tool registry with risk levels (read / write / computer), connect apps through MCP servers, including Composio            | ✅ Done ³  |
+| 7   | Durable jobs and routines                 | Long-running tasks and scheduled routines (cron, webhook, manual) on Trigger.dev, with run history                        | ✅ Done ⁴  |
+| 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                  | ✅ Done ⁵  |
+| 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                    | ✅ Done ⁶  |
+| 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                     | ✅ Done ⁷  |
+| 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                       | ✅ Done ⁸  |
+| 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                            | ✅ Done ⁹  |
+| 13  | Multi-agent teams and rooms               | Several agents working together in rooms, routed by @mention or automatically                                             | ✅ Done ¹⁰ |
+| 14  | Mobile app and voice                      | The full experience on the Expo app, plus voice input                                                                     | ✅ Done ¹¹ |
+| 15  | Ready to share                            | A README with every feature and real screenshots, a setup guide from env keys to every service, verified on a fresh clone | ✅ Done ¹² |
 
 ¹ Chapter 4 also became a character-first redesign (part 2). Two scope items
 were left out: the **approval mode** field (its behaviour belongs to Chapter
@@ -86,6 +86,14 @@ input is transcribed on the API with the user's OpenAI key
 lands in the message box. Decisions from the phone are saved as `mobile`.
 No migration. Verified with a real recording and on the iOS simulator.
 
+¹² Chapter 15 changed from "usage tracking, testing and deployment" to
+making Binary ready to share with students: the README, 27 real
+screenshots, `docs/SETUP.md`, and a whole-system architecture overview.
+Following the guide on a fresh clone found and fixed three problems
+(`pnpm trigger:dev` couldn't build since Chapter 10, tests ignored
+`DATABASE_URL` in `.env`, an install warning). Deployment, usage tracking
+and browser end-to-end tests are left for later.
+
 ## Every chapter ships with
 
 - Plan and acceptance criteria, then code, tests, lint, typecheck and build
@@ -94,5 +102,6 @@ No migration. Verified with a real recording and on the iOS simulator.
 - Docs: README, IMPLEMENTATION, ARCHITECTURE, TESTING, PR_REVIEW, REBUILD_PROMPT
 - Its own `feat/chapter-XX-*` branch with Conventional Commits, merged into `main`
 
-After Chapter 15: integration review, full test suite, master architecture
-diagram and `docs/REBUILD_PROJECT_PROMPT.md`.
+After Chapter 15: the whole-system architecture is in
+[Chapter 15](chapters/chapter-15/ARCHITECTURE.md), and the setup guide in
+[`SETUP.md`](SETUP.md). Still to come: `docs/REBUILD_PROJECT_PROMPT.md`.

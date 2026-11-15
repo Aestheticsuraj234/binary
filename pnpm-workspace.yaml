@@ -5,6 +5,11 @@ packages:
 onlyBuiltDependencies:
   - esbuild
 
+# Trigger.dev's deploy helper; local development never needs its install
+# script, so pnpm doesn't need to warn about it.
+ignoredBuiltDependencies:
+  - '@depot/cli'
+
 # Pinned to a release that has been out a while (Chapter 9).
 overrides:
   e2b: 2.60.0

@@ -29,7 +29,7 @@ sign out on the web and on a phone, with one shared design system.
 
 ## Run it
 
-See the [root README](../../../README.md#run-it-locally). In short:
+See the [setup guide](../../SETUP.md). In short:
 
 ```bash
 pnpm install
