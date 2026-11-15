@@ -54,6 +54,16 @@ export {
 export type {BrowserElement, BrowserPageOutput} from './browsers';
 export {normalizeMath} from './markdown';
 export {
+  addDocumentSchema,
+  addMemorySchema,
+  MAX_DOCUMENT_LENGTH,
+  type AddDocumentInput,
+  type KnowledgeDocumentView,
+  type KnowledgeMatch,
+  type MemoryStatus,
+  type MemoryView,
+} from './memory';
+export {
   CHARACTER_IDS,
   CHARACTERS,
   characterOf,
