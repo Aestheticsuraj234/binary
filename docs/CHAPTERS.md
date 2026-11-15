@@ -21,7 +21,7 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 8   | Approvals, permissions and Today inbox    | Approve or reject risky actions, per-agent approval modes, a "Today" inbox of everything waiting for you                 | ✅ Done ⁵ |
 | 9   | Cloud sandboxes with E2B                  | Agents run code and commands in isolated E2B sandboxes                                                                   | ✅ Done ⁶ |
 | 10  | Browser automation with Playwright        | Agents browse, click, fill forms and read pages in a headless browser                                                    | ✅ Done ⁷ |
-| 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | Planned   |
+| 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | ✅ Done ⁸ |
 | 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                           | Planned   |
 | 13  | Multi-agent teams and rooms               | Several agents working together in rooms, routed by @mention or automatically                                            | Planned   |
 | 14  | Mobile app and voice                      | The full experience on the Expo app, plus voice input                                                                    | Planned   |
@@ -62,6 +62,12 @@ live in memory, so a restart closes them. Chapter 9's `/api/sandboxes`
 became `/api/computers`, for sandboxes and browsers alike. Verified with
 real models (Claude Sonnet 5.5 in the browser, GPT-5.5 in an E2B sandbox),
 which also added math rendering to chat answers.
+
+⁸ Chapter 11's Runner long-polls the API and enforces the shared folders on
+your computer. Its jobs live in the API's memory, so routines on the
+Trigger.dev worker can't reach your computer yet. Claude Code and Codex are
+covered with stand-in CLIs. The cloud desktop was verified on real E2B with
+Claude Sonnet. Adds one migration (`devices.token_hash`).
 
 ## Every chapter ships with
 
