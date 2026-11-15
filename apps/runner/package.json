@@ -1,0 +1,23 @@
+{
+  "name": "@binary/runner",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Binary Runner: lets your characters work on your own computer, only inside the folders you share.",
+  "type": "module",
+  "scripts": {
+    "runner": "tsx src/cli.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@binary/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@binary/config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0"
+  }
+}
