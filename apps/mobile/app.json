@@ -29,7 +29,15 @@
       "expo-router",
       "expo-status-bar",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Binary uses the microphone so you can talk to your crew instead of typing."
+        }
+      ],
+      "expo-font",
+      "expo-asset"
     ]
   }
 }

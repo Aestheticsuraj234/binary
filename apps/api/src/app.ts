@@ -20,6 +20,7 @@ import {runnerRoutes} from './routes/runner';
 import {computerRoutes} from './routes/computers';
 import {deviceRoutes} from './routes/devices';
 import {threadRoutes} from './routes/threads';
+import {voiceRoutes} from './routes/voice';
 
 /** Builds the API. Dependencies come in from the composition root. */
 export function createApp(dependencies: AppDependencies) {
@@ -76,6 +77,7 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/computers', computerRoutes(dependencies));
   app.route('/api/devices', deviceRoutes(dependencies));
   app.route('/api/runner', runnerRoutes(dependencies));
+  app.route('/api/transcribe', voiceRoutes(dependencies));
 
   return app;
 }

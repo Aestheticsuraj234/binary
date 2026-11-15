@@ -2,10 +2,13 @@ export {
   APPROVAL_MODE_INFO,
   APPROVAL_MODES,
   APPROVAL_STATUSES,
+  CLIENT_HEADER,
+  CLIENTS,
   DEFAULT_APPROVAL_MODE,
   type Approval,
   type ApprovalMode,
   type ApprovalStatus,
+  type Client,
 } from './approvals';
 export {
   agentInputSchema,
@@ -52,7 +55,11 @@ export {
   type CommandRunOutput,
 } from './sandboxes';
 export type {BrowserElement, BrowserPageOutput} from './browsers';
-export {normalizeMath} from './markdown';
+export {
+  normalizeMath,
+  parseMarkdownBlocks,
+  type MarkdownBlock,
+} from './markdown';
 export {
   findMentions,
   MAX_ROOM_MEMBERS,
@@ -114,10 +121,12 @@ export {
   connectAppSchema,
   TOOL_CALL_STATUSES,
   TOOL_RISKS,
+  toolCallImages,
   type ConnectAppInput,
   type ConnectedApp,
   type ToolCallStatus,
   type ToolCallView,
+  type ToolImage,
   type ToolInfo,
   type ToolRisk,
 } from './tools';

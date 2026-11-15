@@ -24,7 +24,7 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 11  | Controlling your computer with the Runner | A local Runner that lets agents control your own computer; Claude Code / Codex engines; E2B Desktop                      | ✅ Done ⁸  |
 | 12  | Memory and knowledge                      | Long-term memory and knowledge with pgvector similarity search                                                           | ✅ Done ⁹  |
 | 13  | Multi-agent teams and rooms               | Several agents working together in rooms, routed by @mention or automatically                                            | ✅ Done ¹⁰ |
-| 14  | Mobile app and voice                      | The full experience on the Expo app, plus voice input                                                                    | Planned    |
+| 14  | Mobile app and voice                      | The full experience on the Expo app, plus voice input                                                                    | ✅ Done ¹¹ |
 | 15  | Usage tracking, testing and deployment    | Token and cost tracking, end-to-end tests, final setup README so anyone can run it locally                               | Planned    |
 
 ¹ Chapter 4 also became a character-first redesign (part 2). Two scope items
@@ -78,6 +78,13 @@ Adds one migration (`0004_knowledge`).
 ¹⁰ Chapter 13's rooms answer in turn (at most 4 answers per message), with
 @mentions, automatic routing by the lead's model, and hand-offs. No
 migration. Verified with a real room mixing Claude and GPT models.
+
+¹¹ Chapter 14's app has four tabs (Crew, Rooms, Today, You) and both kinds
+of chat, streamed; hiring, apps, keys and routines stay on the web. Voice
+input is transcribed on the API with the user's OpenAI key
+(`gpt-4o-mini-transcribe`), with their characters' names as a hint, and
+lands in the message box. Decisions from the phone are saved as `mobile`.
+No migration. Verified with a real recording and on the iOS simulator.
 
 ## Every chapter ships with
 

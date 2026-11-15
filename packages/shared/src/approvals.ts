@@ -50,6 +50,17 @@ export const APPROVAL_STATUSES = [
 
 export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 
+/** Where a decision was made. The database enum uses this list. */
+export const CLIENTS = ['web', 'mobile'] as const;
+
+export type Client = (typeof CLIENTS)[number];
+
+/**
+ * The header a client sends to say which app it is. Without it, the API
+ * assumes the web app.
+ */
+export const CLIENT_HEADER = 'X-Binary-Client';
+
 /** A tool call waiting for (or decided by) the user. */
 export interface Approval {
   id: string;
@@ -58,6 +69,8 @@ export interface Approval {
   summary: string;
   createdAt: string;
   decidedAt: string | null;
+  /** Which app the user decided in, once decided. */
+  decidedFrom: Client | null;
   toolCall: ToolCallView;
   agent: {id: string; name: string; avatar: string | null};
   /** The chat it came from, to read the context. */

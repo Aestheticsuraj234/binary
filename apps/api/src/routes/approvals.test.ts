@@ -1,12 +1,13 @@
 import {deleteUsersByEmail} from '@binary/db/test-utils';
-import type {
-  Agent,
-  Approval,
-  ApprovalMode,
-  ChatMessage,
-  ChatStreamEvent,
-  ConnectedApp,
-  Thread,
+import {
+  CLIENT_HEADER,
+  type Agent,
+  type Approval,
+  type ApprovalMode,
+  type ChatMessage,
+  type ChatStreamEvent,
+  type ConnectedApp,
+  type Thread,
 } from '@binary/shared';
 import {simulateReadableStream} from 'ai';
 import {MockLanguageModelV4} from 'ai/test';
@@ -238,6 +239,7 @@ describe('asking for approval', () => {
     expect(shop.refunds).toEqual(['A1']);
     expect(body.approval).toMatchObject({
       status: 'executed',
+      decidedFrom: 'web',
       toolCall: {status: 'succeeded'},
     });
     expect(JSON.stringify(body.approval.toolCall.output)).toContain(
@@ -283,9 +285,10 @@ describe('rejecting', () => {
   it("doesn't run the tool, and the agent acknowledges it", async () => {
     const {thread} = await ask(mimi, 'Please refund order A1 again');
     const [approval] = await pending();
-    const response = await request(
-      'POST',
+    // From the phone: the mobile app says so in a header.
+    const response = await app.request(
       `/api/approvals/${approval?.id}/reject`,
+      {method: 'POST', headers: {Cookie: cookie, [CLIENT_HEADER]: 'mobile'}},
     );
     const body = await readJson<{approval: Approval; reply: ChatMessage}>(
       response,
@@ -293,6 +296,7 @@ describe('rejecting', () => {
 
     expect(body.approval).toMatchObject({
       status: 'rejected',
+      decidedFrom: 'mobile',
       toolCall: {status: 'rejected'},
     });
     expect(shop.refunds).toEqual(['A1']);

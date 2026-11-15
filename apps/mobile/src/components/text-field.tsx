@@ -16,6 +16,8 @@ export function TextField({label, ...inputProps}: TextFieldProps) {
         style={styles.input}
         placeholderTextColor={COLORS.mutedForeground}
         autoCapitalize="none"
+        // Screen readers read the label with the field.
+        accessibilityLabel={label}
         {...inputProps}
       />
     </View>
