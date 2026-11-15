@@ -1,5 +1,5 @@
 import type {ComputerSessionRepository} from '@binary/db';
-import type {AgentComputer, ComputerView} from '@binary/shared';
+import type {ComputerView, SessionComputer} from '@binary/shared';
 
 /**
  * What every kind of computer (sandbox, browser) shares: its sessions are
@@ -10,7 +10,7 @@ import type {AgentComputer, ComputerView} from '@binary/shared';
 export abstract class ComputerSessions {
   constructor(
     protected readonly sessions: ComputerSessionRepository,
-    readonly kind: AgentComputer,
+    readonly kind: SessionComputer,
   ) {}
 
   /** Whether the computer behind a session is still there. */
@@ -18,6 +18,11 @@ export abstract class ComputerSessions {
 
   /** Stops the computer behind a session. */
   protected abstract kill(providerId: string): Promise<void>;
+
+  /** Anything else the list shows about a session (a desktop's live view). */
+  protected details(_providerId: string): Partial<ComputerView> {
+    return {};
+  }
 
   /**
    * Running sessions, oldest first. One whose computer is gone (timed out,
@@ -37,6 +42,7 @@ export abstract class ComputerSessions {
       }),
     );
     return checked.flat().map((session) => ({
+      ...(session.providerId ? this.details(session.providerId) : {}),
       id: session.id,
       kind: this.kind,
       threadId: session.threadId,

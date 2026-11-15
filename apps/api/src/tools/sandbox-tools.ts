@@ -35,7 +35,7 @@ export function sandboxTools(sandbox: ChatSandbox): AgentTool[] {
           code: z.string().min(1).describe('The code to run.'),
         }),
         execute: async ({language, code}) => {
-          const {sandbox: opened, replaced} = await sandbox.open();
+          const {computer: opened, replaced} = await sandbox.open();
           const output = await opened.runCode(code, language);
           return replaced ? {...output, newSandbox: true} : output;
         },
@@ -53,7 +53,7 @@ export function sandboxTools(sandbox: ChatSandbox): AgentTool[] {
           cwd: z.string().optional().describe(`The folder. Default ${HOME}.`),
         }),
         execute: async ({command, cwd}) => {
-          const {sandbox: opened, replaced} = await sandbox.open();
+          const {computer: opened, replaced} = await sandbox.open();
           const output = await opened.runCommand(command, cwd);
           return replaced ? {...output, newSandbox: true} : output;
         },
@@ -71,7 +71,7 @@ export function sandboxTools(sandbox: ChatSandbox): AgentTool[] {
           content: z.string(),
         }),
         execute: async ({path, content}) => {
-          const {sandbox: opened, replaced} = await sandbox.open();
+          const {computer: opened, replaced} = await sandbox.open();
           await opened.writeFile(path, content);
           return {
             written: path,
