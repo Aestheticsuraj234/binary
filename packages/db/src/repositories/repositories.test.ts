@@ -501,10 +501,14 @@ describe('ApprovalRepository', () => {
     ).toBeUndefined();
   });
 
-  it('accepts only the first decision', async () => {
-    expect(await approvals.decide(approvalId, 'approved')).toBe(true);
+  it('accepts only the first decision, and records the app', async () => {
+    expect(await approvals.decide(approvalId, 'approved', 'mobile')).toBe(true);
     expect(await approvals.decide(approvalId, 'rejected')).toBe(false);
     expect(await approvals.countPendingForUser(userId)).toBe(0);
+    expect(await approvals.findForUser(userId, approvalId)).toMatchObject({
+      status: 'approved',
+      decidedFrom: 'mobile',
+    });
   });
 
   it('records the tool result and marks the request executed', async () => {

@@ -1,6 +1,7 @@
 import {
   AGENT_ENGINES,
   APPROVAL_STATUSES,
+  CLIENTS,
   COMPUTER_KINDS,
   PROVIDERS,
   ROUTING_MODES,
@@ -52,7 +53,7 @@ export const toolCallStatusEnum = pgEnum(
 
 export const approvalStatusEnum = pgEnum('approval_status', APPROVAL_STATUSES);
 
-export const clientEnum = pgEnum('client', ['web', 'mobile']);
+export const clientEnum = pgEnum('client', CLIENTS);
 
 export const computerSessionStatusEnum = pgEnum('computer_session_status', [
   'running',

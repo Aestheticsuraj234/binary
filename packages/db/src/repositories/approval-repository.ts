@@ -1,3 +1,4 @@
+import type {Client} from '@binary/shared';
 import {and, asc, count, eq} from 'drizzle-orm';
 
 import type {Database} from '../client';
@@ -17,6 +18,7 @@ const APPROVAL_COLUMNS = {
   summary: approvalRequests.summary,
   createdAt: approvalRequests.createdAt,
   decidedAt: approvalRequests.decidedAt,
+  decidedFrom: approvalRequests.decidedFrom,
   toolCall: {
     id: toolCalls.id,
     toolName: toolCalls.toolName,
@@ -103,12 +105,16 @@ export class ApprovalRepository {
   /**
    * Records the user's decision, but only if the request is still pending.
    * Two clicks (or two devices) racing can't both win: the second gets
-   * false, and the tool never runs twice.
+   * false, and the tool never runs twice. `from` records which app it was.
    */
-  async decide(id: string, status: 'approved' | 'rejected'): Promise<boolean> {
+  async decide(
+    id: string,
+    status: 'approved' | 'rejected',
+    from: Client = 'web',
+  ): Promise<boolean> {
     const decided = await this.db
       .update(approvalRequests)
-      .set({status, decidedAt: new Date(), decidedFrom: 'web'})
+      .set({status, decidedAt: new Date(), decidedFrom: from})
       .where(
         and(
           eq(approvalRequests.id, id),
