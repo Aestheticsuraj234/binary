@@ -9,6 +9,7 @@ const MESSAGE_COLUMNS = {
   id: messages.id,
   role: messages.role,
   content: messages.content,
+  authorAgentId: messages.authorAgentId,
   createdAt: messages.createdAt,
 };
 

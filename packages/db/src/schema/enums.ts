@@ -3,6 +3,7 @@ import {
   APPROVAL_STATUSES,
   COMPUTER_KINDS,
   PROVIDERS,
+  ROUTING_MODES,
   RUN_STATUSES,
   TOOL_CALL_STATUSES,
   TOOL_RISKS,
@@ -32,7 +33,8 @@ export const computerKindEnum = pgEnum('computer_kind', COMPUTER_KINDS);
 
 export const deviceStatusEnum = pgEnum('device_status', ['online', 'offline']);
 
-export const routingModeEnum = pgEnum('routing_mode', ['mention', 'auto']);
+// Shared with the room form (Chapter 13), in the original order.
+export const routingModeEnum = pgEnum('routing_mode', ROUTING_MODES);
 
 export const messageRoleEnum = pgEnum('message_role', [
   'user',
