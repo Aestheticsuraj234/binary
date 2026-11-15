@@ -8,4 +8,9 @@ export default defineConfig({
   dirs: ['./src/trigger'],
   runtime: 'node',
   maxDuration: 600,
+  build: {
+    // Playwright (Chapter 10) loads its browser driver at run time, which a
+    // bundler can't follow; the worker uses it from node_modules instead.
+    external: ['playwright', 'playwright-core', 'chromium-bidi'],
+  },
 });
