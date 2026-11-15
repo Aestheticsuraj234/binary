@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {normalizeMath} from './markdown';
+import {normalizeMath, parseMarkdownBlocks} from './markdown';
 
 describe('normalizeMath', () => {
   it('turns \\[…\\] into a display block', () => {
@@ -29,5 +29,41 @@ describe('normalizeMath', () => {
     const text = 'Here:\n```python\nprint("\\\\(")';
 
     expect(normalizeMath(text)).toBe(text);
+  });
+});
+
+describe('parseMarkdownBlocks', () => {
+  it('splits headings, paragraphs, lists and quotes', () => {
+    const text = [
+      '## Plan',
+      'First line',
+      'and its second line.',
+      '',
+      '- one',
+      '* two',
+      '2. three',
+      '> a quote',
+    ].join('\n');
+
+    expect(parseMarkdownBlocks(text)).toEqual([
+      {kind: 'heading', text: 'Plan'},
+      {kind: 'paragraph', text: 'First line\nand its second line.'},
+      {kind: 'item', marker: '•', text: 'one'},
+      {kind: 'item', marker: '•', text: 'two'},
+      {kind: 'item', marker: '2.', text: 'three'},
+      {kind: 'quote', text: 'a quote'},
+    ]);
+  });
+
+  it('keeps code exactly as written, even while it streams in', () => {
+    expect(
+      parseMarkdownBlocks('Run:\n```sh\n# not a heading\n- nor a list\n```'),
+    ).toEqual([
+      {kind: 'paragraph', text: 'Run:'},
+      {kind: 'code', text: '# not a heading\n- nor a list'},
+    ]);
+    expect(parseMarkdownBlocks('```py\nprint(1)')).toEqual([
+      {kind: 'code', text: 'print(1)'},
+    ]);
   });
 });

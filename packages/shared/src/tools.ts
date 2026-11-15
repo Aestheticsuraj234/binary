@@ -73,3 +73,53 @@ export interface ConnectedApp {
   /** Why the last connection failed, when status is "error". */
   error?: string;
 }
+
+/** A picture a tool made, ready for an <img> or <Image> as a data URL. */
+export interface ToolImage {
+  src: string;
+  alt: string;
+}
+
+function fieldOf(value: unknown, key: string): unknown {
+  return typeof value === 'object' && value !== null
+    ? Reflect.get(value, key)
+    : undefined;
+}
+
+/**
+ * Charts from a code run, and the screenshot of a browser or desktop step:
+ * shown under the tool's row, since the picture is usually the point.
+ */
+export function toolCallImages(call: ToolCallView): ToolImage[] {
+  if (call.status !== 'succeeded') {
+    return [];
+  }
+  const results = fieldOf(call.output, 'results');
+  const charts = (Array.isArray(results) ? results : []).flatMap(
+    (result: unknown) => {
+      const png = fieldOf(result, 'png');
+      return typeof png === 'string' ? [png] : [];
+    },
+  );
+  const images = charts.map((png, index) => ({
+    src: `data:image/png;base64,${png}`,
+    alt: `Chart ${index + 1} from the sandbox`,
+  }));
+  const screenshot = fieldOf(call.output, 'screenshot');
+  if (typeof screenshot !== 'string' || !screenshot) {
+    return images;
+  }
+  const title = fieldOf(call.output, 'title');
+  // Browsers send JPEGs, desktops PNGs; a PNG's base64 starts "iVBOR".
+  const type = screenshot.startsWith('iVBOR') ? 'png' : 'jpeg';
+  return [
+    ...images,
+    {
+      src: `data:image/${type};base64,${screenshot}`,
+      alt:
+        typeof title === 'string' && title
+          ? `Screenshot of ${title}`
+          : 'Screenshot of the screen',
+    },
+  ];
+}
