@@ -12,6 +12,7 @@ import {
   Plug,
   Plus,
   Repeat,
+  Users,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -27,6 +28,7 @@ import {cn} from '@/lib/utils';
 const LINKS = [
   {href: '/today', label: 'Today', icon: Inbox},
   {href: '/', label: 'Discover', icon: Compass},
+  {href: '/rooms', label: 'Rooms', icon: Users},
   {href: '/routines', label: 'Routines', icon: Repeat},
   {href: '/knowledge', label: 'Knowledge', icon: Library},
   {href: '/apps', label: 'Apps & tools', icon: Plug},

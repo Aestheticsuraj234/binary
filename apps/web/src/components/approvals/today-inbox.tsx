@@ -98,7 +98,11 @@ export function TodayInbox({initialApprovals}: {initialApprovals: Approval[]}) {
                 </div>
               </div>
               <Link
-                href={`/agents/${approval.agent.id}?chat=${approval.threadId}`}
+                href={
+                  approval.roomId
+                    ? `/rooms/${approval.roomId}?chat=${approval.threadId}`
+                    : `/agents/${approval.agent.id}?chat=${approval.threadId}`
+                }
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
               >
                 <MessageSquare className="size-4" />
