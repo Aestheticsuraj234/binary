@@ -120,6 +120,9 @@ export async function writeReply(
     }
   };
   let answer = '';
+  // Text written after a tool call starts a new paragraph; otherwise "…the
+  // values.I've prepared…" runs two thoughts together.
+  let afterTool = false;
 
   try {
     const events = engine.stream({
@@ -130,9 +133,15 @@ export async function writeReply(
     });
     for await (const event of events) {
       if (event.type === 'text') {
-        answer += event.text;
-        await emit({type: 'delta', text: event.text});
+        const text =
+          afterTool && answer !== '' && !answer.endsWith('\n')
+            ? `\n\n${event.text}`
+            : event.text;
+        afterTool = false;
+        answer += text;
+        await emit({type: 'delta', text});
       } else if (event.type === 'tool-call') {
+        afterTool = true;
         await emitTool(log.start(event.id, event.name, event.input));
       } else if (event.type === 'tool-result') {
         await emitTool(log.finish(event.id, event.output));
