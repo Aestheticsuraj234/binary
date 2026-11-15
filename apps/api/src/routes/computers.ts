@@ -1,4 +1,4 @@
-import type {AgentComputer} from '@binary/shared';
+import type {SessionComputer} from '@binary/shared';
 import {Hono} from 'hono';
 
 import {requireUser, type AppEnv} from '../app-env';
@@ -16,9 +16,10 @@ export function computerRoutes({computers}: AppDependencies) {
   routes.use(requireUser);
 
   // Which computers this server can provide, for the agent form.
-  const available: Record<AgentComputer, boolean> = {
+  const available: Record<SessionComputer, boolean> = {
     sandbox: computers.some((manager) => manager.kind === 'sandbox'),
     browser: computers.some((manager) => manager.kind === 'browser'),
+    desktop: computers.some((manager) => manager.kind === 'desktop'),
   };
 
   routes.get('/', async (c) => {

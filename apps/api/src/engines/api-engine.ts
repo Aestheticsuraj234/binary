@@ -11,9 +11,25 @@ import type {
 // the cap stops a confused model from calling tools forever.
 const MAX_STEPS = 5;
 
-/** The conversation so far, then the new message. */
-function toMessages({prompt, history = []}: GenerateRequest) {
-  return [...history, {role: 'user' as const, content: prompt}];
+/** The conversation so far, then the new message (with any pictures). */
+function toMessages({prompt, history = [], images = []}: GenerateRequest) {
+  if (images.length === 0) {
+    return [...history, {role: 'user' as const, content: prompt}];
+  }
+  return [
+    ...history,
+    {
+      role: 'user' as const,
+      content: [
+        {type: 'text' as const, text: prompt},
+        ...images.map(({mediaType, data}) => ({
+          type: 'image' as const,
+          image: data,
+          mediaType,
+        })),
+      ],
+    },
+  ];
 }
 
 /** An engine that thinks with a hosted LLM through the Vercel AI SDK. */

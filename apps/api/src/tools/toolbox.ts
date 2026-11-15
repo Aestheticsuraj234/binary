@@ -1,7 +1,9 @@
 import type {ToolInfo, ToolRisk} from '@binary/shared';
 import {dynamicTool, type ToolSet} from 'ai';
 
+import type {PromptImage} from '../engines/agent-engine';
 import {toToolInfo, type AgentTool} from './agent-tool';
+import {withImage, withoutImages} from './model-view';
 import type {AppConnection} from './mcp';
 import {
   AWAITING_APPROVAL_RESULT,
@@ -51,16 +53,21 @@ export class Toolbox {
     return Object.fromEntries(entries);
   }
 
-  private wrap({risk, tool, forModel}: AgentTool, policy: ToolPolicy) {
+  private wrap(
+    {risk, tool, forModel, showsImage}: AgentTool,
+    policy: ToolPolicy,
+  ) {
     return dynamicTool({
       description: tool.description,
       inputSchema: tool.inputSchema,
-      toModelOutput: forModel
-        ? ({output}) => ({
-            type: 'text',
-            value: JSON.stringify(forModel(output)),
-          })
-        : undefined,
+      toModelOutput: showsImage
+        ? ({output}) => withImage(output)
+        : forModel
+          ? ({output}) => ({
+              type: 'text',
+              value: JSON.stringify(forModel(output)),
+            })
+          : undefined,
       execute: async (input, options) => {
         const decision = policy.decide(risk);
         if (decision === 'block') {
@@ -74,10 +81,30 @@ export class Toolbox {
     });
   }
 
+  /**
+   * The screenshot in a result, for tools whose results the model must see
+   * (AgentTool.showsImage); none for any other tool.
+   */
+  imagesIn(name: string, output: unknown): PromptImage[] {
+    if (!this.tools.get(name)?.showsImage) {
+      return [];
+    }
+    const screenshot =
+      typeof output === 'object' && output !== null
+        ? Reflect.get(output, 'screenshot')
+        : undefined;
+    return typeof screenshot === 'string'
+      ? [{mediaType: 'image/png', data: screenshot}]
+      : [];
+  }
+
   /** A result as the model should read it (see AgentTool.forModel). */
   forModel(name: string, output: unknown): unknown {
-    const forModel = this.tools.get(name)?.forModel;
-    return forModel ? forModel(output) : output;
+    const tool = this.tools.get(name);
+    if (tool?.showsImage) {
+      return withoutImages(output);
+    }
+    return tool?.forModel ? tool.forModel(output) : output;
   }
 
   /**

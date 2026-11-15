@@ -1,4 +1,4 @@
-import {agentInputSchema, type Provider} from '@binary/shared';
+import {agentInputSchema, type AgentInput, type Provider} from '@binary/shared';
 import {Hono} from 'hono';
 
 import {requireUser, type AppEnv} from '../app-env';
@@ -37,6 +37,18 @@ export function agentRoutes({
     return agent;
   }
 
+  /**
+   * How the agent thinks, as saved: an API agent needs a key for its
+   * provider; a CLI agent brings its own model, so it keeps none.
+   */
+  async function thinking(userId: string, input: AgentInput) {
+    if (input.engine !== 'api' || !input.provider || !input.model) {
+      return {engine: input.engine, provider: null, model: null};
+    }
+    await requireProviderKey(userId, input.provider);
+    return {engine: input.engine, provider: input.provider, model: input.model};
+  }
+
   routes.get('/', async (c) => {
     const list = await agents.listForUser(c.get('user').id);
     return c.json({agents: list});
@@ -45,13 +57,14 @@ export function agentRoutes({
   routes.post('/', async (c) => {
     const userId = c.get('user').id;
     const {templateId, ...fields} = await parseBody(c, agentInputSchema);
-    await requireProviderKey(userId, fields.provider);
+    const engine = await thinking(userId, fields);
     if (templateId && !(await agentTemplates.findById(templateId))) {
       throw new ValidationError('That template does not exist.');
     }
 
     const agent = await agents.create({
       ...fields,
+      ...engine,
       userId,
       templateId: templateId ?? null,
     });
@@ -68,14 +81,13 @@ export function agentRoutes({
     const userId = c.get('user').id;
     const {id} = await findAgent(userId, c.req.param('id'));
     const input = await parseBody(c, agentInputSchema);
-    await requireProviderKey(userId, input.provider);
+    const engine = await thinking(userId, input);
 
     const agent = await agents.update(userId, id, {
       name: input.name,
       role: input.role,
       instructions: input.instructions,
-      provider: input.provider,
-      model: input.model,
+      ...engine,
       avatar: input.avatar,
       approvalMode: input.approvalMode,
       defaultComputer: input.defaultComputer,

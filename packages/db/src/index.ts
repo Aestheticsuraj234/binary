@@ -3,6 +3,7 @@ export {migrateDatabase} from './migrations';
 export * as schema from './schema';
 export {ApprovalRepository} from './repositories/approval-repository';
 export {ComputerSessionRepository} from './repositories/computer-session-repository';
+export {DeviceRepository} from './repositories/device-repository';
 export {
   AgentRepository,
   type AgentChanges,

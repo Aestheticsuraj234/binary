@@ -8,7 +8,7 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 10 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 11 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
 > give them tools and MCP apps, and set up routines they run on a schedule,
 > by webhook or on demand, on Trigger.dev. Each character has a permission
@@ -16,7 +16,9 @@ feature and is documented in [`docs/chapters`](docs/chapters).
 > in the chat or in the **Today** inbox. Characters with a cloud sandbox
 > (E2B) run code, commands and files, and charts show up in the chat.
 > Characters with a browser (Playwright) open, read, click and type on the
-> public web, with a screenshot of every step.
+> public web, with a screenshot of every step. Pair your own computer with the
+> Runner to let characters work in folders you share, think with Claude Code
+> or Codex, or use a cloud desktop you can watch live.
 
 ## What's inside
 
@@ -102,21 +104,22 @@ laptop must be on the same Wi-Fi.
 
 ## Everyday commands
 
-| Command                 | What it does                                        |
-| ----------------------- | --------------------------------------------------- |
-| `pnpm dev`              | Start the API and web app                           |
-| `pnpm mobile`           | Start the Expo dev server                           |
-| `pnpm trigger:dev`      | Run routines on Trigger.dev (optional, Ch. 7)       |
-| `pnpm browsers:install` | Download Chromium for characters' browsers (Ch. 10) |
-| `pnpm test`             | Migrate, then run all tests (needs Postgres)        |
-| `pnpm db:migrate`       | Apply pending database migrations                   |
-| `pnpm db:generate`      | Create a migration after changing the schema        |
-| `pnpm db:studio`        | Browse the database in Drizzle Studio               |
-| `pnpm db:seed`          | Add the templates and demo account again            |
-| `pnpm lint`             | Check code style (Google TypeScript Style)          |
-| `pnpm typecheck`        | Type-check every app and package                    |
-| `pnpm format`           | Format every file with Prettier                     |
-| `pnpm build`            | Production build                                    |
+| Command                                                         | What it does                                        |
+| --------------------------------------------------------------- | --------------------------------------------------- |
+| `pnpm dev`                                                      | Start the API and web app                           |
+| `pnpm mobile`                                                   | Start the Expo dev server                           |
+| `pnpm trigger:dev`                                              | Run routines on Trigger.dev (optional, Ch. 7)       |
+| `pnpm browsers:install`                                         | Download Chromium for characters' browsers (Ch. 10) |
+| `pnpm runner pair <CODE>` / `pnpm runner start --folder <path>` | Let characters work on this computer (Ch. 11)       |
+| `pnpm test`                                                     | Migrate, then run all tests (needs Postgres)        |
+| `pnpm db:migrate`                                               | Apply pending database migrations                   |
+| `pnpm db:generate`                                              | Create a migration after changing the schema        |
+| `pnpm db:studio`                                                | Browse the database in Drizzle Studio               |
+| `pnpm db:seed`                                                  | Add the templates and demo account again            |
+| `pnpm lint`                                                     | Check code style (Google TypeScript Style)          |
+| `pnpm typecheck`                                                | Type-check every app and package                    |
+| `pnpm format`                                                   | Format every file with Prettier                     |
+| `pnpm build`                                                    | Production build                                    |
 
 ## Troubleshooting
 
@@ -156,3 +159,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 8: Approvals, permissions and Today](docs/chapters/chapter-08/README.md)
 - [Chapter 9: Cloud sandboxes with E2B](docs/chapters/chapter-09/README.md)
 - [Chapter 10: Browser automation with Playwright](docs/chapters/chapter-10/README.md)
+- [Chapter 11: Controlling your computer with the Runner](docs/chapters/chapter-11/README.md)

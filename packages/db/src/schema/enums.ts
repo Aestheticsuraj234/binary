@@ -1,4 +1,5 @@
 import {
+  AGENT_ENGINES,
   APPROVAL_STATUSES,
   COMPUTER_KINDS,
   PROVIDERS,
@@ -13,11 +14,8 @@ import {pgEnum} from 'drizzle-orm/pg-core';
 // Shared with the API validation and web forms, so all three always agree.
 export const providerEnum = pgEnum('provider', PROVIDERS);
 
-export const agentEngineEnum = pgEnum('agent_engine', [
-  'api',
-  'claude_code',
-  'codex',
-]);
+// Shared with the agent form (Chapter 11), in the original order.
+export const agentEngineEnum = pgEnum('agent_engine', AGENT_ENGINES);
 
 // Mirrors APPROVAL_MODES in packages/shared, which lists the same values
 // from most careful to most trusting. Postgres enums keep their order, so

@@ -3,6 +3,8 @@
 import {
   AGENT_COMPUTER_INFO,
   AGENT_COMPUTERS,
+  AGENT_ENGINE_INFO,
+  AGENT_ENGINES,
   agentInputSchema,
   APPROVAL_MODE_INFO,
   APPROVAL_MODES,
@@ -17,7 +19,9 @@ import {
   TEMPLATE_COMPUTERS,
   type Agent,
   type AgentComputer,
+  type AgentEngine,
   type AgentTemplate,
+  type CliEngine,
   type ApprovalMode,
   type CharacterId,
   type Provider,
@@ -45,17 +49,27 @@ interface AgentFormProps {
   agent?: Agent;
   /** Pre-fills a new agent from a ready-made template. */
   template?: AgentTemplate;
-  /** Which computers the API can provide (E2B key, Chromium installed). */
+  /**
+   * Which computers can be used: the server's (E2B key, Chromium) and the
+   * user's own (a computer paired with the Runner).
+   */
   availableComputers: Record<AgentComputer, boolean>;
 }
 
-/** The one step that turns on a computer this server can't provide yet. */
+/** The one step that turns on a computer that can't be used yet. */
 const SETUP_HINTS: Record<AgentComputer, string> = {
   sandbox:
     'Cloud sandboxes need an E2B key: add E2B_API_KEY to .env and restart the API.',
   browser:
     'Browsers need Chromium: run pnpm browsers:install and restart the API.',
+  desktop:
+    'Cloud desktops need an E2B key: add E2B_API_KEY to .env and restart the API.',
+  runner: 'Pair a computer under Your computers first.',
 };
+
+const CLI_ENGINES = AGENT_ENGINES.filter(
+  (engine): engine is CliEngine => engine !== 'api',
+);
 
 /** The suggested models, plus the agent's own model if it is not listed. */
 function modelOptions(provider: Provider, currentModel: string) {
@@ -94,6 +108,9 @@ export function AgentForm({
   const [mood, setMood] = useState<Mood>('idle');
   const [error, setError] = useState('');
   const [isPending, setIsPending] = useState(false);
+  const [engine, setEngine] = useState<AgentEngine>(
+    agent?.engine ?? (connectedProviders.length > 0 ? 'api' : 'claude_code'),
+  );
   const [provider, setProvider] = useState<Provider>(
     agent?.provider ?? connectedProviders[0] ?? 'openai',
   );
@@ -126,9 +143,15 @@ export function AgentForm({
     moodTimer.current = setTimeout(() => setMood('idle'), 1200);
   }
 
-  // The select only offers known providers, so parsing always succeeds.
-  function handleProviderChange(value: string) {
+  // One select for both: a provider (the api engine) or a CLI engine.
+  function handleThinksWithChange(value: string) {
+    const cli = CLI_ENGINES.find((item) => item === value);
+    if (cli) {
+      setEngine(cli);
+      return;
+    }
     const next = providerSchema.parse(value);
+    setEngine('api');
     setProvider(next);
     setModel(PROVIDER_INFO[next].models[0] ?? '');
   }
@@ -142,8 +165,9 @@ export function AgentForm({
       name,
       role: form.get('role'),
       instructions: form.get('instructions'),
-      provider,
-      model,
+      engine,
+      provider: engine === 'api' ? provider : null,
+      model: engine === 'api' ? model : null,
       avatar,
       approvalMode,
       defaultComputer: computer,
@@ -277,8 +301,8 @@ export function AgentForm({
             <NativeSelect
               id="provider"
               className="h-10 w-full"
-              value={provider}
-              onChange={(event) => handleProviderChange(event.target.value)}
+              value={engine === 'api' ? provider : engine}
+              onChange={(event) => handleThinksWithChange(event.target.value)}
             >
               {PROVIDERS.map((id) => (
                 <NativeSelectOption
@@ -290,23 +314,37 @@ export function AgentForm({
                   {!connectedProviders.includes(id) && ' (no key)'}
                 </NativeSelectOption>
               ))}
-            </NativeSelect>
-          </div>
-          <div className="space-y-2 *:w-full">
-            <Label htmlFor="model">Model</Label>
-            <NativeSelect
-              id="model"
-              className="h-10 w-full"
-              value={model}
-              onChange={(event) => setModel(event.target.value)}
-            >
-              {modelOptions(provider, model).map((id) => (
+              {CLI_ENGINES.map((id) => (
                 <NativeSelectOption key={id} value={id}>
-                  {id}
+                  {AGENT_ENGINE_INFO[id].label}
                 </NativeSelectOption>
               ))}
             </NativeSelect>
           </div>
+          {engine !== 'api' ? (
+            <div className="space-y-2 text-xs text-muted-foreground sm:pt-7">
+              <p>{AGENT_ENGINE_INFO[engine].description}</p>
+              {!availableComputers.runner && (
+                <p className="text-warning">{SETUP_HINTS.runner}</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2 *:w-full">
+              <Label htmlFor="model">Model</Label>
+              <NativeSelect
+                id="model"
+                className="h-10 w-full"
+                value={model}
+                onChange={(event) => setModel(event.target.value)}
+              >
+                {modelOptions(provider, model).map((id) => (
+                  <NativeSelectOption key={id} value={id}>
+                    {id}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2 *:w-full">
@@ -354,7 +392,8 @@ export function AgentForm({
                 disabled={!availableComputers[kind] && computer !== kind}
               >
                 {AGENT_COMPUTER_INFO[kind].label}
-                {!availableComputers[kind] && ' (not set up)'}
+                {!availableComputers[kind] &&
+                  (kind === 'runner' ? ' (none paired)' : ' (not set up)')}
               </NativeSelectOption>
             ))}
           </NativeSelect>
@@ -363,12 +402,8 @@ export function AgentForm({
               ? AGENT_COMPUTER_INFO[computer].description
               : 'Uses its tools and apps only.'}
           </p>
-          {AGENT_COMPUTERS.filter((kind) => !availableComputers[kind]).map(
-            (kind) => (
-              <p key={kind} className="text-xs text-warning">
-                {SETUP_HINTS[kind]}
-              </p>
-            ),
+          {computer && !availableComputers[computer] && (
+            <p className="text-xs text-warning">{SETUP_HINTS[computer]}</p>
           )}
         </div>
 

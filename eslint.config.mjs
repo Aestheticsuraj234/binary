@@ -24,6 +24,11 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Small Node scripts, e.g. the Runner tests' fake CLIs.
+    files: ['**/*.mjs'],
+    languageOptions: {globals: globals.node},
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     plugins: {'react-hooks': reactHooks},
     languageOptions: {

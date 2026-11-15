@@ -29,6 +29,9 @@ export const devices = pgTable(
     os: text().notNull(),
     // A short code typed into the Runner once; cleared after pairing.
     pairingCode: text().unique(),
+    // SHA-256 of the token the Runner signs in with (Chapter 11). The token
+    // itself is only ever on the user's computer.
+    tokenHash: text().unique(),
     status: deviceStatusEnum().notNull().default('offline'),
     allowedFolders: text().array().notNull().default([]),
     killSwitch: boolean().notNull().default(false),

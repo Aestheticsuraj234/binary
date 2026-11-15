@@ -21,12 +21,14 @@ function imagesOf(call: ToolCallView): ToolImage[] {
   }));
   const screenshot = text(field(call.output, 'screenshot'));
   const title = text(field(call.output, 'title'));
+  // Browsers send JPEGs, desktops PNGs; a PNG's base64 starts "iVBOR".
+  const type = screenshot.startsWith('iVBOR') ? 'png' : 'jpeg';
   return screenshot
     ? [
         ...charts,
         {
-          src: `data:image/jpeg;base64,${screenshot}`,
-          alt: `Screenshot of ${title || 'the page'}`,
+          src: `data:image/${type};base64,${screenshot}`,
+          alt: title ? `Screenshot of ${title}` : 'Screenshot of the screen',
         },
       ]
     : charts;

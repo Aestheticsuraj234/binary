@@ -187,7 +187,7 @@ async function approve(threadId: string, calls: ToolCallView[]) {
 
 async function browsers(as = cookie) {
   const {available, computers} = await readJson<{
-    available: {sandbox: boolean; browser: boolean};
+    available: {sandbox: boolean; browser: boolean; desktop: boolean};
     computers: ComputerView[];
   }>(await request('GET', '/api/computers', undefined, {as}));
   return {
@@ -236,6 +236,7 @@ describe('browser tools', () => {
     expect((await browsers()).available).toEqual({
       sandbox: false,
       browser: true,
+      desktop: false,
     });
   });
 

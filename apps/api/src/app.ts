@@ -14,7 +14,9 @@ import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
 import {routineRoutes} from './routes/routines';
+import {runnerRoutes} from './routes/runner';
 import {computerRoutes} from './routes/computers';
+import {deviceRoutes} from './routes/devices';
 import {threadRoutes} from './routes/threads';
 
 /** Builds the API. Dependencies come in from the composition root. */
@@ -28,7 +30,7 @@ export function createApp(dependencies: AppDependencies) {
     cors({
       origin: env.WEB_URL,
       credentials: true,
-      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     }),
   );
 
@@ -67,6 +69,8 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/approvals', approvalRoutes(dependencies));
   app.route('/api/today', todayRoutes(dependencies));
   app.route('/api/computers', computerRoutes(dependencies));
+  app.route('/api/devices', deviceRoutes(dependencies));
+  app.route('/api/runner', runnerRoutes(dependencies));
 
   return app;
 }

@@ -7,6 +7,7 @@ import {createTestUser} from '../test-utils';
 import {AgentRepository} from './agent-repository';
 import {ApprovalRepository} from './approval-repository';
 import {ComputerSessionRepository} from './computer-session-repository';
+import {DeviceRepository} from './device-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
 import {McpServerRepository} from './mcp-server-repository';
 import {MessageRepository} from './message-repository';
@@ -581,5 +582,63 @@ describe('ComputerSessionRepository', () => {
     expect(
       await sessions.findRunningForThread(userId, threadId, 'sandbox'),
     ).toBeUndefined();
+  });
+});
+
+describe('DeviceRepository', () => {
+  const devices = new DeviceRepository(db);
+  const code = `T${Date.now().toString(36).toUpperCase().slice(-7)}`;
+  let deviceId = '';
+
+  it('adds a computer waiting for its pairing code', async () => {
+    const device = await devices.createPending(userId, 'MacBook', code);
+    deviceId = device.id;
+
+    expect(device).toMatchObject({name: 'MacBook', pairingCode: code});
+    expect(device.tokenHash).toBeNull();
+  });
+
+  it('pairs once, with a fresh code, and stores only the token hash', async () => {
+    const since = new Date(Date.now() - 60_000);
+    const later = new Date(Date.now() + 60_000);
+
+    expect(
+      await devices.pair(code, {os: 'macOS', tokenHash: 'h1', since: later}),
+    ).toBeUndefined();
+    const paired = await devices.pair(code, {
+      os: 'macOS',
+      tokenHash: 'h1',
+      since,
+    });
+    expect(paired).toMatchObject({
+      id: deviceId,
+      os: 'macOS',
+      pairingCode: null,
+    });
+    expect(
+      await devices.pair(code, {os: 'macOS', tokenHash: 'h2', since}),
+    ).toBeUndefined();
+    expect((await devices.findByTokenHash('h1'))?.id).toBe(deviceId);
+  });
+
+  it('records check-ins and the shared folders, and the kill switch', async () => {
+    await devices.seen(deviceId, {allowedFolders: ['/Users/me/projects']});
+    await devices.setPaused(userId, deviceId, true);
+
+    expect(await devices.findForUser(userId, deviceId)).toMatchObject({
+      allowedFolders: ['/Users/me/projects'],
+      killSwitch: true,
+    });
+  });
+
+  it('is invisible to another user, and can be removed', async () => {
+    expect(await devices.findForUser(otherUserId, deviceId)).toBeUndefined();
+    expect(
+      await devices.setPaused(otherUserId, deviceId, false),
+    ).toBeUndefined();
+    expect(await devices.delete(otherUserId, deviceId)).toBe(false);
+
+    expect(await devices.delete(userId, deviceId)).toBe(true);
+    expect(await devices.listForUser(userId)).toEqual([]);
   });
 });

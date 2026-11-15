@@ -67,26 +67,27 @@ for React Native in `apps/mobile/src/lib/theme.ts`.
 
 ## Components in use
 
-| Component                     | Source                                       |
-| ----------------------------- | -------------------------------------------- |
-| Button                        | shadcn/ui `button`                           |
-| Input, Label                  | shadcn/ui `input`, `label`                   |
-| Card                          | shadcn/ui `card`                             |
-| Avatar                        | shadcn/ui `avatar`                           |
-| Logo                          | `components/brand/logo.tsx`                  |
-| FormField                     | `components/auth/form-field.tsx`             |
-| Icons                         | `lucide-react`                               |
-| Badge                         | shadcn/ui `badge` (Ch. 3)                    |
-| Textarea                      | shadcn/ui `textarea` (Ch. 3)                 |
-| NativeSelect                  | shadcn/ui `native-select` (Ch. 3)            |
-| AppSidebar                    | `components/app/app-sidebar.tsx` (Ch. 4)     |
-| Character, CharacterAvatar    | `components/characters/character.tsx`        |
-| CrewCard, CastCard            | `components/characters/character-cards.tsx`  |
-| SpeechBubble                  | `components/characters/speech-bubble.tsx`    |
-| ModelBadge                    | `components/agents/model-badge.tsx`          |
-| ComputerChip, ComputerSection | `components/computers/` (Ch. 9, 10)          |
-| TerminalOutput                | `components/chat/sandbox-output.tsx` (Ch. 9) |
-| ToolImages, BrowserOutput     | `components/chat/` (Ch. 10)                  |
+| Component                     | Source                                             |
+| ----------------------------- | -------------------------------------------------- |
+| Button                        | shadcn/ui `button`                                 |
+| Input, Label                  | shadcn/ui `input`, `label`                         |
+| Card                          | shadcn/ui `card`                                   |
+| Avatar                        | shadcn/ui `avatar`                                 |
+| Logo                          | `components/brand/logo.tsx`                        |
+| FormField                     | `components/auth/form-field.tsx`                   |
+| Icons                         | `lucide-react`                                     |
+| Badge                         | shadcn/ui `badge` (Ch. 3)                          |
+| Textarea                      | shadcn/ui `textarea` (Ch. 3)                       |
+| NativeSelect                  | shadcn/ui `native-select` (Ch. 3)                  |
+| AppSidebar                    | `components/app/app-sidebar.tsx` (Ch. 4)           |
+| Character, CharacterAvatar    | `components/characters/character.tsx`              |
+| CrewCard, CastCard            | `components/characters/character-cards.tsx`        |
+| SpeechBubble                  | `components/characters/speech-bubble.tsx`          |
+| ModelBadge                    | `components/agents/model-badge.tsx`                |
+| ComputerChip, ComputerSection | `components/computers/` (Ch. 9, 10)                |
+| TerminalOutput                | `components/chat/sandbox-output.tsx` (Ch. 9)       |
+| ToolImages, BrowserOutput     | `components/chat/` (Ch. 10)                        |
+| YourComputers                 | `components/computers/your-computers.tsx` (Ch. 11) |
 
 Add new shadcn components with:
 
@@ -203,7 +204,19 @@ pnpm dlx shadcn@latest add <component>
   "Close browser"). The Apps page has one section per computer, each with
   a Set up / Not set up badge, its tools, and what is running now (Chat,
   Stop or Close).
-- **Computer select (Ch. 9, 10):** None, Cloud sandbox or Browser, with the
+- **Your computers (Ch. 11):** each paired computer is a card: laptop icon,
+  name and OS, a status pill (Online with a pulsing lime dot, Offline
+  muted, Waiting for pairing or Paused in `warning`), its shared folders in
+  mono, and outline Pause/Resume plus a ghost Remove. The pairing code is
+  large and mono; commands to copy sit in small zinc-950 terminal lines
+  with a copy button.
+- **Watch live (Ch. 11):** a desktop's chip and its Apps row carry an Eye
+  link that opens the view-only stream in a new tab.
+- **Thinks with (Ch. 11):** the providers, then "Claude Code (your
+  computer)" and "Codex (your computer)". Choosing a CLI replaces the
+  model select with a muted description; the model badge reads "Claude
+  Code · your computer".
+- **Computer select (Ch. 9, 10, 11):** None, Cloud sandbox or Browser, with the
   chosen one's one-line description. A computer this server can't provide
   is disabled "(not set up)", with one `warning` line per missing computer
   saying the one step that fixes it.

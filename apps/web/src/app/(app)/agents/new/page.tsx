@@ -2,6 +2,7 @@ import {
   CHARACTERS,
   TEMPLATE_CHARACTERS,
   type AgentTemplate,
+  type DeviceView,
   type ProviderKeySummary,
 } from '@binary/shared';
 import {ArrowLeft} from 'lucide-react';
@@ -11,6 +12,7 @@ import {redirect} from 'next/navigation';
 
 import {AgentForm} from '@/components/agents/agent-form';
 import type {ComputerList} from '@/lib/computers';
+import {hasPairedComputer} from '@/lib/devices';
 import {getFromApi} from '@/lib/server-api';
 
 export const metadata: Metadata = {title: 'Hire a character · Binary'};
@@ -21,14 +23,19 @@ interface NewAgentPageProps {
 
 export default async function NewAgentPage({searchParams}: NewAgentPageProps) {
   const {template: slug} = await searchParams;
-  const [keyData, templateData, computerData] = await Promise.all([
+  const [keyData, templateData, computerData, deviceData] = await Promise.all([
     getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
     getFromApi<{templates: AgentTemplate[]}>('/api/agent-templates'),
     getFromApi<ComputerList>('/api/computers'),
+    getFromApi<{devices: DeviceView[]}>('/api/devices'),
   ]);
   const connectedProviders = (keyData?.keys ?? []).map((key) => key.provider);
-  // A character needs a model to think with, and a model needs a key.
-  if (connectedProviders.length === 0) {
+  // A character needs something to think with: a model (which needs a
+  // key), or Claude Code / Codex on a paired computer.
+  if (
+    connectedProviders.length === 0 &&
+    !hasPairedComputer(deviceData?.devices)
+  ) {
     redirect('/settings');
   }
   const template = templateData?.templates.find((item) => item.slug === slug);
@@ -56,9 +63,12 @@ export default async function NewAgentPage({searchParams}: NewAgentPageProps) {
       <AgentForm
         connectedProviders={connectedProviders}
         template={template}
-        availableComputers={
-          computerData?.available ?? {sandbox: false, browser: false}
-        }
+        availableComputers={{
+          sandbox: computerData?.available.sandbox ?? false,
+          browser: computerData?.available.browser ?? false,
+          desktop: computerData?.available.desktop ?? false,
+          runner: hasPairedComputer(deviceData?.devices),
+        }}
       />
     </main>
   );

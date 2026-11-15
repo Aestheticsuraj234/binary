@@ -1,4 +1,4 @@
-import type {Agent, ProviderKeySummary} from '@binary/shared';
+import type {Agent, DeviceView, ProviderKeySummary} from '@binary/shared';
 import {ArrowLeft} from 'lucide-react';
 import type {Metadata} from 'next';
 import Link from 'next/link';
@@ -7,6 +7,7 @@ import {notFound} from 'next/navigation';
 import {AgentForm} from '@/components/agents/agent-form';
 import {DeleteAgentButton} from '@/components/agents/delete-agent-button';
 import type {ComputerList} from '@/lib/computers';
+import {hasPairedComputer} from '@/lib/devices';
 import {getFromApi} from '@/lib/server-api';
 
 export const metadata: Metadata = {title: 'Edit character · Binary'};
@@ -17,10 +18,11 @@ interface EditAgentPageProps {
 
 export default async function EditAgentPage({params}: EditAgentPageProps) {
   const {id} = await params;
-  const [agentData, keyData, computerData] = await Promise.all([
+  const [agentData, keyData, computerData, deviceData] = await Promise.all([
     getFromApi<{agent: Agent}>(`/api/agents/${id}`),
     getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
     getFromApi<ComputerList>('/api/computers'),
+    getFromApi<{devices: DeviceView[]}>('/api/devices'),
   ]);
   // The API answers 404 for an unknown id and for someone else's agent alike.
   if (!agentData) {
@@ -50,9 +52,12 @@ export default async function EditAgentPage({params}: EditAgentPageProps) {
       <AgentForm
         connectedProviders={connectedProviders}
         agent={agent}
-        availableComputers={
-          computerData?.available ?? {sandbox: false, browser: false}
-        }
+        availableComputers={{
+          sandbox: computerData?.available.sandbox ?? false,
+          browser: computerData?.available.browser ?? false,
+          desktop: computerData?.available.desktop ?? false,
+          runner: hasPairedComputer(deviceData?.devices),
+        }}
       />
       <div className="border-t pt-6">
         <DeleteAgentButton agentId={agent.id} agentName={agent.name} />

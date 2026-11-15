@@ -2,8 +2,9 @@ import type {AgentRepository} from '@binary/db';
 import type {ChatMessage} from '@binary/shared';
 
 import {writeReply, type ReplyDependencies} from '../chat/reply';
+import type {PromptImage} from '../engines/agent-engine';
 import type {EngineFactory} from '../engines/engine-factory';
-import {AppError, NotFoundError, ValidationError} from '../errors';
+import {AppError, NotFoundError} from '../errors';
 
 export interface DecideDependencies extends ReplyDependencies {
   agents: AgentRepository;
@@ -72,6 +73,7 @@ export async function decideApproval(
   // only, and carries the raw tool result it needs to carry on.
   let note: string;
   let instruction: string;
+  let images: PromptImage[] = [];
   if (decision === 'approved') {
     // The same tools the agent had in that chat, sandbox included.
     const {toolbox} = await deps.toolboxes.forUser(userId, {
@@ -86,6 +88,8 @@ export async function decideApproval(
       output = await toolbox.runApproved(toolCall.toolName, toolCall.input);
       failed = reportsError(output);
       modelView = toolbox.forModel(toolCall.toolName, output);
+      // A desktop agent must see the screen after its click to carry on.
+      images = toolbox.imagesIn(toolCall.toolName, output);
     } catch (error) {
       output = {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -104,8 +108,11 @@ export async function decideApproval(
     note = `You approved ${tool}.${failed ? ' It failed.' : ''}`;
     instruction = [
       `The tool's result: ${asText(modelView)}`,
+      images.length > 0 ? 'The screen afterwards is attached.' : '',
       'Tell the user what happened, briefly, and carry on with the task.',
-    ].join('\n');
+    ]
+      .filter(Boolean)
+      .join('\n');
   } else {
     await deps.toolCalls.finish(toolCall.id, 'rejected', {rejected: true});
     note = `You rejected ${tool}.`;
@@ -115,14 +122,10 @@ export async function decideApproval(
 
   // The agent picks up where it left off, in the same chat.
   try {
-    if (!agent?.provider || !agent.model) {
-      throw new ValidationError('Choose a model for this agent first.');
+    if (!agent) {
+      throw new NotFoundError('Agent');
     }
-    const engine = await deps.engineFactory.create({
-      userId,
-      provider: agent.provider,
-      model: agent.model,
-    });
+    const engine = await deps.engineFactory.forAgent(userId, agent);
     const reply = await writeReply(deps, {
       userId,
       agent,
@@ -131,6 +134,7 @@ export async function decideApproval(
       content: note,
       savedAs: 'tool',
       instruction,
+      images,
     });
     return {reply};
   } catch (error) {
