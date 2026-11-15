@@ -8,6 +8,8 @@ import {AgentRepository} from './agent-repository';
 import {ApprovalRepository} from './approval-repository';
 import {ComputerSessionRepository} from './computer-session-repository';
 import {DeviceRepository} from './device-repository';
+import {KnowledgeRepository} from './knowledge-repository';
+import {MemoryRepository} from './memory-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
 import {McpServerRepository} from './mcp-server-repository';
 import {MessageRepository} from './message-repository';
@@ -640,5 +642,133 @@ describe('DeviceRepository', () => {
 
     expect(await devices.delete(userId, deviceId)).toBe(true);
     expect(await devices.listForUser(userId)).toEqual([]);
+  });
+});
+
+/** A 1536-long vector pointing mostly along `axis` (cosine search tests). */
+function vector(axis: number, lean = 0): number[] {
+  return Array.from({length: 1536}, (_, index) =>
+    index === axis ? 1 : index === axis + 1 ? lean : 0,
+  );
+}
+
+describe('MemoryRepository', () => {
+  const memoryRepository = new MemoryRepository(db);
+  let agentId = '';
+
+  beforeAll(async () => {
+    agentId = (
+      await new AgentRepository(db).create({
+        userId,
+        name: 'Nova',
+        role: 'Remembers things.',
+        avatar: 'nova',
+        approvalMode: 'auto_approve_reads',
+      })
+    ).id;
+  });
+
+  it('finds the memory closest in meaning first, from the same model', async () => {
+    await memoryRepository.add({
+      agentId,
+      content: 'Likes TypeScript',
+      embedding: vector(1),
+      embeddingModel: 'm1',
+      source: 'manual',
+    });
+    await memoryRepository.add({
+      agentId,
+      content: 'Lives in Pune',
+      embedding: vector(5),
+      embeddingModel: 'm1',
+      source: 'thread-1',
+    });
+    await memoryRepository.add({
+      agentId,
+      content: 'Old model',
+      embedding: vector(1),
+      embeddingModel: 'm0',
+      source: 'manual',
+    });
+
+    const [nearest, next] = await memoryRepository.search(
+      agentId,
+      {embedding: vector(1, 0.2), embeddingModel: 'm1'},
+      5,
+    );
+    expect(nearest).toMatchObject({content: 'Likes TypeScript'});
+    expect(nearest?.distance).toBeLessThan(0.05);
+    expect(next).toMatchObject({content: 'Lives in Pune'});
+    expect(next?.distance).toBeCloseTo(1, 5);
+    expect(await memoryRepository.countOtherModels(agentId, 'm1')).toBe(1);
+  });
+
+  it('lists newest first and deletes one', async () => {
+    const [newest] = await memoryRepository.listForAgent(agentId);
+    expect(newest?.content).toBe('Old model');
+
+    expect(await memoryRepository.delete(agentId, newest?.id ?? '')).toBe(true);
+    expect(await memoryRepository.listForAgent(agentId)).toHaveLength(2);
+  });
+});
+
+describe('KnowledgeRepository', () => {
+  const knowledge = new KnowledgeRepository(db);
+  let documentId = '';
+
+  it('saves a document with its passages and lists it with their count', async () => {
+    const saved = await knowledge.create(
+      {userId, title: 'Handbook', source: 'text', characters: 40},
+      [
+        {position: 0, content: 'Holidays: 25 days', embedding: vector(10)},
+        {position: 1, content: 'Laptops: MacBook', embedding: vector(20)},
+      ],
+      'm1',
+    );
+    documentId = saved.id;
+
+    expect(await knowledge.listForUser(userId)).toEqual([
+      expect.objectContaining({title: 'Handbook', chunks: 2}),
+    ]);
+  });
+
+  it('finds the nearest passage with its document, only for its owner', async () => {
+    const [best] = await knowledge.search(
+      userId,
+      {embedding: vector(20, 0.1), embeddingModel: 'm1'},
+      3,
+    );
+    expect(best).toMatchObject({
+      title: 'Handbook',
+      content: 'Laptops: MacBook',
+      position: 1,
+    });
+
+    expect(
+      await knowledge.search(
+        otherUserId,
+        {embedding: vector(20), embeddingModel: 'm1'},
+        3,
+      ),
+    ).toEqual([]);
+    expect(
+      await knowledge.search(
+        userId,
+        {embedding: vector(20), embeddingModel: 'other'},
+        3,
+      ),
+    ).toEqual([]);
+  });
+
+  it('deletes a document with its passages, only for its owner', async () => {
+    expect(await knowledge.delete(otherUserId, documentId)).toBe(false);
+    expect(await knowledge.delete(userId, documentId)).toBe(true);
+    expect(
+      await knowledge.search(
+        userId,
+        {embedding: vector(20), embeddingModel: 'm1'},
+        3,
+      ),
+    ).toEqual([]);
   });
 });
