@@ -204,6 +204,12 @@ pnpm dlx shadcn@latest add <component>
   "Close browser"). The Apps page has one section per computer, each with
   a Set up / Not set up badge, its tools, and what is running now (Chat,
   Stop or Close).
+- **Rooms (Ch. 13):** in a room chat every answer has its character's
+  face and a small muted name above the bubble, so answers read like a
+  meeting. @Name chips (face plus name, outline pills) sit above the box.
+  The side panel lists members (lead marked in lime text), the mode as an
+  outline badge, Edit room and the room's chats. Picking room members uses
+  toggle cards (face, name, role, a lime check and border when picked).
 - **Memory (Ch. 12):** a character's memories are a divided list: the
   fact, an outline badge ("From a chat" / "Added by you"), the date, and an
   icon-only Forget. Adding is one input and a secondary "Remember"; a

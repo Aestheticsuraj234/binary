@@ -8,7 +8,7 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 12 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 13 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
 > give them tools and MCP apps, and set up routines they run on a schedule,
 > by webhook or on demand, on Trigger.dev. Each character has a permission
@@ -20,6 +20,8 @@ feature and is documented in [`docs/chapters`](docs/chapters).
 > Runner to let characters work in folders you share, think with Claude Code
 > or Codex, or use a cloud desktop you can watch live. Characters remember
 > you across chats, and search your documents (Knowledge) and cite them.
+> Put several characters in a room: @mention who answers or let the lead
+> pick, and they hand work to each other.
 
 ## What's inside
 
@@ -162,3 +164,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 10: Browser automation with Playwright](docs/chapters/chapter-10/README.md)
 - [Chapter 11: Controlling your computer with the Runner](docs/chapters/chapter-11/README.md)
 - [Chapter 12: Memory and knowledge](docs/chapters/chapter-12/README.md)
+- [Chapter 13: Multi-agent teams and rooms](docs/chapters/chapter-13/README.md)
