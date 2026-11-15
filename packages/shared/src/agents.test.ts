@@ -54,7 +54,16 @@ describe('agentInputSchema', () => {
         .defaultComputer,
     ).toBe('sandbox');
     expect(
+      agentInputSchema.parse({...VALID_AGENT, defaultComputer: 'browser'})
+        .defaultComputer,
+    ).toBe('browser');
+    expect(
       agentInputSchema.safeParse({...VALID_AGENT, defaultComputer: 'laptop'})
+        .success,
+    ).toBe(false);
+    // Your own computer arrives with the Runner (Chapter 11).
+    expect(
+      agentInputSchema.safeParse({...VALID_AGENT, defaultComputer: 'runner'})
         .success,
     ).toBe(false);
   });

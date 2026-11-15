@@ -3,7 +3,7 @@ import {z} from 'zod';
 import {APPROVAL_MODES, type ApprovalMode} from './approvals';
 import {characterSchema} from './characters';
 import {type Provider, providerSchema} from './providers';
-import {AGENT_COMPUTERS, type AgentComputer} from './sandboxes';
+import {AGENT_COMPUTERS, type AgentComputer} from './computers';
 
 // The web form and the API both validate with these schemas, so a user sees
 // the same messages wherever a mistake is caught.
@@ -29,7 +29,7 @@ export const agentInputSchema = z.object({
   avatar: characterSchema,
   /** How much the agent may do without asking (Chapter 8). */
   approvalMode: z.enum(APPROVAL_MODES),
-  /** The computer it works on, if any (Chapter 9: a cloud sandbox). */
+  /** The computer it works on, if any: a cloud sandbox or a browser. */
   defaultComputer: z.enum(AGENT_COMPUTERS).nullable().default(null),
   /** The template this agent was hired from, if any. */
   templateId: z.uuid().nullish(),
