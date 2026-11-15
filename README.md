@@ -8,7 +8,7 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 13 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 14 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
 > give them tools and MCP apps, and set up routines they run on a schedule,
 > by webhook or on demand, on Trigger.dev. Each character has a permission
@@ -21,7 +21,8 @@ feature and is documented in [`docs/chapters`](docs/chapters).
 > or Codex, or use a cloud desktop you can watch live. Characters remember
 > you across chats, and search your documents (Knowledge) and cite them.
 > Put several characters in a room: @mention who answers or let the lead
-> pick, and they hand work to each other.
+> pick, and they hand work to each other. The Expo app brings your crew,
+> rooms and Today to your phone, and you can talk to them by voice.
 
 ## What's inside
 
@@ -103,7 +104,9 @@ pnpm mobile
 ```
 
 Scan the QR code with the [Expo Go](https://expo.dev/go) app. Your phone and
-laptop must be on the same Wi-Fi.
+laptop must be on the same Wi-Fi. Hire characters and add keys on the web;
+the app shows your crew, rooms and Today. The microphone in a chat needs an
+OpenAI key ([Chapter 14](docs/chapters/chapter-14/README.md)).
 
 ## Everyday commands
 
@@ -141,6 +144,8 @@ laptop must be on the same Wi-Fi.
   account. See [Chapter 2](docs/chapters/chapter-02/README.md#coming-from-chapter-1).
 - **The phone can't sign in.** Check `apps/mobile/.env` uses your laptop's IP,
   not `localhost`, and that the API is running.
+- **The mic says "Voice needs an OpenAI key".** Add an OpenAI key in
+  Settings on the web; Anthropic has no speech-to-text.
 
 ## Code style
 
@@ -165,3 +170,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 11: Controlling your computer with the Runner](docs/chapters/chapter-11/README.md)
 - [Chapter 12: Memory and knowledge](docs/chapters/chapter-12/README.md)
 - [Chapter 13: Multi-agent teams and rooms](docs/chapters/chapter-13/README.md)
+- [Chapter 14: Mobile app and voice](docs/chapters/chapter-14/README.md)

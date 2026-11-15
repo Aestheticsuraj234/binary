@@ -259,6 +259,32 @@ holds the same values as plain constants. Mobile uses `StyleSheet` with these
 constants, not a styling library, to keep setup simple. When a token
 changes, update **both** files.
 
+Since Chapter 14 the app has the whole experience:
+
+- **Characters:** the same drawings as the web, generated from
+  `<Character>` by `pnpm --filter @binary/web faces:export`. Never edit
+  `character-faces.ts` by hand. `CharacterAvatar` tints a round tile with
+  the character's color; while a character talks, its mouth opens and
+  closes every 180 ms.
+- **Tabs:** Crew, Rooms, Today, You (Ionicons). Active is lime; the Today
+  badge is lime with dark text.
+- **Tab pages:** a 32px bold title, a muted line, then content that pulls
+  to refresh. Cards are `card` with a 24px radius; a character's card is
+  tinted with its color (`14` fill, `40` border).
+- **Chats:** a header with back, the character's face and role, and round
+  icon buttons (New chat, Delete chat). Your bubbles are `secondary` on
+  the right; characters' are `card` with a border on the left, under
+  their name in a room. @Name chips sit in a strip above the box.
+- **The composer:** a rounded `card` box with the mic (`secondary`, lime
+  while recording, with "Listening… tap the square when you're done.")
+  and a lime Send. A transcription shows in the placeholder while it
+  works.
+- **Tool rows and approvals:** one line closed; open shows input and
+  result in mono. A waiting call has a `warning` border, "Needs your OK",
+  a lime Approve and a quiet Reject. Today's cards use the same buttons.
+- **Every icon button has an accessibility label** ("Talk", "Send",
+  "Back", "Mention Bolt").
+
 ## Motion
 
 Defined in `globals.css`, applied by class:
