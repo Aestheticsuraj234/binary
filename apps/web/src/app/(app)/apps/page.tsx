@@ -1,7 +1,13 @@
-import {TOOL_RISKS, type ConnectedApp, type ToolInfo} from '@binary/shared';
+import {
+  TOOL_RISKS,
+  type ConnectedApp,
+  type SandboxView,
+  type ToolInfo,
+} from '@binary/shared';
 import {Plug} from 'lucide-react';
 import type {Metadata} from 'next';
 
+import {SandboxSection} from '@/components/sandboxes/sandbox-section';
 import {AppCard} from '@/components/tools/app-card';
 import {ConnectAppForm} from '@/components/tools/connect-app-form';
 import {RISK_INFO, RiskBadge} from '@/components/tools/risk-badge';
@@ -11,9 +17,14 @@ import {getFromApi} from '@/lib/server-api';
 export const metadata: Metadata = {title: 'Apps & tools · Binary'};
 
 export default async function AppsPage() {
-  const data = await getFromApi<{builtIn: ToolInfo[]; apps: ConnectedApp[]}>(
-    '/api/apps',
-  );
+  const [data, sandboxData] = await Promise.all([
+    getFromApi<{
+      builtIn: ToolInfo[];
+      sandbox: {available: boolean; tools: ToolInfo[]};
+      apps: ConnectedApp[];
+    }>('/api/apps'),
+    getFromApi<{sandboxes: SandboxView[]}>('/api/sandboxes'),
+  ]);
   const builtIn = data?.builtIn ?? [];
   const apps = data?.apps ?? [];
 
@@ -25,7 +36,8 @@ export default async function AppsPage() {
         </h1>
         <p className="max-w-2xl text-muted-foreground">
           Tools let your characters look things up and act for you. Every
-          character can use every tool below; connect apps to add more.
+          character can use the built-in tools and your apps; characters with a
+          cloud sandbox can also run code.
         </p>
       </div>
 
@@ -50,6 +62,12 @@ export default async function AppsPage() {
           ))}
         </ul>
       </section>
+
+      <SandboxSection
+        available={data?.sandbox.available ?? false}
+        tools={data?.sandbox.tools ?? []}
+        running={sandboxData?.sandboxes ?? []}
+      />
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">

@@ -121,6 +121,28 @@ describe('Toolbox with approval policies', () => {
   it('treats a tool it does not know as risky', () => {
     expect(new Toolbox([]).riskOf('made_up')).toBe('write');
   });
+
+  it("gives the model a tool's own view of its result", async () => {
+    const chart: AgentTool = {
+      ...fakeTool('chart', 'read', []),
+      forModel: () => ({chart: 'A chart.'}),
+    };
+    const toolbox = new Toolbox([chart, fakeTool('look', 'read', [])]);
+    const tools = toolbox.toToolSet(approvalPolicy('auto_approve_reads'));
+
+    expect(
+      await tools.chart?.toModelOutput?.({
+        toolCallId: 'call-1',
+        input: {},
+        output: {png: 'iVBOR…'},
+      }),
+    ).toEqual({type: 'text', value: '{"chart":"A chart."}'});
+    expect(tools.look?.toModelOutput).toBeUndefined();
+    expect(toolbox.forModel('chart', {png: 'iVBOR…'})).toEqual({
+      chart: 'A chart.',
+    });
+    expect(toolbox.forModel('look', {ok: true})).toEqual({ok: true});
+  });
 });
 
 describe('built-in tools', () => {

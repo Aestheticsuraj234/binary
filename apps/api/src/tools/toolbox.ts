@@ -44,24 +44,40 @@ export class Toolbox {
    * returns BLOCKED_RESULT (never runs).
    */
   toToolSet(policy: ToolPolicy): ToolSet {
-    const entries = [...this.tools.values()].map(({name, risk, tool}) => [
-      name,
-      dynamicTool({
-        description: tool.description,
-        inputSchema: tool.inputSchema,
-        execute: async (input, options) => {
-          const decision = policy.decide(risk);
-          if (decision === 'block') {
-            return BLOCKED_RESULT;
-          }
-          if (decision === 'ask') {
-            return AWAITING_APPROVAL_RESULT;
-          }
-          return tool.execute?.(input, options);
-        },
-      }),
+    const entries = [...this.tools.values()].map((agentTool) => [
+      agentTool.name,
+      this.wrap(agentTool, policy),
     ]);
     return Object.fromEntries(entries);
+  }
+
+  private wrap({risk, tool, forModel}: AgentTool, policy: ToolPolicy) {
+    return dynamicTool({
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+      toModelOutput: forModel
+        ? ({output}) => ({
+            type: 'text',
+            value: JSON.stringify(forModel(output)),
+          })
+        : undefined,
+      execute: async (input, options) => {
+        const decision = policy.decide(risk);
+        if (decision === 'block') {
+          return BLOCKED_RESULT;
+        }
+        if (decision === 'ask') {
+          return AWAITING_APPROVAL_RESULT;
+        }
+        return tool.execute?.(input, options);
+      },
+    });
+  }
+
+  /** A result as the model should read it (see AgentTool.forModel). */
+  forModel(name: string, output: unknown): unknown {
+    const forModel = this.tools.get(name)?.forModel;
+    return forModel ? forModel(output) : output;
   }
 
   /**

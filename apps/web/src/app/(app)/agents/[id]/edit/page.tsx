@@ -16,9 +16,10 @@ interface EditAgentPageProps {
 
 export default async function EditAgentPage({params}: EditAgentPageProps) {
   const {id} = await params;
-  const [agentData, keyData] = await Promise.all([
+  const [agentData, keyData, sandboxData] = await Promise.all([
     getFromApi<{agent: Agent}>(`/api/agents/${id}`),
     getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
+    getFromApi<{available: boolean}>('/api/sandboxes'),
   ]);
   // The API answers 404 for an unknown id and for someone else's agent alike.
   if (!agentData) {
@@ -45,7 +46,11 @@ export default async function EditAgentPage({params}: EditAgentPageProps) {
           the new profile.
         </p>
       </div>
-      <AgentForm connectedProviders={connectedProviders} agent={agent} />
+      <AgentForm
+        connectedProviders={connectedProviders}
+        agent={agent}
+        sandboxAvailable={sandboxData?.available ?? false}
+      />
       <div className="border-t pt-6">
         <DeleteAgentButton agentId={agent.id} agentName={agent.name} />
       </div>

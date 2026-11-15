@@ -14,6 +14,20 @@ export {
   type AgentTemplate,
 } from './agents';
 export {
+  AGENT_COMPUTER_INFO,
+  AGENT_COMPUTERS,
+  CODE_LANGUAGES,
+  COMPUTER_KINDS,
+  TEMPLATE_COMPUTERS,
+  type AgentComputer,
+  type ComputerKind,
+  type CodeLanguage,
+  type CodeResult,
+  type CodeRunOutput,
+  type CommandRunOutput,
+  type SandboxView,
+} from './sandboxes';
+export {
   CHARACTER_IDS,
   CHARACTERS,
   characterOf,

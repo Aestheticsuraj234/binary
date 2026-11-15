@@ -47,6 +47,18 @@ describe('agentInputSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('has no computer unless one is chosen', () => {
+    expect(agentInputSchema.parse(VALID_AGENT).defaultComputer).toBeNull();
+    expect(
+      agentInputSchema.parse({...VALID_AGENT, defaultComputer: 'sandbox'})
+        .defaultComputer,
+    ).toBe('sandbox');
+    expect(
+      agentInputSchema.safeParse({...VALID_AGENT, defaultComputer: 'laptop'})
+        .success,
+    ).toBe(false);
+  });
+
   it('rejects an unknown character', () => {
     const result = agentInputSchema.safeParse({
       ...VALID_AGENT,

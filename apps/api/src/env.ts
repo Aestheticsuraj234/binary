@@ -23,6 +23,11 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => value || undefined),
+  // Optional (Chapter 9). With it, agents can be given an E2B cloud sandbox.
+  E2B_API_KEY: z
+    .string()
+    .optional()
+    .transform((value) => value || undefined),
 });
 
 export const env = envSchema.parse(process.env);

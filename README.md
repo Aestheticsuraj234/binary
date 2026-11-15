@@ -8,12 +8,13 @@ Binary is built chapter by chapter on YouTube
 ([@codebysuraj](https://youtube.com/@codebysuraj)). Each chapter adds one
 feature and is documented in [`docs/chapters`](docs/chapters).
 
-> **Status:** Chapter 8 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
+> **Status:** Chapter 9 of 15 (see [the plan](docs/CHAPTERS.md)). Hire
 > cartoon characters as agents, chat with them (streamed, saved, Markdown),
 > give them tools and MCP apps, and set up routines they run on a schedule,
 > by webhook or on demand, on Trigger.dev. Each character has a permission
 > level: tools that change things ask first, and you approve or reject them
-> in the chat or in the **Today** inbox.
+> in the chat or in the **Today** inbox. Characters with a cloud sandbox
+> (E2B) run code, commands and files, and charts show up in the chat.
 
 ## What's inside
 
@@ -74,6 +75,12 @@ pnpm dev
 Open http://localhost:3000, sign in with the demo account or create your
 own, add an API key under **API keys**, then hire a character on
 **Discover** or try the **Playground**.
+
+Two services are optional, each turned on by one key in `.env`:
+`TRIGGER_SECRET_KEY` runs routines on Trigger.dev
+([Chapter 7](docs/chapters/chapter-07/README.md)), and `E2B_API_KEY` gives
+characters a cloud sandbox to run code in
+([Chapter 9](docs/chapters/chapter-09/README.md)).
 
 ### 5. Run the mobile app (optional)
 
@@ -142,3 +149,4 @@ short functions, early returns, and no clever abstractions.
 - [Chapter 6: Tool system and MCP apps](docs/chapters/chapter-06/README.md)
 - [Chapter 7: Durable jobs and routines](docs/chapters/chapter-07/README.md)
 - [Chapter 8: Approvals, permissions and Today](docs/chapters/chapter-08/README.md)
+- [Chapter 9: Cloud sandboxes with E2B](docs/chapters/chapter-09/README.md)

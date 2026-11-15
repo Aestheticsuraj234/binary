@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  AGENT_COMPUTER_INFO,
+  AGENT_COMPUTERS,
   agentInputSchema,
   APPROVAL_MODE_INFO,
   APPROVAL_MODES,
@@ -12,7 +14,9 @@ import {
   PROVIDERS,
   providerSchema,
   TEMPLATE_CHARACTERS,
+  TEMPLATE_COMPUTERS,
   type Agent,
+  type AgentComputer,
   type AgentTemplate,
   type ApprovalMode,
   type CharacterId,
@@ -41,6 +45,8 @@ interface AgentFormProps {
   agent?: Agent;
   /** Pre-fills a new agent from a ready-made template. */
   template?: AgentTemplate;
+  /** Whether the API can start cloud sandboxes (E2B is set up). */
+  sandboxAvailable: boolean;
 }
 
 /** The suggested models, plus the agent's own model if it is not listed. */
@@ -68,6 +74,7 @@ export function AgentForm({
   connectedProviders,
   agent,
   template,
+  sandboxAvailable,
 }: AgentFormProps) {
   const router = useRouter();
   const [avatar, setAvatar] = useState<CharacterId>(
@@ -84,6 +91,13 @@ export function AgentForm({
   );
   const [approvalMode, setApprovalMode] = useState<ApprovalMode>(
     agent?.approvalMode ?? DEFAULT_APPROVAL_MODE,
+  );
+  const [computer, setComputer] = useState<AgentComputer | null>(
+    agent
+      ? agent.defaultComputer
+      : sandboxAvailable
+        ? (TEMPLATE_COMPUTERS[template?.slug ?? ''] ?? null)
+        : null,
   );
   const [model, setModel] = useState(
     agent?.model ?? PROVIDER_INFO[provider].models[0] ?? '',
@@ -124,6 +138,7 @@ export function AgentForm({
       model,
       avatar,
       approvalMode,
+      defaultComputer: computer,
       templateId: template?.id,
     });
     if (!parsed.success) {
@@ -308,6 +323,44 @@ export function AgentForm({
           <p className="text-xs text-muted-foreground">
             {APPROVAL_MODE_INFO[approvalMode].description}
           </p>
+        </div>
+
+        <div className="space-y-2 *:w-full">
+          <Label htmlFor="computer">Computer</Label>
+          <NativeSelect
+            id="computer"
+            className="h-10 w-full"
+            value={computer ?? ''}
+            onChange={(event) =>
+              setComputer(
+                AGENT_COMPUTERS.find((kind) => kind === event.target.value) ??
+                  null,
+              )
+            }
+          >
+            <NativeSelectOption value="">None</NativeSelectOption>
+            {AGENT_COMPUTERS.map((kind) => (
+              <NativeSelectOption
+                key={kind}
+                value={kind}
+                disabled={!sandboxAvailable && computer !== kind}
+              >
+                {AGENT_COMPUTER_INFO[kind].label}
+                {!sandboxAvailable && ' (not set up)'}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <p className="text-xs text-muted-foreground">
+            {computer
+              ? `${AGENT_COMPUTER_INFO[computer].description} Running code always asks you first.`
+              : 'Uses its tools and apps only.'}
+          </p>
+          {!sandboxAvailable && (
+            <p className="text-xs text-warning">
+              Cloud sandboxes need an E2B key: add E2B_API_KEY to the API&apos;s
+              .env and restart it.
+            </p>
+          )}
         </div>
 
         {error && (

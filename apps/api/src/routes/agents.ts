@@ -68,18 +68,17 @@ export function agentRoutes({
     const userId = c.get('user').id;
     const {id} = await findAgent(userId, c.req.param('id'));
     const input = await parseBody(c, agentInputSchema);
-    const {name, role, instructions, provider, model, avatar, approvalMode} =
-      input;
-    await requireProviderKey(userId, provider);
+    await requireProviderKey(userId, input.provider);
 
     const agent = await agents.update(userId, id, {
-      name,
-      role,
-      instructions,
-      provider,
-      model,
-      avatar,
-      approvalMode,
+      name: input.name,
+      role: input.role,
+      instructions: input.instructions,
+      provider: input.provider,
+      model: input.model,
+      avatar: input.avatar,
+      approvalMode: input.approvalMode,
+      defaultComputer: input.defaultComputer,
     });
     return c.json({agent});
   });
