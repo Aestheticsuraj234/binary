@@ -285,7 +285,20 @@ Since Chapter 14 the app has the whole experience:
 - **Every icon button has an accessibility label** ("Talk", "Send",
   "Back", "Mention Bolt").
 
-## Motion
+## Screenshots
+
+Screenshots in the README and docs (`docs/screenshots/`, Chapter 15) are
+of the real app with real answers:
+
+- **The showcase account** (Ada Lovelace, `ada@example.com`): varied
+  characters, one story. Never a real person's name or email.
+- **The production web build** (`next build` + `next start`), so no
+  development overlays; dark; 1440×900 at 2×, then resized to 1440 wide
+  (`sips -Z 1440`).
+- **Mobile:** the Expo web build at 390×844 at 3×, resized to 1266 wide;
+  the iOS simulator for native checks.
+- In the README, show screenshots side by side in a table, with a caption
+  that says what's happening ("Bolt plots a chart").
 
 Defined in `globals.css`, applied by class:
 
