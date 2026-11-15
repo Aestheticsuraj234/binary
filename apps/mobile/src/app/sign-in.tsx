@@ -1,5 +1,5 @@
 import {signInSchema} from '@binary/shared';
-import {Link, router} from 'expo-router';
+import {Link} from 'expo-router';
 import {useState} from 'react';
 import {StyleSheet, Text} from 'react-native';
 
@@ -36,7 +36,7 @@ export default function SignInScreen() {
       setError(result.error.message ?? 'Could not sign in.');
       return;
     }
-    router.replace('/');
+    // Signed in: the root layout now shows the app instead.
   }
 
   return (
