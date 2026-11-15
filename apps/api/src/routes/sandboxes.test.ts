@@ -3,7 +3,7 @@ import type {
   Agent,
   ChatMessage,
   ChatStreamEvent,
-  SandboxView,
+  ComputerView,
   Thread,
   ToolCallView,
   ToolInfo,
@@ -96,10 +96,12 @@ function fakeModel() {
 
 const provider = new FakeSandboxProvider();
 const app = createApp(
-  createDependencies(fakeModel, undefined, undefined, provider),
+  createDependencies(fakeModel, {sandboxProvider: provider}),
 );
 // The same API with E2B not set up.
-const appWithoutE2B = createApp(createDependencies(fakeModel));
+const appWithoutE2B = createApp(
+  createDependencies(fakeModel, {sandboxProvider: null}),
+);
 const createdEmails: string[] = [];
 let cookie = '';
 let otherCookie = '';
@@ -179,10 +181,19 @@ async function approve(threadId: string, calls: ToolCallView[]) {
   return {call, messages};
 }
 
+interface ComputerList {
+  available: {sandbox: boolean; browser: boolean};
+  computers: ComputerView[];
+}
+
+/** The user's running sandboxes, from the computers list. */
 async function running(as = cookie) {
-  return readJson<{available: boolean; sandboxes: SandboxView[]}>(
-    await request('GET', '/api/sandboxes', undefined, {as}),
+  const {computers} = await readJson<ComputerList>(
+    await request('GET', '/api/computers', undefined, {as}),
   );
+  return {
+    sandboxes: computers.filter((computer) => computer.kind === 'sandbox'),
+  };
 }
 
 beforeAll(async () => {
@@ -202,13 +213,16 @@ afterAll(async () => {
 
 describe('sandbox tools', () => {
   it('lists the sandbox tools on the Apps page, with their risks', async () => {
-    const {sandbox} = await readJson<{
-      sandbox: {available: boolean; tools: ToolInfo[]};
+    const {computers} = await readJson<{
+      computers: {kind: string; available: boolean; tools: ToolInfo[]}[];
     }>(await request('GET', '/api/apps'));
+    const sandbox = computers.find((computer) => computer.kind === 'sandbox');
 
-    expect(sandbox.available).toBe(true);
+    expect(sandbox?.available).toBe(true);
     expect(
-      Object.fromEntries(sandbox.tools.map((tool) => [tool.name, tool.risk])),
+      Object.fromEntries(
+        (sandbox?.tools ?? []).map((tool) => [tool.name, tool.risk]),
+      ),
     ).toEqual({
       run_code: 'computer',
       run_command: 'computer',
@@ -339,7 +353,7 @@ describe('a chat with a sandbox', () => {
     expect((await running(otherCookie)).sandboxes).toEqual([]);
     const response = await request(
       'DELETE',
-      `/api/sandboxes/${sandboxId}`,
+      `/api/computers/${sandboxId}`,
       undefined,
       {as: otherCookie},
     );
@@ -349,7 +363,7 @@ describe('a chat with a sandbox', () => {
   it('stops when the user stops it', async () => {
     const before = provider.sandboxes.size;
     expect(
-      (await request('DELETE', `/api/sandboxes/${sandboxId}`)).status,
+      (await request('DELETE', `/api/computers/${sandboxId}`)).status,
     ).toBe(204);
 
     expect(provider.sandboxes.size).toBe(before - 1);
@@ -357,7 +371,7 @@ describe('a chat with a sandbox', () => {
       (await running()).sandboxes.some((item) => item.id === sandboxId),
     ).toBe(false);
     expect(
-      (await request('DELETE', `/api/sandboxes/${sandboxId}`)).status,
+      (await request('DELETE', `/api/computers/${sandboxId}`)).status,
     ).toBe(404);
   });
 });
@@ -412,10 +426,10 @@ describe('sandbox housekeeping', () => {
 
 describe('without E2B', () => {
   it('says sandboxes are not available, and gives agents no sandbox tools', async () => {
-    const {available} = await readJson<{available: boolean}>(
-      await request('GET', '/api/sandboxes', undefined, {on: appWithoutE2B}),
+    const {available} = await readJson<ComputerList>(
+      await request('GET', '/api/computers', undefined, {on: appWithoutE2B}),
     );
-    expect(available).toBe(false);
+    expect(available.sandbox).toBe(false);
 
     await say((await newChat(ada, appWithoutE2B)).id, 'Hi', appWithoutE2B);
     expect(lastTools).not.toContain('run_code');

@@ -4,6 +4,7 @@ import {z} from 'zod';
 
 import type {ChatSandbox} from '../sandboxes/sandbox-sessions';
 import type {AgentTool} from './agent-tool';
+import {withoutImages} from './model-view';
 
 const SOURCE = 'Sandbox';
 const HOME = '/home/user';
@@ -12,30 +13,6 @@ const NO_SANDBOX = {
   error:
     'This chat has no sandbox running yet. Use run_code, run_command or write_file first.',
 } as const;
-
-/**
- * The model reads a chart as a short note, not as an image in base64: the
- * user sees the picture, and the model saves thousands of tokens.
- */
-function withoutImages(output: unknown): unknown {
-  if (typeof output !== 'object' || output === null) {
-    return output;
-  }
-  const results: unknown = Reflect.get(output, 'results');
-  if (!Array.isArray(results)) {
-    return output;
-  }
-  return {
-    ...output,
-    results: results.map((result: unknown) =>
-      typeof result === 'object' &&
-      result !== null &&
-      Reflect.get(result, 'png') !== undefined
-        ? {chart: 'A chart. The user can see it.'}
-        : result,
-    ),
-  };
-}
 
 /**
  * Tools that work in the chat's cloud sandbox. Running code, running

@@ -1,5 +1,12 @@
 import type {McpServer, McpServerRepository} from '@binary/db';
-import type {ComputerKind, ConnectedApp, ToolInfo} from '@binary/shared';
+import type {
+  AgentComputer,
+  ComputerKind,
+  ConnectedApp,
+  ToolInfo,
+} from '@binary/shared';
+
+import type {BrowserSessions} from '../browsers/browser-sessions';
 
 import {AppConnectionError} from '../errors';
 import type {KeyVault} from '../keys/key-vault';
@@ -12,6 +19,7 @@ import {
   type AppConnectionDetails,
   type AppConnector,
 } from './mcp';
+import {browserTools} from './browser-tools';
 import {sandboxTools} from './sandbox-tools';
 import {Toolbox} from './toolbox';
 
@@ -21,6 +29,23 @@ export interface ToolScope {
   computer: ComputerKind | null;
 }
 
+/** The computers this server can give agents, and what each needs. */
+export interface ToolboxOptions {
+  connect?: AppConnector;
+  /** Undefined when E2B is not set up. */
+  sandboxes?: SandboxSessions;
+  /** Undefined when Playwright's Chromium is not installed. */
+  browsers?: BrowserSessions;
+  builtIns?: AgentTool[];
+}
+
+/** A computer as the Apps page shows it. */
+export interface ComputerTools {
+  kind: AgentComputer;
+  available: boolean;
+  tools: ToolInfo[];
+}
+
 interface OpenedApp {
   app: ConnectedApp;
   connection?: AppConnection;
@@ -28,35 +53,52 @@ interface OpenedApp {
 
 /**
  * Builds a user's Toolbox (the Factory pattern, like EngineFactory): the
- * built-in tools, the tools of every app they connected, and, for an agent
- * with a cloud sandbox, the sandbox tools of that chat. Apps open in
- * parallel; one that fails is skipped and marked "error", so a broken app
- * never breaks a chat.
+ * built-in tools, the tools of every app they connected, and the tools of
+ * the chat's computer (a cloud sandbox or a browser) when its agent has
+ * one. Apps open in parallel; one that fails is skipped and marked "error",
+ * so a broken app never breaks a chat.
  *
- * `sandboxes` is undefined when E2B is not set up; agents then simply have
- * no sandbox tools.
+ * A computer this server can't provide (no E2B key, no Chromium) is simply
+ * left out: agents that would use it get no tools for it.
  */
 export class ToolboxFactory {
+  private readonly connect: AppConnector;
+  private readonly sandboxes?: SandboxSessions;
+  private readonly browsers?: BrowserSessions;
+  private readonly builtIns: AgentTool[];
+
   constructor(
     private readonly servers: McpServerRepository,
     private readonly keyVault: KeyVault,
-    private readonly connect: AppConnector = connectApp,
-    private readonly sandboxes?: SandboxSessions,
-    private readonly builtIns: AgentTool[] = builtInTools(),
-  ) {}
-
-  /** Whether agents can be given a cloud sandbox (E2B is set up). */
-  get sandboxesAvailable() {
-    return this.sandboxes !== undefined;
+    options: ToolboxOptions = {},
+  ) {
+    this.connect = options.connect ?? connectApp;
+    this.sandboxes = options.sandboxes;
+    this.browsers = options.browsers;
+    this.builtIns = options.builtIns ?? builtInTools();
   }
 
-  /** The sandbox tools, as the Apps page lists them (none without E2B). */
-  sandboxToolInfo(): ToolInfo[] {
-    if (!this.sandboxes) {
-      return [];
-    }
-    // Only their descriptions are read, so the tools are never run.
-    return sandboxTools(this.sandboxes.forThread('', '')).map(toToolInfo);
+  /**
+   * Each computer, whether this server can provide it, and its tools (only
+   * their descriptions are read, so they are bound to no chat).
+   */
+  computers(): ComputerTools[] {
+    return [
+      {
+        kind: 'sandbox',
+        available: this.sandboxes !== undefined,
+        tools: this.sandboxes
+          ? sandboxTools(this.sandboxes.forThread('', '')).map(toToolInfo)
+          : [],
+      },
+      {
+        kind: 'browser',
+        available: this.browsers !== undefined,
+        tools: this.browsers
+          ? browserTools(this.browsers.forThread('', '')).map(toToolInfo)
+          : [],
+      },
+    ];
   }
 
   async forUser(userId: string, scope?: ToolScope) {
@@ -70,10 +112,7 @@ export class ToolboxFactory {
       connection ? [connection] : [],
     );
     const appTools = connections.flatMap((connection) => connection.tools);
-    const computerTools =
-      this.sandboxes && scope?.computer === 'sandbox'
-        ? sandboxTools(this.sandboxes.forThread(userId, scope.threadId))
-        : [];
+    const computerTools = scope ? this.computerTools(userId, scope) : [];
     return {
       toolbox: new Toolbox(
         [...this.builtIns, ...computerTools, ...appTools],
@@ -99,6 +138,16 @@ export class ToolboxFactory {
     }
     const {ciphertext, iv} = this.keyVault.encrypt(authorization);
     return {encryptedAuth: ciphertext, iv};
+  }
+
+  private computerTools(userId: string, {threadId, computer}: ToolScope) {
+    if (computer === 'sandbox' && this.sandboxes) {
+      return sandboxTools(this.sandboxes.forThread(userId, threadId));
+    }
+    if (computer === 'browser' && this.browsers) {
+      return browserTools(this.browsers.forThread(userId, threadId));
+    }
+    return [];
   }
 
   private async open(server: McpServer): Promise<OpenedApp> {

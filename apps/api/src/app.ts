@@ -14,7 +14,7 @@ import {agentRoutes} from './routes/agents';
 import {playgroundRoutes} from './routes/playground';
 import {providerKeyRoutes} from './routes/provider-keys';
 import {routineRoutes} from './routes/routines';
-import {sandboxRoutes} from './routes/sandboxes';
+import {computerRoutes} from './routes/computers';
 import {threadRoutes} from './routes/threads';
 
 /** Builds the API. Dependencies come in from the composition root. */
@@ -66,7 +66,7 @@ export function createApp(dependencies: AppDependencies) {
   app.route('/api/hooks', hookRoutes(dependencies));
   app.route('/api/approvals', approvalRoutes(dependencies));
   app.route('/api/today', todayRoutes(dependencies));
-  app.route('/api/sandboxes', sandboxRoutes(dependencies));
+  app.route('/api/computers', computerRoutes(dependencies));
 
   return app;
 }
