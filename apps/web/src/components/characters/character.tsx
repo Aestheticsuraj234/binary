@@ -102,6 +102,15 @@ const PUPIL_OFFSET: Record<Mood, [number, number]> = {
 
 const SUN_RAYS = Array.from({length: 12}, (_, index) => (index * Math.PI) / 6);
 
+/**
+ * Node and the browser can disagree on the last digits of Math.cos and
+ * Math.sin, which made the server's SVG differ from the browser's (a
+ * hydration warning). Two decimals is far finer than a pixel.
+ */
+function rounded(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 function Body({shape, color}: {shape: Look['shape']; color: string}) {
   if (shape === 'box') {
     return <rect x="34" y="50" width="132" height="122" rx="38" fill={color} />;
@@ -173,10 +182,10 @@ function BackDetails({
           {SUN_RAYS.map((angle) => (
             <line
               key={angle}
-              x1={100 + Math.cos(angle) * 74}
-              y1={112 + Math.sin(angle) * 74}
-              x2={100 + Math.cos(angle) * 90}
-              y2={112 + Math.sin(angle) * 90}
+              x1={rounded(100 + Math.cos(angle) * 74)}
+              y1={rounded(112 + Math.sin(angle) * 74)}
+              x2={rounded(100 + Math.cos(angle) * 90)}
+              y2={rounded(112 + Math.sin(angle) * 90)}
             />
           ))}
         </g>
