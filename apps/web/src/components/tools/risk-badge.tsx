@@ -23,7 +23,7 @@ export const RISK_INFO: Record<
     label: 'Computer',
     icon: Monitor,
     explanation:
-      'Controls a computer, like running code in a cloud sandbox. Always asks first.',
+      'Controls a computer: runs code in a sandbox, or clicks and types in a browser. Always asks first.',
   },
 };
 

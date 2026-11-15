@@ -1,52 +1,72 @@
 'use client';
 
-import type {SandboxView} from '@binary/shared';
+import type {AgentComputer, ComputerView} from '@binary/shared';
 import {Square} from 'lucide-react';
 import {useEffect, useState} from 'react';
 
 import {Button} from '@/components/ui/button';
-import {listSandboxes, stopSandbox} from '@/lib/sandboxes';
+import {listComputers, stopComputer} from '@/lib/computers';
 
-interface SandboxChipProps {
+const COPY: Record<
+  AgentComputer,
+  {label: string; stop: string; confirm: string}
+> = {
+  sandbox: {
+    label: 'Sandbox on',
+    stop: 'Stop sandbox',
+    confirm: 'Stop the sandbox? Its files are deleted.',
+  },
+  browser: {
+    label: 'Browser open',
+    stop: 'Close browser',
+    confirm: 'Close the browser? Its tabs and sign-ins are lost.',
+  },
+};
+
+interface ComputerChipProps {
   threadId: string;
+  kind: AgentComputer;
   /** Changes after each reply or decision, so the chip checks again. */
   checkKey: number;
 }
 
 /**
- * "Sandbox on · Stop" in a chat's header while that chat's cloud sandbox
- * is running, so it never runs unseen. Shows nothing otherwise.
+ * "Sandbox on" or "Browser open", with a stop button, in a chat's header
+ * while that chat's computer is running, so it never runs unseen. Shows
+ * nothing otherwise.
  */
-export function SandboxChip({threadId, checkKey}: SandboxChipProps) {
-  const [sandbox, setSandbox] = useState<SandboxView>();
+export function ComputerChip({threadId, kind, checkKey}: ComputerChipProps) {
+  const [computer, setComputer] = useState<ComputerView>();
   const [isStopping, setIsStopping] = useState(false);
+  const copy = COPY[kind];
 
   useEffect(() => {
     let current = true;
-    listSandboxes().then(({sandboxes}) => {
+    listComputers().then(({computers}) => {
       if (current) {
-        setSandbox(sandboxes.find((item) => item.threadId === threadId));
+        setComputer(
+          computers.find(
+            (item) => item.threadId === threadId && item.kind === kind,
+          ),
+        );
       }
     });
     return () => {
       current = false;
     };
-  }, [threadId, checkKey]);
+  }, [threadId, kind, checkKey]);
 
-  if (!sandbox) {
+  if (!computer) {
     return null;
   }
 
   async function handleStop() {
-    if (
-      !sandbox ||
-      !window.confirm('Stop the sandbox? Its files are deleted.')
-    ) {
+    if (!computer || !window.confirm(copy.confirm)) {
       return;
     }
     setIsStopping(true);
-    if (await stopSandbox(sandbox.id)) {
-      setSandbox(undefined);
+    if (await stopComputer(computer.id)) {
+      setComputer(undefined);
     }
     setIsStopping(false);
   }
@@ -54,18 +74,18 @@ export function SandboxChip({threadId, checkKey}: SandboxChipProps) {
   return (
     <div
       className="flex shrink-0 items-center gap-1 rounded-full border py-0.5 pr-0.5 pl-2.5 text-xs"
-      title={`Running for about ${sandbox.minutesUsed} min. It stops by itself after 10 idle minutes.`}
+      title={`Running for about ${computer.minutesUsed} min. It stops by itself after 10 idle minutes.`}
     >
       <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-      <span className="text-muted-foreground">Sandbox on</span>
+      <span className="text-muted-foreground">{copy.label}</span>
       <Button
         variant="ghost"
         size="icon-sm"
         className="size-6 rounded-full text-muted-foreground hover:text-destructive"
         onClick={handleStop}
         disabled={isStopping}
-        aria-label="Stop sandbox"
-        title="Stop sandbox"
+        aria-label={copy.stop}
+        title={copy.stop}
       >
         <Square className="size-3" />
       </Button>

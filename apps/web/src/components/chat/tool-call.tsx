@@ -12,12 +12,13 @@ import {
 
 import {useState} from 'react';
 
+import {BrowserOutput, isBrowserOutput} from '@/components/chat/browser-output';
 import {
   isTerminalOutput,
   sandboxInput,
-  SandboxCharts,
   TerminalOutput,
 } from '@/components/chat/sandbox-output';
+import {ToolImages} from '@/components/chat/tool-images';
 import {RiskBadge} from '@/components/tools/risk-badge';
 import {Button} from '@/components/ui/button';
 import {cn} from '@/lib/utils';
@@ -141,6 +142,8 @@ export function ToolCall({call, onDecide}: ToolCallProps) {
               <p className="text-muted-foreground">Result</p>
               {isTerminalOutput(call.output) ? (
                 <TerminalOutput output={call.output} />
+              ) : isBrowserOutput(call.output) ? (
+                <BrowserOutput output={call.output} />
               ) : (
                 <pre className="max-h-60 overflow-auto rounded-lg bg-muted p-2 font-mono whitespace-pre-wrap">
                   {asJson(call.output)}
@@ -150,7 +153,7 @@ export function ToolCall({call, onDecide}: ToolCallProps) {
           )}
         </div>
       </details>
-      <SandboxCharts call={call} />
+      <ToolImages call={call} />
       {waiting && call.approvalId && onDecide && (
         <div className="flex flex-wrap items-center gap-2 border-t px-3 py-2">
           <span className="mr-auto text-warning">Needs your OK</span>

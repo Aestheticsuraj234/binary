@@ -1,27 +1,32 @@
-import type {SandboxView} from '@binary/shared';
+import type {AgentComputer, ComputerView} from '@binary/shared';
 
 import {API_URL} from '@/lib/env';
 
-export interface SandboxList {
-  /** False when the API has no E2B key, so agents get no sandbox. */
-  available: boolean;
-  sandboxes: SandboxView[];
+export interface ComputerList {
+  /** Which computers this server can give agents (E2B key, Chromium). */
+  available: Record<AgentComputer, boolean>;
+  computers: ComputerView[];
 }
 
-/** The user's running sandboxes, from the browser. */
-export async function listSandboxes(): Promise<SandboxList> {
-  const response = await fetch(`${API_URL}/api/sandboxes`, {
+const NONE: ComputerList = {
+  available: {sandbox: false, browser: false},
+  computers: [],
+};
+
+/** The user's running sandboxes and browsers, from the browser. */
+export async function listComputers(): Promise<ComputerList> {
+  const response = await fetch(`${API_URL}/api/computers`, {
     credentials: 'include',
   }).catch(() => null);
-  const body: SandboxList | null = response?.ok
+  const body: ComputerList | null = response?.ok
     ? await response.json().catch(() => null)
     : null;
-  return body ?? {available: false, sandboxes: []};
+  return body ?? NONE;
 }
 
-/** Stops a sandbox at once; its files are gone. True if it worked. */
-export async function stopSandbox(id: string): Promise<boolean> {
-  const response = await fetch(`${API_URL}/api/sandboxes/${id}`, {
+/** Stops a sandbox or browser at once. True if it worked. */
+export async function stopComputer(id: string): Promise<boolean> {
+  const response = await fetch(`${API_URL}/api/computers/${id}`, {
     method: 'DELETE',
     credentials: 'include',
   }).catch(() => null);

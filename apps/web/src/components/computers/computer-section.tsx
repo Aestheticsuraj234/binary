@@ -1,7 +1,12 @@
 'use client';
 
-import {characterOf, type SandboxView, type ToolInfo} from '@binary/shared';
-import {Box, Square} from 'lucide-react';
+import {
+  characterOf,
+  type AgentComputer,
+  type ComputerView,
+  type ToolInfo,
+} from '@binary/shared';
+import {Box, Globe, Square} from 'lucide-react';
 import Link from 'next/link';
 import {useState} from 'react';
 
@@ -9,34 +14,86 @@ import {CharacterAvatar} from '@/components/characters/character';
 import {ToolRow} from '@/components/tools/tool-row';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
-import {stopSandbox} from '@/lib/sandboxes';
+import {stopComputer} from '@/lib/computers';
 
-interface SandboxSectionProps {
+const COPY: Record<
+  AgentComputer,
+  {
+    title: string;
+    about: string;
+    off: string;
+    setup: React.ReactNode;
+    icon: typeof Box;
+    empty: string;
+    stop: string;
+  }
+> = {
+  sandbox: {
+    title: 'Cloud sandbox',
+    about:
+      'A private Linux machine from E2B, one per chat, for characters whose computer is a cloud sandbox (Edit → Computer). It stops by itself after 10 idle minutes; its files go with it.',
+    off: 'Sandboxes are off.',
+    setup: (
+      <>
+        Get an API key at e2b.dev, add{' '}
+        <code className="font-mono">E2B_API_KEY</code> to{' '}
+        <code className="font-mono">.env</code> and restart the API.
+      </>
+    ),
+    icon: Box,
+    empty:
+      'No sandbox is running. One starts when a character first runs code in a chat.',
+    stop: 'Stop',
+  },
+  browser: {
+    title: 'Browser',
+    about:
+      'A headless Chromium on this server, one per chat, for characters whose computer is a browser. It only reaches public addresses, never your network, and closes after 10 idle minutes.',
+    off: 'Browsers are off.',
+    setup: (
+      <>
+        Install Chromium with{' '}
+        <code className="font-mono">pnpm browsers:install</code> and restart the
+        API.
+      </>
+    ),
+    icon: Globe,
+    empty:
+      'No browser is open. One opens when a character first visits a page in a chat.',
+    stop: 'Close',
+  },
+};
+
+interface ComputerSectionProps {
+  kind: AgentComputer;
   available: boolean;
   tools: ToolInfo[];
-  running: SandboxView[];
+  running: ComputerView[];
 }
 
 /**
- * The Apps page's cloud sandbox: whether E2B is set up, the tools a
- * character with a sandbox gets, and every sandbox running right now.
+ * One computer on the Apps page: whether this server can provide it, the
+ * tools a character with it gets, and every one running right now.
  */
-export function SandboxSection({
+export function ComputerSection({
+  kind,
   available,
   tools,
   running,
-}: SandboxSectionProps) {
-  const [sandboxes, setSandboxes] = useState(running);
+}: ComputerSectionProps) {
+  const [computers, setComputers] = useState(running);
   const [stopping, setStopping] = useState<string>();
   const [error, setError] = useState('');
+  const copy = COPY[kind];
+  const Icon = copy.icon;
 
   async function handleStop(id: string) {
     setError('');
     setStopping(id);
-    if (await stopSandbox(id)) {
-      setSandboxes((current) => current.filter((item) => item.id !== id));
+    if (await stopComputer(id)) {
+      setComputers((current) => current.filter((item) => item.id !== id));
     } else {
-      setError('Could not stop the sandbox. Try again.');
+      setError('Could not stop it. Try again.');
     }
     setStopping(undefined);
   }
@@ -46,7 +103,7 @@ export function SandboxSection({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <h2 className="text-2xl font-semibold tracking-tight">
-            Cloud sandbox
+            {copy.title}
           </h2>
           {available ? (
             <Badge variant="secondary">Set up</Badge>
@@ -54,22 +111,13 @@ export function SandboxSection({
             <Badge variant="outline">Not set up</Badge>
           )}
         </div>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          A private Linux machine from E2B, one per chat, for characters whose
-          computer is a cloud sandbox (Edit → Computer). It stops by itself
-          after 10 idle minutes; its files go with it.
-        </p>
+        <p className="max-w-2xl text-sm text-muted-foreground">{copy.about}</p>
       </div>
 
       {!available && (
         <div className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">
-          <p className="font-medium">Sandboxes are off.</p>
-          <p className="text-muted-foreground">
-            Get an API key at e2b.dev, add{' '}
-            <code className="font-mono">E2B_API_KEY</code> to{' '}
-            <code className="font-mono">apps/api/.env</code> and restart the
-            API.
-          </p>
+          <p className="font-medium">{copy.off}</p>
+          <p className="text-muted-foreground">{copy.setup}</p>
         </div>
       )}
 
@@ -84,39 +132,36 @@ export function SandboxSection({
       {available && (
         <div className="space-y-2">
           <h3 className="font-semibold">Running now</h3>
-          {sandboxes.length === 0 ? (
+          {computers.length === 0 ? (
             <div className="flex items-center gap-4 rounded-3xl border border-dashed p-5">
               <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary">
-                <Box className="size-5 text-primary" />
+                <Icon className="size-5 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground">
-                No sandbox is running. One starts when a character first runs
-                code in a chat.
-              </p>
+              <p className="text-sm text-muted-foreground">{copy.empty}</p>
             </div>
           ) : (
             <ul className="divide-y rounded-3xl border bg-card px-5">
-              {sandboxes.map((sandbox) => (
-                <li key={sandbox.id} className="flex items-center gap-3 py-3">
-                  {sandbox.agent && (
+              {computers.map((computer) => (
+                <li key={computer.id} className="flex items-center gap-3 py-3">
+                  {computer.agent && (
                     <CharacterAvatar
-                      id={characterOf(sandbox.agent.avatar)}
+                      id={characterOf(computer.agent.avatar)}
                       size={32}
                     />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
-                      {sandbox.agent?.name ?? 'A deleted character'}
+                      {computer.agent?.name ?? 'A deleted character'}
                       <span className="text-muted-foreground">
                         {' · '}
-                        {sandbox.threadTitle ?? 'Untitled chat'}
+                        {computer.threadTitle ?? 'Untitled chat'}
                       </span>
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      About {sandbox.minutesUsed} min so far
+                      About {computer.minutesUsed} min so far
                     </p>
                   </div>
-                  {sandbox.agent && sandbox.threadId && (
+                  {computer.agent && computer.threadId && (
                     <Button
                       asChild
                       variant="ghost"
@@ -124,7 +169,7 @@ export function SandboxSection({
                       className="rounded-full"
                     >
                       <Link
-                        href={`/agents/${sandbox.agent.id}?chat=${sandbox.threadId}`}
+                        href={`/agents/${computer.agent.id}?chat=${computer.threadId}`}
                       >
                         Chat
                       </Link>
@@ -134,11 +179,11 @@ export function SandboxSection({
                     variant="ghost"
                     size="sm"
                     className="rounded-full text-muted-foreground hover:text-destructive"
-                    onClick={() => handleStop(sandbox.id)}
-                    disabled={stopping === sandbox.id}
+                    onClick={() => handleStop(computer.id)}
+                    disabled={stopping === computer.id}
                   >
                     <Square />
-                    Stop
+                    {copy.stop}
                   </Button>
                 </li>
               ))}

@@ -6,6 +6,7 @@ import {notFound} from 'next/navigation';
 
 import {AgentForm} from '@/components/agents/agent-form';
 import {DeleteAgentButton} from '@/components/agents/delete-agent-button';
+import type {ComputerList} from '@/lib/computers';
 import {getFromApi} from '@/lib/server-api';
 
 export const metadata: Metadata = {title: 'Edit character · Binary'};
@@ -16,10 +17,10 @@ interface EditAgentPageProps {
 
 export default async function EditAgentPage({params}: EditAgentPageProps) {
   const {id} = await params;
-  const [agentData, keyData, sandboxData] = await Promise.all([
+  const [agentData, keyData, computerData] = await Promise.all([
     getFromApi<{agent: Agent}>(`/api/agents/${id}`),
     getFromApi<{keys: ProviderKeySummary[]}>('/api/provider-keys'),
-    getFromApi<{available: boolean}>('/api/sandboxes'),
+    getFromApi<ComputerList>('/api/computers'),
   ]);
   // The API answers 404 for an unknown id and for someone else's agent alike.
   if (!agentData) {
@@ -49,7 +50,9 @@ export default async function EditAgentPage({params}: EditAgentPageProps) {
       <AgentForm
         connectedProviders={connectedProviders}
         agent={agent}
-        sandboxAvailable={sandboxData?.available ?? false}
+        availableComputers={
+          computerData?.available ?? {sandbox: false, browser: false}
+        }
       />
       <div className="border-t pt-6">
         <DeleteAgentButton agentId={agent.id} agentName={agent.name} />
