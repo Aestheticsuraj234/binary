@@ -8,6 +8,11 @@ import type {Tool} from 'ai';
  */
 export interface AgentTool extends ToolInfo {
   tool: Tool;
+  /**
+   * What the model reads instead of the full result, when that differs:
+   * a sandbox chart is a short note for the model, a picture for the user.
+   */
+  forModel?: (output: unknown) => unknown;
 }
 
 /** The public description of a tool, without its code. */

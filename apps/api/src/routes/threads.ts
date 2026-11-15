@@ -20,6 +20,7 @@ export function threadRoutes({
   approvals,
   engineFactory,
   toolboxes,
+  sandboxes,
 }: AppDependencies) {
   const routes = new Hono<AppEnv>();
   routes.use(requireUser);
@@ -61,6 +62,8 @@ export function threadRoutes({
 
   routes.delete('/:id', async (c) => {
     const {id} = await findThread(c.get('user').id, c.req.param('id'));
+    // Its sandbox would otherwise run on, unseen, until it timed out.
+    await sandboxes?.stopForThread(c.get('user').id, id);
     await threads.delete(c.get('user').id, id);
     return c.body(null, 204);
   });

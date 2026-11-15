@@ -7,7 +7,10 @@ import {NotFoundError, parseBody} from '../errors';
 import {toConnectedApp} from '../tools/toolbox-factory';
 import {isUuid} from './ids';
 
-/** The Apps page: built-in tools, and apps connected through MCP servers. */
+/**
+ * The Apps page: built-in tools, the cloud sandbox's tools, and apps
+ * connected through MCP servers.
+ */
 export function appRoutes({mcpServers, toolboxes}: AppDependencies) {
   const routes = new Hono<AppEnv>();
   routes.use(requireUser);
@@ -18,7 +21,11 @@ export function appRoutes({mcpServers, toolboxes}: AppDependencies) {
     const {toolbox, apps} = await toolboxes.forUser(c.get('user').id);
     await toolbox.close();
     const builtIn = toolbox.list().filter((tool) => tool.source === 'Binary');
-    return c.json({builtIn, apps});
+    const sandbox = {
+      available: toolboxes.sandboxesAvailable,
+      tools: toolboxes.sandboxToolInfo(),
+    };
+    return c.json({builtIn, sandbox, apps});
   });
 
   // An app is only saved after Binary could connect and list its tools.

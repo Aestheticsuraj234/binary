@@ -1,8 +1,9 @@
 import type {McpServer, McpServerRepository} from '@binary/db';
-import type {ConnectedApp} from '@binary/shared';
+import type {ComputerKind, ConnectedApp, ToolInfo} from '@binary/shared';
 
 import {AppConnectionError} from '../errors';
 import type {KeyVault} from '../keys/key-vault';
+import type {SandboxSessions} from '../sandboxes/sandbox-sessions';
 import {toToolInfo, type AgentTool} from './agent-tool';
 import {builtInTools} from './built-in';
 import {
@@ -11,7 +12,14 @@ import {
   type AppConnectionDetails,
   type AppConnector,
 } from './mcp';
+import {sandboxTools} from './sandbox-tools';
 import {Toolbox} from './toolbox';
+
+/** Which chat the tools are for, and the computer its agent uses. */
+export interface ToolScope {
+  threadId: string;
+  computer: ComputerKind | null;
+}
 
 interface OpenedApp {
   app: ConnectedApp;
@@ -20,19 +28,38 @@ interface OpenedApp {
 
 /**
  * Builds a user's Toolbox (the Factory pattern, like EngineFactory): the
- * built-in tools plus the tools of every app they connected. Apps open in
+ * built-in tools, the tools of every app they connected, and, for an agent
+ * with a cloud sandbox, the sandbox tools of that chat. Apps open in
  * parallel; one that fails is skipped and marked "error", so a broken app
  * never breaks a chat.
+ *
+ * `sandboxes` is undefined when E2B is not set up; agents then simply have
+ * no sandbox tools.
  */
 export class ToolboxFactory {
   constructor(
     private readonly servers: McpServerRepository,
     private readonly keyVault: KeyVault,
     private readonly connect: AppConnector = connectApp,
+    private readonly sandboxes?: SandboxSessions,
     private readonly builtIns: AgentTool[] = builtInTools(),
   ) {}
 
-  async forUser(userId: string) {
+  /** Whether agents can be given a cloud sandbox (E2B is set up). */
+  get sandboxesAvailable() {
+    return this.sandboxes !== undefined;
+  }
+
+  /** The sandbox tools, as the Apps page lists them (none without E2B). */
+  sandboxToolInfo(): ToolInfo[] {
+    if (!this.sandboxes) {
+      return [];
+    }
+    // Only their descriptions are read, so the tools are never run.
+    return sandboxTools(this.sandboxes.forThread('', '')).map(toToolInfo);
+  }
+
+  async forUser(userId: string, scope?: ToolScope) {
     const saved = await this.servers.listForUser(userId);
     const opened = await Promise.all(
       saved
@@ -43,8 +70,15 @@ export class ToolboxFactory {
       connection ? [connection] : [],
     );
     const appTools = connections.flatMap((connection) => connection.tools);
+    const computerTools =
+      this.sandboxes && scope?.computer === 'sandbox'
+        ? sandboxTools(this.sandboxes.forThread(userId, scope.threadId))
+        : [];
     return {
-      toolbox: new Toolbox([...this.builtIns, ...appTools], connections),
+      toolbox: new Toolbox(
+        [...this.builtIns, ...computerTools, ...appTools],
+        connections,
+      ),
       apps: opened.map(({app}) => app),
     };
   }

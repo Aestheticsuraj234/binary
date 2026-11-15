@@ -2,6 +2,7 @@ import {
   AgentRepository,
   ApprovalRepository,
   AgentTemplateRepository,
+  ComputerSessionRepository,
   McpServerRepository,
   MessageRepository,
   ProviderKeyRepository,
@@ -23,6 +24,9 @@ import {InProcessRunner, type JobRunner} from './jobs/job-runner';
 import {TriggerDevRunner} from './jobs/trigger-dev-runner';
 import {KeyVault} from './keys/key-vault';
 import {runRoutine, type RoutineDependencies} from './routines/run-routine';
+import type {SandboxProvider} from './sandboxes/cloud-sandbox';
+import {E2BSandboxProvider} from './sandboxes/e2b-sandbox-provider';
+import {SandboxSessions} from './sandboxes/sandbox-sessions';
 import {connectApp, type AppConnector} from './tools/mcp';
 import {ToolboxFactory} from './tools/toolbox-factory';
 
@@ -42,18 +46,22 @@ export interface AppDependencies {
   keyVault: KeyVault;
   engineFactory: EngineFactory;
   toolboxes: ToolboxFactory;
+  /** Undefined when E2B is not set up. */
+  sandboxes?: SandboxSessions;
   jobs: JobRunner;
 }
 
 /**
  * The composition root: the one place where classes are created and wired
- * together. Tests call it with a fake model factory (and, when they need it,
- * a fake app connector), so no real LLM or app is ever reached.
+ * together. Tests call it with a fake model factory (and, when they need
+ * them, a fake app connector, job runner or sandbox provider), so no real
+ * LLM, app or sandbox is ever reached.
  */
 export function createDependencies(
   createModel: LanguageModelFactory = createLanguageModel,
   connect: AppConnector = connectApp,
   makeJobs: (deps: RoutineDependencies) => JobRunner = defaultJobs,
+  sandboxProvider: SandboxProvider | undefined = defaultSandboxes(),
 ): AppDependencies {
   const agents = new AgentRepository(db);
   const agentTemplates = new AgentTemplateRepository(db);
@@ -64,7 +72,15 @@ export function createDependencies(
   const mcpServers = new McpServerRepository(db);
   const keyVault = new KeyVault(env.ENCRYPTION_KEY);
   const engineFactory = new EngineFactory(providerKeys, keyVault, createModel);
-  const toolboxes = new ToolboxFactory(mcpServers, keyVault, connect);
+  const sandboxes = sandboxProvider
+    ? new SandboxSessions(new ComputerSessionRepository(db), sandboxProvider)
+    : undefined;
+  const toolboxes = new ToolboxFactory(
+    mcpServers,
+    keyVault,
+    connect,
+    sandboxes,
+  );
   const base = {
     agents,
     agentTemplates,
@@ -80,8 +96,14 @@ export function createDependencies(
     keyVault,
     engineFactory,
     toolboxes,
+    sandboxes,
   };
   return {...base, jobs: makeJobs(base)};
+}
+
+/** E2B when it is set up; otherwise agents get no sandbox. */
+function defaultSandboxes(): SandboxProvider | undefined {
+  return env.E2B_API_KEY ? new E2BSandboxProvider(env.E2B_API_KEY) : undefined;
 }
 
 /** Trigger.dev when it is set up; otherwise runs happen inside the API. */

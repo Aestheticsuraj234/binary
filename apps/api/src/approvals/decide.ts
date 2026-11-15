@@ -67,22 +67,31 @@ export async function decideApproval(
 
   const {toolCall} = approval;
   const tool = toolCall.toolName.replaceAll('_', ' ');
+  const agent = await deps.agents.findForUser(userId, approval.agent.id);
   // `note` is saved in the chat for the user; `instruction` is for the model
   // only, and carries the raw tool result it needs to carry on.
   let note: string;
   let instruction: string;
   if (decision === 'approved') {
-    const {toolbox} = await deps.toolboxes.forUser(userId);
+    // The same tools the agent had in that chat, sandbox included.
+    const {toolbox} = await deps.toolboxes.forUser(userId, {
+      threadId: approval.threadId,
+      computer: agent?.defaultComputer ?? null,
+    });
     let output: unknown;
     let failed: boolean;
+    // What the model reads: a chart becomes a note, for example.
+    let modelView: unknown;
     try {
       output = await toolbox.runApproved(toolCall.toolName, toolCall.input);
       failed = reportsError(output);
+      modelView = toolbox.forModel(toolCall.toolName, output);
     } catch (error) {
       output = {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
       failed = true;
+      modelView = output;
     } finally {
       await toolbox.close();
     }
@@ -94,7 +103,7 @@ export async function decideApproval(
     await deps.approvals.markExecuted(approval.id);
     note = `You approved ${tool}.${failed ? ' It failed.' : ''}`;
     instruction = [
-      `The tool's result: ${asText(output)}`,
+      `The tool's result: ${asText(modelView)}`,
       'Tell the user what happened, briefly, and carry on with the task.',
     ].join('\n');
   } else {
@@ -106,7 +115,6 @@ export async function decideApproval(
 
   // The agent picks up where it left off, in the same chat.
   try {
-    const agent = await deps.agents.findForUser(userId, approval.agent.id);
     if (!agent?.provider || !agent.model) {
       throw new ValidationError('Choose a model for this agent first.');
     }

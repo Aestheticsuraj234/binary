@@ -7,6 +7,7 @@ import type {
 import type {
   ApprovalMode,
   ChatMessage,
+  ComputerKind,
   ChatStreamEvent,
   ChatTurn,
 } from '@binary/shared';
@@ -47,6 +48,7 @@ export interface ReplyRequest {
     instructions: string;
     avatar: string | null;
     approvalMode: ApprovalMode;
+    defaultComputer: ComputerKind | null;
   };
   engine: AgentEngine;
   threadId: string;
@@ -105,7 +107,10 @@ export async function writeReply(
     await threads.rename(userId, threadId, title ?? titleFrom(content));
   }
 
-  const {toolbox} = await toolboxes.forUser(userId);
+  const {toolbox} = await toolboxes.forUser(userId, {
+    threadId,
+    computer: agent.defaultComputer,
+  });
   const log = new ToolCallLog((name) => toolbox.riskOf(name));
   const emitTool = async (
     call: ReturnType<ToolCallLog['start']> | undefined,
