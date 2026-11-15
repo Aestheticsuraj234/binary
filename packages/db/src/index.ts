@@ -6,6 +6,7 @@ export {ComputerSessionRepository} from './repositories/computer-session-reposit
 export {DeviceRepository} from './repositories/device-repository';
 export {KnowledgeRepository} from './repositories/knowledge-repository';
 export {MemoryRepository} from './repositories/memory-repository';
+export {RoomRepository} from './repositories/room-repository';
 export {
   AgentRepository,
   type AgentChanges,

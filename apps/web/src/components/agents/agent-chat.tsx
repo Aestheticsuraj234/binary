@@ -245,7 +245,7 @@ export function AgentChat({
             ['happy', 1500],
             ['idle', 0],
           ]);
-        } else {
+        } else if (event.type === 'error') {
           showFailure(replyId, event.error);
         }
       }

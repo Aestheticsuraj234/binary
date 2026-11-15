@@ -10,6 +10,7 @@ import {ComputerSessionRepository} from './computer-session-repository';
 import {DeviceRepository} from './device-repository';
 import {KnowledgeRepository} from './knowledge-repository';
 import {MemoryRepository} from './memory-repository';
+import {RoomRepository} from './room-repository';
 import {AgentTemplateRepository} from './agent-template-repository';
 import {McpServerRepository} from './mcp-server-repository';
 import {MessageRepository} from './message-repository';
@@ -455,6 +456,7 @@ describe('ApprovalRepository', () => {
     const message = await new MessageRepository(db).add({
       threadId,
       role: 'assistant',
+      authorAgentId: agent.id,
       content: 'I asked to refund it.',
     });
     const [call] = await toolCallRepository.addMany([
@@ -769,6 +771,127 @@ describe('KnowledgeRepository', () => {
         {embedding: vector(20), embeddingModel: 'm1'},
         3,
       ),
+    ).toEqual([]);
+  });
+});
+
+describe('RoomRepository', () => {
+  const roomRepository = new RoomRepository(db);
+  const agentRepository = new AgentRepository(db);
+  let ids: string[] = [];
+  let roomId = '';
+
+  beforeAll(async () => {
+    ids = await Promise.all(
+      ['Ava', 'Ben', 'Cy'].map(
+        async (name) =>
+          (
+            await agentRepository.create({
+              userId,
+              name,
+              role: `${name} does things.`,
+              avatar: 'nova',
+              approvalMode: 'auto_approve_reads',
+            })
+          ).id,
+      ),
+    );
+  });
+
+  it('creates a room with its members, listed by name', async () => {
+    const created = await roomRepository.create(userId, {
+      name: 'Launch',
+      routingMode: 'auto',
+      leadAgentId: ids[0] ?? '',
+      memberIds: [ids[1] ?? '', ids[0] ?? ''],
+    });
+    roomId = created?.id ?? '';
+
+    const room = await roomRepository.findForUser(userId, roomId);
+    expect(room).toMatchObject({
+      name: 'Launch',
+      routingMode: 'auto',
+      leadAgentId: ids[0],
+    });
+    expect(room?.members.map((member) => member.name)).toEqual(['Ava', 'Ben']);
+  });
+
+  it("refuses another user's agents as members", async () => {
+    const foreign = await agentRepository.create({
+      userId: otherUserId,
+      name: 'Eve',
+      role: 'Not yours.',
+      avatar: 'nova',
+      approvalMode: 'auto_approve_reads',
+    });
+    expect(
+      await roomRepository.create(userId, {
+        name: 'Sneaky',
+        routingMode: 'mention',
+        leadAgentId: ids[0] ?? '',
+        memberIds: [ids[0] ?? '', foreign.id],
+      }),
+    ).toBeUndefined();
+  });
+
+  it('updates the room and replaces its members together', async () => {
+    await roomRepository.update(userId, roomId, {
+      name: 'Launch team',
+      routingMode: 'mention',
+      leadAgentId: ids[2] ?? '',
+      memberIds: [ids[0] ?? '', ids[2] ?? ''],
+    });
+
+    const [room] = await roomRepository.listForUser(userId);
+    expect(room).toMatchObject({name: 'Launch team', routingMode: 'mention'});
+    expect(room?.members.map((member) => member.name)).toEqual(['Ava', 'Cy']);
+    expect(
+      await roomRepository.findForUser(otherUserId, roomId),
+    ).toBeUndefined();
+  });
+
+  it('has its own chats, whose approvals reach the inbox with the room', async () => {
+    const threadsRepo = new ThreadRepository(db);
+    const thread = await threadsRepo.createForRoom(userId, roomId);
+    expect(thread).toMatchObject({roomId, agentId: null});
+    expect(
+      (await threadsRepo.listForRoom(userId, roomId, 10)).map(
+        (item) => item.id,
+      ),
+    ).toEqual([thread.id]);
+
+    // A tool call by one member, waiting for approval.
+    const message = await new MessageRepository(db).add({
+      threadId: thread.id,
+      role: 'assistant',
+      authorAgentId: ids[2],
+      content: 'I asked.',
+    });
+    const [call] = await new ToolCallRepository(db).addMany([
+      {
+        messageId: message.id,
+        toolName: 'send_email',
+        risk: 'write',
+        status: 'awaiting_approval',
+        input: {},
+      },
+    ]);
+    const approvals = new ApprovalRepository(db);
+    await approvals.createMany(userId, [
+      {toolCallId: call?.id ?? '', summary: 'send email {}'},
+    ]);
+
+    const waiting = (await approvals.listPendingForUser(userId)).find(
+      (approval) => approval.threadId === thread.id,
+    );
+    expect(waiting).toMatchObject({roomId, agent: {name: 'Cy'}});
+  });
+
+  it('deletes a room with its chats', async () => {
+    expect(await roomRepository.delete(otherUserId, roomId)).toBe(false);
+    expect(await roomRepository.delete(userId, roomId)).toBe(true);
+    expect(
+      await new ThreadRepository(db).listForRoom(userId, roomId, 10),
     ).toEqual([]);
   });
 });

@@ -6,6 +6,7 @@ import {agents, threads} from '../schema';
 const THREAD_COLUMNS = {
   id: threads.id,
   agentId: threads.agentId,
+  roomId: threads.roomId,
   title: threads.title,
   createdAt: threads.createdAt,
   updatedAt: threads.updatedAt,
@@ -29,6 +30,28 @@ export class ThreadRepository {
       throw new Error('Could not start a chat.');
     }
     return created;
+  }
+
+  /** Starts an empty chat in a room (Chapter 13). */
+  async createForRoom(userId: string, roomId: string) {
+    const [created] = await this.db
+      .insert(threads)
+      .values({userId, roomId})
+      .returning(THREAD_COLUMNS);
+    if (!created) {
+      throw new Error('Could not start a chat.');
+    }
+    return created;
+  }
+
+  /** A room's chats, most recently active first. */
+  listForRoom(userId: string, roomId: string, limit: number) {
+    return this.db
+      .select(THREAD_COLUMNS)
+      .from(threads)
+      .where(and(eq(threads.userId, userId), eq(threads.roomId, roomId)))
+      .orderBy(desc(threads.updatedAt))
+      .limit(limit);
   }
 
   async findForUser(userId: string, id: string) {

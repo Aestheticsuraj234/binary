@@ -27,6 +27,7 @@ const APPROVAL_COLUMNS = {
   },
   agent: {id: agents.id, name: agents.name, avatar: agents.avatar},
   threadId: threads.id,
+  roomId: threads.roomId,
 };
 
 /**
@@ -54,13 +55,17 @@ export class ApprovalRepository {
   }
 
   private select() {
-    return this.db
-      .select(APPROVAL_COLUMNS)
-      .from(approvalRequests)
-      .innerJoin(toolCalls, eq(approvalRequests.toolCallId, toolCalls.id))
-      .innerJoin(messages, eq(toolCalls.messageId, messages.id))
-      .innerJoin(threads, eq(messages.threadId, threads.id))
-      .innerJoin(agents, eq(threads.agentId, agents.id));
+    return (
+      this.db
+        .select(APPROVAL_COLUMNS)
+        .from(approvalRequests)
+        .innerJoin(toolCalls, eq(approvalRequests.toolCallId, toolCalls.id))
+        .innerJoin(messages, eq(toolCalls.messageId, messages.id))
+        .innerJoin(threads, eq(messages.threadId, threads.id))
+        // The agent that asked wrote the message; in a room, the thread has
+        // no single agent.
+        .innerJoin(agents, eq(messages.authorAgentId, agents.id))
+    );
   }
 
   /** Oldest first: the inbox is a queue. */

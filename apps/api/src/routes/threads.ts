@@ -1,9 +1,10 @@
 import {sendMessageSchema, type ChatStreamEvent} from '@binary/shared';
-import {Hono} from 'hono';
+import {Hono, type Context} from 'hono';
 import {stream} from 'hono/streaming';
 
 import {requireUser, type AppEnv} from '../app-env';
 import {writeReply} from '../chat/reply';
+import {runRoomTurn} from '../rooms/room-turn';
 import type {AppDependencies} from '../container';
 import {AppError, NotFoundError, parseBody} from '../errors';
 import {isUuid} from './ids';
@@ -22,6 +23,7 @@ export function threadRoutes({
   toolboxes,
   computers,
   memory,
+  rooms,
 }: AppDependencies) {
   const routes = new Hono<AppEnv>();
   routes.use(requireUser);
@@ -83,6 +85,9 @@ export function threadRoutes({
   routes.post('/:id/messages', async (c) => {
     const userId = c.get('user').id;
     const thread = await findThread(userId, c.req.param('id'));
+    if (thread.roomId) {
+      return sendToRoom(c, userId, thread.id, thread.roomId);
+    }
     const agent = thread.agentId
       ? await agents.findForUser(userId, thread.agentId)
       : undefined;
@@ -117,6 +122,53 @@ export function threadRoutes({
       }
     });
   });
+
+  /** A message in a room: several agents may answer, one after another. */
+  async function sendToRoom(
+    c: Context<AppEnv>,
+    userId: string,
+    threadId: string,
+    roomId: string,
+  ) {
+    const room = await rooms.findForUser(userId, roomId);
+    if (!room) {
+      throw new NotFoundError('Chat');
+    }
+    const {content} = await parseBody(c, sendMessageSchema);
+    c.header('Content-Type', 'application/x-ndjson; charset=utf-8');
+    c.header('Cache-Control', 'no-cache');
+    return stream(c, async (output) => {
+      const send = (event: ChatStreamEvent) =>
+        output.writeln(JSON.stringify(event));
+      try {
+        await runRoomTurn(
+          {
+            messages,
+            threads,
+            toolCalls,
+            approvals,
+            toolboxes,
+            memory,
+            agents,
+            engineFactory,
+          },
+          {userId, room, threadId, content, onEvent: send},
+        );
+      } catch (error) {
+        if (!(error instanceof AppError)) {
+          console.error(error);
+        }
+        await send({
+          type: 'error',
+          error:
+            error instanceof AppError
+              ? error.message
+              : 'Something went wrong on the server.',
+        });
+        await send({type: 'end'});
+      }
+    });
+  }
 
   return routes;
 }

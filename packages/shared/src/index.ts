@@ -54,6 +54,18 @@ export {
 export type {BrowserElement, BrowserPageOutput} from './browsers';
 export {normalizeMath} from './markdown';
 export {
+  findMentions,
+  MAX_ROOM_MEMBERS,
+  MAX_ROOM_REPLIES,
+  ROUTING_MODE_INFO,
+  ROUTING_MODES,
+  roomInputSchema,
+  type Room,
+  type RoomInput,
+  type RoomMember,
+  type RoutingMode,
+} from './rooms';
+export {
   addDocumentSchema,
   addMemorySchema,
   MAX_DOCUMENT_LENGTH,

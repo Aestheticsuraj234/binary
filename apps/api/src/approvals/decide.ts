@@ -1,4 +1,4 @@
-import type {AgentRepository} from '@binary/db';
+import type {AgentRepository, RoomRepository} from '@binary/db';
 import type {ChatMessage} from '@binary/shared';
 
 import {writeReply, type ReplyDependencies} from '../chat/reply';
@@ -9,6 +9,7 @@ import {AppError, NotFoundError} from '../errors';
 export interface DecideDependencies extends ReplyDependencies {
   agents: AgentRepository;
   engineFactory: EngineFactory;
+  rooms: RoomRepository;
 }
 
 export interface Decision {
@@ -127,6 +128,10 @@ export async function decideApproval(
       throw new NotFoundError('Agent');
     }
     const engine = await deps.engineFactory.forAgent(userId, agent);
+    // In a room, the agent still knows who else is there.
+    const room = approval.roomId
+      ? await deps.rooms.findForUser(userId, approval.roomId)
+      : undefined;
     const reply = await writeReply(deps, {
       userId,
       agent,
@@ -136,6 +141,10 @@ export async function decideApproval(
       savedAs: 'tool',
       instruction,
       images,
+      room: room && {
+        name: room.name,
+        members: room.members.map(({id, name, role}) => ({id, name, role})),
+      },
     });
     return {reply};
   } catch (error) {
