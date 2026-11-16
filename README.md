@@ -189,7 +189,7 @@ flowchart LR
 | Quality  | Vitest, ESLint (Google TypeScript Style), Prettier, GitHub Actions           |
 
 The whole system, piece by piece: the
-[architecture overview](docs/chapters/chapter-15/ARCHITECTURE.md).
+[architecture overview](docs/ARCHITECTURE.md).
 
 ## Project structure
 
@@ -223,8 +223,8 @@ The whole system, piece by piece: the
 
 ## The course: 15 chapters
 
-Each chapter adds one feature, with its plan, architecture diagrams,
-tests, a review, screenshots and a prompt to rebuild it.
+Each chapter adds one feature: a short README, one diagram, and a
+natural prompt you paste into your own coding agent to build it yourself.
 [The plan](docs/CHAPTERS.md).
 
 | #   | Chapter                                                                                   |

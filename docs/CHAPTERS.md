@@ -27,81 +27,52 @@ Vercel AI SDK for OpenAI / Anthropic / Gemini.
 | 14  | Mobile app and voice                      | The full experience on the Expo app, plus voice input                                                                     | ✅ Done ¹¹ |
 | 15  | Ready to share                            | A README with every feature and real screenshots, a setup guide from env keys to every service, verified on a fresh clone | ✅ Done ¹² |
 
-¹ Chapter 4 also became a character-first redesign (part 2). Two scope items
-were left out: the **approval mode** field (its behaviour belongs to Chapter
-8, so it is exposed there) and the **`AppError` hierarchy**, which Chapter 6 added (tools bring several
-new kinds of failure).
+¹ Chapter 4 became a character-first redesign: every agent is played by a
+cartoon character. Approval modes arrive in Chapter 8, and the `AppError`
+hierarchy in Chapter 6.
 
-² Chapter 5 also gained Markdown rendering (part 2). **Live updates via
-Postgres LISTEN/NOTIFY are not built yet**: chats stream to the tab that
-sent the message, but other open tabs and devices only update on reload.
+² Chapter 5 also renders Markdown. Live updates across tabs (Postgres
+LISTEN/NOTIFY) are not built: other tabs and devices update on reload.
 
-³ Chapter 6 blocked **write** and **computer** tools until Chapter 8 could
-ask you first. Since Chapter 8 they ask, depending on the agent's approval
-mode.
+³ Chapter 6 blocks `write` and `computer` tools. Since Chapter 8 they ask
+first, depending on the agent's approval mode.
 
-⁴ Chapter 7 was verified on a real Trigger.dev project (Run now, a cron
-firing, schedule removal). Without Trigger.dev, routines run inside the API
-and schedules don't fire.
+⁴ Without Trigger.dev, routines run inside the API and schedules don't fire.
 
-⁵ Chapter 8 asks without holding anything open: a request is a row, decided
-once, and the agent follows up in its chat. Agents hired before it keep the
-database default, **Ask first**; new ones start on **Auto-approve reads**.
-Requests don't expire yet, and the Today count updates on page load (still
-no LISTEN/NOTIFY).
+⁵ An approval request is a saved row, decided once; the agent follows up in
+its chat. New agents start on **Auto-approve reads**. Requests don't expire
+yet.
 
-⁶ Chapter 9 gives each chat its own E2B sandbox, started on the first
-approved run and stopped after 10 idle minutes. It is optional: without
-`E2B_API_KEY`, characters have no sandbox. Verified on real E2B (code,
-charts, files, stop) with a scripted model.
+⁶ One E2B sandbox per chat, started on the first approved run and stopped
+after 10 idle minutes. Optional: without `E2B_API_KEY`, there's no sandbox.
 
-⁷ Chapter 10 runs Playwright Chromium inside the API, one context per chat.
-Opening and reading pages run on their own; clicking and typing ask first.
-Every request the browser makes is limited to public addresses. Browsers
-live in memory, so a restart closes them. Chapter 9's `/api/sandboxes`
-became `/api/computers`, for sandboxes and browsers alike. Verified with
-real models (Claude Sonnet 5.5 in the browser, GPT-5.5 in an E2B sandbox),
-which also added math rendering to chat answers.
+⁷ Playwright Chromium runs inside the API, one browser per chat, limited to
+public addresses. Reading runs on its own; clicking and typing ask first.
 
-⁸ Chapter 11's Runner long-polls the API and enforces the shared folders on
-your computer. Its jobs live in the API's memory, so routines on the
-Trigger.dev worker can't reach your computer yet. Claude Code and Codex are
-covered with stand-in CLIs. The cloud desktop was verified on real E2B with
-Claude Sonnet. Adds one migration (`devices.token_hash`).
+⁸ The Runner long-polls the API and enforces your shared folders. Routines
+on the Trigger.dev worker can't reach your computer yet.
 
-⁹ Chapter 12 embeds with OpenAI's `text-embedding-3-small` (or Google's
-`gemini-embedding-001`) into pgvector; Anthropic-only users have no memory
-or knowledge until they add one of those keys. Memories are per character,
-knowledge per user. Verified with real embeddings and Claude Sonnet.
-Adds one migration (`0004_knowledge`).
+⁹ Embeddings need an OpenAI or Google key; with only an Anthropic key there's
+no memory or knowledge. Memories are per character, knowledge per user.
 
-¹⁰ Chapter 13's rooms answer in turn (at most 4 answers per message), with
-@mentions, automatic routing by the lead's model, and hand-offs. No
-migration. Verified with a real room mixing Claude and GPT models.
+¹⁰ Rooms answer in turn, at most 4 answers per message, routed by @mention
+or by the lead's model.
 
-¹¹ Chapter 14's app has four tabs (Crew, Rooms, Today, You) and both kinds
-of chat, streamed; hiring, apps, keys and routines stay on the web. Voice
-input is transcribed on the API with the user's OpenAI key
-(`gpt-4o-mini-transcribe`), with their characters' names as a hint, and
-lands in the message box. Decisions from the phone are saved as `mobile`.
-No migration. Verified with a real recording and on the iOS simulator.
+¹¹ The app has four tabs (Crew, Rooms, Today, You). Hiring, apps, keys and
+routines stay on the web. Voice uses your OpenAI key.
 
-¹² Chapter 15 changed from "usage tracking, testing and deployment" to
-making Binary ready to share with students: the README, 27 real
-screenshots, `docs/SETUP.md`, and a whole-system architecture overview.
-Following the guide on a fresh clone found and fixed three problems
-(`pnpm trigger:dev` couldn't build since Chapter 10, tests ignored
-`DATABASE_URL` in `.env`, an install warning). Deployment, usage tracking
-and browser end-to-end tests are left for later.
+¹² Chapter 15 makes Binary ready to share: the README with real screenshots,
+[`SETUP.md`](SETUP.md) and the [architecture overview](ARCHITECTURE.md). No
+deployment, usage tracking or browser end-to-end tests yet.
 
-## Every chapter ships with
+## Every chapter folder has
 
-- Plan and acceptance criteria, then code, tests, lint, typecheck and build
-- A review against the Google TypeScript Style Guide
-- Diagrams in `docs/chapters/chapter-XX/architecture/`
-- Docs: README, IMPLEMENTATION, ARCHITECTURE, TESTING, PR_REVIEW, REBUILD_PROMPT
-- Its own `feat/chapter-XX-*` branch with Conventional Commits, merged into `main`
+- **README.md**: what the chapter adds, what you'll learn, how to try it
+- **PROMPT.md**: a short brief to paste into your own coding agent. It says
+  what to build and why, and what "done" looks like. The agent explores, plans
+  and asks questions; the prompt doesn't dictate the code.
+- **DIAGRAM.md**: one diagram of what the chapter adds
+- **screenshots/**: a few images, when the chapter has a UI
 
-After Chapter 15: the whole-system architecture is in
-[Chapter 15](chapters/chapter-15/ARCHITECTURE.md), and the setup guide in
-[`SETUP.md`](SETUP.md). Still to come: `docs/REBUILD_PROJECT_PROMPT.md`.
+The detailed plans, reviews and file-by-file notes of each chapter are in
+the git history and on its `feat/chapter-XX-*` branch.

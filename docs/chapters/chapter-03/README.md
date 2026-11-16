@@ -1,58 +1,53 @@
-# Chapter 3: AI engine layer and API key vault
+# Chapter 3: The AI engine and key vault
 
-**Goal:** users bring their own OpenAI, Anthropic or Gemini key, Binary
-stores it encrypted, and one engine interface can answer with any of them.
-The proof: the same prompt answered by three providers, side by side.
+Binary can now talk to real AI models. You add your own OpenAI, Anthropic or
+Gemini key, Binary stores it encrypted, and one engine layer can answer with
+any of them. The Playground proves it: the same prompt, answered by each
+provider side by side.
 
-![Playground](screenshots/playground.png)
+![The Playground](screenshots/playground.png)
 
-## What you get
+## What you'll learn
 
-- **Key vault:** AES-256-GCM encryption for users' API keys, with a master
-  key in `ENCRYPTION_KEY`. Tampered data or the wrong master key fails loudly.
-- **API keys page** (`/settings`): add, replace or remove a key per provider;
-  only the last 4 characters are ever shown.
-- **Engine layer:** the `AgentEngine` interface (Strategy), `ApiEngine` on the
-  Vercel AI SDK, a one-line-per-provider model factory, and `EngineFactory`
-  (Factory) that finds, decrypts and uses the user's key.
-- **Composition root:** `createDependencies()` wires everything once; tests
-  swap in a fake model.
-- **Playground** (`/playground`): one prompt, run on every connected
-  provider in parallel, each with its own model picker, answer, token count
-  and time.
-- **App shell:** a shared header with navigation for every signed-in page.
-- **Robustness fixes:** pages and forms now show a clear message instead of
-  crashing or hanging when the API is unreachable.
+- How **AES-256-GCM** encrypts secrets at rest, and why it also detects
+  tampering
+- The **Strategy pattern**: one engine interface, so the rest of the app
+  doesn't care which model answers
+- The **Factory pattern**: one place that finds your key, decrypts it and
+  builds the engine
+- How the **Vercel AI SDK** talks to three providers through one API
+- Why a **composition root** (all wiring in one place) lets tests use a fake
+  model instead of real keys
 
-## Files in this chapter's docs
+## Try it
 
-| File                                   | What's in it                                                    |
-| -------------------------------------- | --------------------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions              |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Engine layer, key security, API contracts                       |
-| [TESTING.md](TESTING.md)               | Tests and results                                               |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                                       |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter                       |
-| [architecture/](architecture)          | Components, class diagram, request flows, encryption and wiring |
-| [screenshots/](screenshots)            | Playground, API keys (desktop + phone)                          |
-
-## Run it
-
-Add a master key to the root `.env` (new in this chapter):
+Add a master key to the root `.env` first. It's new in this chapter:
 
 ```bash
-openssl rand -base64 32   # paste as ENCRYPTION_KEY=...
+openssl rand -base64 32   # paste the result as ENCRYPTION_KEY=...
 pnpm dev
 ```
 
-Open http://localhost:3000 → **API keys**, paste at least one provider key,
-then open **Playground**.
+Open http://localhost:3000, go to **API keys** and paste at least one key.
+Then open **Playground**, write a prompt and press **Run on all**.
 
-> Keep `ENCRYPTION_KEY` safe and never change it on a running install: keys
-> saved with the old value can no longer be decrypted, and users would have
-> to add them again.
+![The API keys page](screenshots/settings.png)
 
-## What comes next
+## Good to know
 
-Chapter 4 adds agents: each one picks a provider and model from the keys
-connected here, and thinks through the same `EngineFactory`.
+- **Never change `ENCRYPTION_KEY` once you've saved keys.** Keys saved with
+  the old value can't be decrypted any more, and you'd have to add them again.
+- You only need one provider key to follow along. Providers without a key
+  show "No key yet" in the Playground.
+- Model ids change often. If a provider rejects a model, pick another one in
+  the dropdown.
+
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 2 repo.
+See [DIAGRAM.md](DIAGRAM.md) for how a key and a prompt flow through the API.
+
+## Next
+
+[Chapter 4](../chapter-04/README.md) adds agents, played by cartoon
+characters you hire and talk to.

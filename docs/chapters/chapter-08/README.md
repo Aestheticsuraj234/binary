@@ -1,56 +1,31 @@
-# Chapter 8: Approvals, permissions and the Today inbox
+# Chapter 8: Approvals and the Today inbox
 
-**Goal:** characters can do real things, and you stay in charge. Each
-character has a **permission level**. When a tool needs your OK, the
-character asks, the request waits in **Today**, and approving runs the tool.
-Then the character carries on in the same chat.
+Characters can now do real things, and you stay in charge. Each character
+has an approval mode. When a tool needs your OK, the character asks, the
+request waits in the chat and in **Today**, and approving runs the tool. Then
+the character carries on in the same chat.
 
 ![Mimi asking to refund an order](screenshots/chat-approval.png)
 
-## What you get
+## What you'll learn
 
-- **Permission levels** (per character, on the hire and edit form):
+- **Human-in-the-loop** approvals: the agent proposes, you decide
+- How one **policy table** turns an approval mode and a risk level into
+  run, ask or block
+- Why asking **never blocks anything**: a request is a row in the database,
+  not a waiting process, so it survives restarts
+- How one conditional database update makes a decision happen **exactly
+  once**, even with two clicks on two devices
+- How the agent **follows up** after your decision as a normal new turn
 
-  | Level                  | Read tools | Write tools | Computer tools |
-  | ---------------------- | ---------- | ----------- | -------------- |
-  | Plan only              | never      | never       | never          |
-  | Ask first              | ask        | ask         | ask            |
-  | **Auto-approve reads** | run        | ask         | ask            |
-  | Accept edits           | run        | run         | ask            |
+| Approval mode          | `read` | `write` | `computer` |
+| ---------------------- | ------ | ------- | ---------- |
+| Plan only              | never  | never   | never      |
+| Ask first              | ask    | ask     | ask        |
+| **Auto-approve reads** | run    | ask     | ask        |
+| Accept edits           | run    | run     | ask        |
 
-  New characters start on **Auto-approve reads**.
-
-- **Asking never blocks anything.** The tool returns "waiting for approval"
-  at once. The character tells you what it asked for, and the request is
-  saved in the database, so it survives restarts and works the same in
-  chat and in routines.
-- **Approve or reject in the chat**, on the tool row ("Wants to use shop
-  refund order · Write · Needs your OK"), **or in Today**.
-- **After your decision**:
-  - Approving runs the tool with exactly the input the character gave, and
-    saves the result.
-  - Rejecting saves that you said no.
-  - Either way, a short note appears in the chat ("You approved shop refund
-    order."), and the character replies with what happened.
-- **Today** (`/today`, first in the sidebar, with a count of waiting
-  requests): everything waiting for you, oldest first, plus your routine
-  runs from the last 24 hours.
-- **Safety:** a request can only be decided once. Two clicks or two devices
-  racing can't run the tool twice.
-
-## Files in this chapter's docs
-
-| File                                   | What's in it                                        |
-| -------------------------------------- | --------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions  |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Policy table, the approval lifecycle, API contracts |
-| [TESTING.md](TESTING.md)               | Tests and results                                   |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                           |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter           |
-| [architecture/](architecture)          | Components, approve end to end, policy and states   |
-| [screenshots/](screenshots)            | Asking in chat, after approval, the Today inbox     |
-
-## Run it
+## Try it
 
 No new settings and no migration.
 
@@ -58,14 +33,32 @@ No new settings and no migration.
 pnpm dev
 ```
 
-Connect an app with a write tool (Chapter 6), ask a character to use it,
-and approve it in the chat or in **Today**.
+Connect an app with a write tool (Chapter 6) and ask a character to use it.
+Approve it in the chat, or open **Today**, first in the sidebar, and approve
+it there. You'll see "You approved …" in the chat, then the character's
+reply.
 
-> **Characters hired before this chapter** keep the database default,
-> **Ask first**, so they now ask even before reading. Switch them to
-> Auto-approve reads under **Edit → Permissions**.
+![The Today inbox](screenshots/today.png)
 
-## What comes next
+![After approving: the note and the follow-up](screenshots/chat-approved.png)
 
-Chapter 9 adds cloud sandboxes with E2B: the first **computer** tools,
-which ask first in every mode except Plan only (which blocks them).
+## Good to know
+
+- **Characters hired before this chapter** keep the database default, Ask
+  first, so they now ask even before reading. Switch them to Auto-approve
+  reads under **Edit → Permissions**. New characters start there.
+- Requests don't expire yet. Old ones wait until you decide.
+- The Today count updates when a page loads. A request from a routine shows
+  up on the next load, not instantly.
+- Approving waits for the tool and the character's reply, so a slow tool
+  makes the button slow.
+
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 7 repo.
+See [DIAGRAM.md](DIAGRAM.md) for a request from asking to approving.
+
+## Next
+
+[Chapter 9](../chapter-09/README.md) adds cloud sandboxes with E2B: the
+first `computer` tools, which ask first in every mode except Plan only.

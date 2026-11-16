@@ -1,60 +1,54 @@
-# Chapter 4: Agents
+# Chapter 4: Agents as characters
 
-**Goal:** hire AI coworkers. Each agent has a name, a role, instructions and
-the model it thinks with, and answers in character through the same
-`EngineFactory` the playground uses. The proof: hire a Research Assistant
-from a template, give it a task, and get an answer that knows who it is.
+Binary gets its coworkers. You hire **agents**, each played by a cartoon
+character with a face, a personality and moods, and talk to them on a stage
+that reacts to the conversation. Each agent has a job, instructions and a
+model, and answers in character through the engine from chapter 3.
 
-![A conversation with a character](screenshots/chat.png)
+![Discover, with your crew and the cast](screenshots/discover.png)
 
-> **Part 2 redesigned this chapter around characters.** Agents are now
-> played by cartoon characters, with a sidebar, Discover, a character
-> creator and a conversation screen. See [CHARACTERS.md](CHARACTERS.md).
-> The list below describes part 1; the APIs it lists are unchanged.
+## What you'll learn
 
-## What you get
+- How an agent's profile becomes a **system prompt**, rebuilt on every
+  message so edits apply straight away
+- **Ownership checks**: every query is scoped to the signed-in user, and a
+  stranger's agent is a 404 so its id stays secret
+- Why a response returns only the fields the app needs, never the whole row
+- How **templates** are copied into a new agent, so editing one never
+  changes the other
+- How to draw and animate characters with **SVG and CSS**, and respect
+  reduced motion
 
-- **Agents API** (`/api/agents`): list, hire, read, edit and fire agents,
-  always limited to the signed-in user. Another user's agent is a plain 404.
-- **Run an agent** (`POST /api/agents/:id/run`): the agent's profile becomes
-  a system prompt, and its provider + model answer the message.
-- **Templates** (`/api/agent-templates`): the four seeded starting points
-  (Research Assistant, Coding Agent, Inbox Manager, Personal Assistant).
-- **Agents page** (`/agents`): your agents, an empty state, and template cards.
-- **Hire page** (`/agents/new`): a form pre-filled from a template, or blank.
-  Providers without a key are shown but disabled.
-- **Agent page** (`/agents/:id`): give the agent a task, edit its profile,
-  or fire it.
-- **Home:** shows your agents, and the next step is now key → agent →
-  playground.
+## Try it
 
-## Files in this chapter's docs
-
-| File                                   | What's in it                                          |
-| -------------------------------------- | ----------------------------------------------------- |
-| [CHARACTERS.md](CHARACTERS.md)         | Part 2: the cast, sidebar, Discover, creator and chat |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions    |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Ownership, system prompt, API contracts               |
-| [TESTING.md](TESTING.md)               | Tests and results                                     |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                             |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter             |
-| [architecture/](architecture)          | Components, request flows, ownership and wiring       |
-| [screenshots/](screenshots)            | Agents list, an agent's page (desktop + phone)        |
-
-## Run it
-
-No new settings and no migration: the `agents` table has existed since
-Chapter 2.
+No new settings and no migration.
 
 ```bash
 pnpm db:seed   # makes sure the four templates exist
 pnpm dev
 ```
 
-Open http://localhost:3000. **Discover** shows the cast; pick one to hire.
-If you have no API key yet, Pebble asks you to add one first.
+Open http://localhost:3000. **Discover** shows the cast under "Meet the
+cast". Pick Nova, rename her if you like, switch characters to watch the
+preview change, and press the lime **Hire** button. Then give her a task.
 
-## What comes next
+![Hiring Nova in the character creator](screenshots/hire.png)
 
-Chapter 5 adds chat: real conversations with an agent, with history and
-streamed answers, replacing today's one-message "Give a task" box.
+## Good to know
+
+- Without an API key, Pebble asks you to add one, and the hire page sends
+  you to **API keys** first.
+- Conversations aren't saved yet. **New chat** or a reload starts over.
+  Saved chats arrive in chapter 5.
+- The cast is eight characters. Four play the templates; the rest are free
+  for agents you design yourself.
+
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 3 repo.
+See [DIAGRAM.md](DIAGRAM.md) for how hiring and a reply flow through the API.
+
+## Next
+
+[Chapter 5](../chapter-05/README.md) saves every chat and streams the
+answers word by word.

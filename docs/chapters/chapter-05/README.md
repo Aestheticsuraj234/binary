@@ -1,63 +1,56 @@
-# Chapter 5: Chat
+# Chapter 5: Saved, streaming chat
 
-**Goal:** real conversations. Every chat with a character is saved, answers
-stream in word by word, and your recent chats sit in the sidebar like any
-chat app. The proof: ask Nova something, watch the answer type itself out
-while Nova talks, reload the page, and the conversation is still there.
+Chats become real conversations. Every chat with a character is saved,
+answers stream in word by word while the character talks, and your recent
+chats sit in the sidebar like in any chat app. Answers also render as
+Markdown, with highlighted code.
 
-![An answer streaming in](screenshots/streaming.png)
+![A saved chat with Markdown, highlighted code and Recent chats](screenshots/markdown.png)
 
-## What you get
+## What you'll learn
 
-- **Saved chats:** each conversation is a `thread` with its `messages`.
-  Chapter 2 created those tables, so there's no migration. A new chat is
-  saved on its first message.
-- **Streaming:** `POST /api/threads/:id/messages` streams the answer as
-  NDJSON (one JSON event per line): `delta` pieces, then `done` with the
-  saved message, or `error`.
-- **Memory within a chat:** the model reads up to the last 20 messages.
-- **Automatic titles:** a chat is named after its first message, with no
-  extra model call.
-- **Recent chats** in the sidebar (and the phone drawer), most recent first,
-  each with its character's face. Click one to pick up where you left off.
-- **Chat header:** the title, **New chat** and **Delete chat**.
-- **The character reacts to the stream itself:** thinking until the first
-  word, talking while words arrive, happy when done, oops on errors. A lime
-  caret shows where the answer is being written.
-- **Markdown and highlighted code** (part 2): answers render headings,
-  lists, tables, links and Shiki-highlighted code, even mid-stream. See
-  [MARKDOWN.md](MARKDOWN.md).
-- **Failures are honest:** a provider error before or during the answer
-  shows the reason. Words that already arrived stay visible. Your question
-  is saved; the failed answer is not.
+- How **streaming** works: the Vercel AI SDK hands over the answer piece by
+  piece, and the API passes each piece straight to the browser
+- Why we stream **newline-delimited JSON** over `fetch` instead of
+  server-sent events
+- How **threads and messages** keep a conversation, and why the model only
+  reads the last 20 messages
+- Why every check happens **before the first byte** is sent, so errors get
+  real HTTP statuses
+- How to render **Markdown while it streams**, without showing half-written
+  `**` or code fences
 
-## Files in this chapter's docs
+## Try it
 
-| File                                   | What's in it                                        |
-| -------------------------------------- | --------------------------------------------------- |
-| [MARKDOWN.md](MARKDOWN.md)             | Part 2: Streamdown Markdown and code highlighting   |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions  |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Streaming protocol, ownership, API contracts        |
-| [TESTING.md](TESTING.md)               | Tests and results                                   |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                           |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter           |
-| [architecture/](architecture)          | Components, request flows, the chat's state machine |
-| [screenshots/](screenshots)            | Streaming, a saved chat, recent chats, phone        |
-
-## Run it
-
-No new settings, no migration.
+No new settings and no migration.
 
 ```bash
 pnpm dev
 ```
 
-Open a character from **Your crew**, send a message, and watch it stream.
-Reload to see it saved, or open it again from **Recent chats**.
+Open a character from **Your crew** in the sidebar and ask something. Watch
+the answer type itself out while the character talks. Reload the page: the
+chat is still there, and it's listed under **Recent chats**.
 
-## What comes next
+![An answer streaming in](screenshots/streaming.png)
 
-Chats are one-on-one for now. The `rooms` table already exists for group
-chats where several characters work together, and `tool_calls` and
-`approval_requests` exist for tools that need your approval. Both arrive in
-later chapters.
+## Good to know
+
+- Only the tab that sent the message streams. Other open tabs and devices
+  show the new messages after a reload.
+- Streamdown styles itself with Tailwind classes, so Tailwind must scan its
+  files in `apps/web/node_modules`. Point it at the wrong folder and answers
+  render without styles, with no error.
+- The first code block in a new language shows uncolored for a moment while
+  its highlighting loads.
+- Chat doesn't show token usage. The Playground still does.
+
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 4 repo.
+See [DIAGRAM.md](DIAGRAM.md) for what happens when you send a message.
+
+## Next
+
+[Chapter 6](../chapter-06/README.md) gives agents tools, with risk levels,
+and connects your apps through MCP.

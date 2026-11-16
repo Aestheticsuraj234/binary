@@ -1,72 +1,62 @@
 # Chapter 9: Cloud sandboxes with E2B
 
-**Goal:** characters can run real code. A character whose computer is a
-**cloud sandbox** gets a private Linux machine from [E2B](https://e2b.dev)
-for each chat. In it the character runs Python or JavaScript, runs shell
-commands and works with files. Charts it draws appear right in the chat.
+Characters can now run real code. A character whose computer is a **cloud
+sandbox** gets a private Linux machine from E2B for each chat, where it runs
+Python or JavaScript, runs commands and works with files. Charts it draws
+show up right in the chat.
 
 ![Bolt drew a chart in its sandbox](screenshots/chat-chart.png)
 
-## What you get
+## What you'll learn
 
-- **A computer per character** (hire and edit form: **Computer** → None or
-  Cloud sandbox). The Coding Agent template starts with one.
-- **Five sandbox tools:**
+- How a **cloud sandbox** lets an agent run untrusted code away from your
+  machine
+- Why running code is a **computer** tool that always asks first, while
+  reading files doesn't
+- How to manage a resource's **lifecycle**: start on first use, reuse it,
+  stop it when idle or when the chat is deleted
+- Why the user and the model see **different views** of a result (the chart
+  for you, a short note for the model)
+- How a small **provider interface** lets tests use a fake sandbox instead
+  of E2B
 
-  | Tool          | What it does                                                                      | Risk     |
-  | ------------- | --------------------------------------------------------------------------------- | -------- |
-  | `run_code`    | Python or JavaScript; variables are kept between runs; charts come back as images | Computer |
-  | `run_command` | A shell command (`pip install …`, `git …`)                                        | Computer |
-  | `write_file`  | Create or replace a text file                                                     | Computer |
-  | `read_file`   | Read a text file                                                                  | Read     |
-  | `list_files`  | List a folder                                                                     | Read     |
+## Try it
 
-- **You approve every run.** Computer tools ask first in every permission
-  mode (and Plan only blocks them). A waiting call opens by itself, so you
-  see the exact code or command before you click **Approve**.
-- **One sandbox per chat, started only when needed.** Nothing starts until
-  the first approved run. The next message finds the same sandbox again,
-  with its files and variables. Reading and listing never start one.
-- **Nothing runs unseen.**
-  - A chat with a running sandbox shows **Sandbox on** with a Stop
-    button.
-  - **Apps & tools** lists every running sandbox, with Chat and Stop.
-  - Deleting a chat stops its sandbox.
-  - A sandbox stops by itself after 10 idle minutes. The next run starts
-    a fresh one and says that the old files are gone.
-- **Charts for you, a note for the model.** The PNG is shown in the chat.
-  The model only reads "A chart. The user can see it.", which saves
-  thousands of tokens per chart.
-
-## Files in this chapter's docs
-
-| File                                   | What's in it                                        |
-| -------------------------------------- | --------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions  |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Sandbox lifecycle, tools, API contracts             |
-| [TESTING.md](TESTING.md)               | Tests and results                                   |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                           |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter           |
-| [architecture/](architecture)          | Components, a run end to end, sandbox states        |
-| [screenshots/](screenshots)            | Asking to run code, the chart, the Apps page, phone |
-
-## Run it
-
-1. Get an API key at [e2b.dev/dashboard](https://e2b.dev/dashboard)
-   (API keys). The free tier is enough to try this.
-2. Add it to `.env`:
+1. Get an API key at [e2b.dev/dashboard](https://e2b.dev/dashboard). The
+   free tier is enough.
+2. Add it to `.env` and restart:
 
    ```bash
-   E2B_API_KEY=e2b_…
+   E2B_API_KEY=e2b_...
+   pnpm dev
    ```
 
-3. Restart `pnpm dev`. Then hire the **Coding Agent** (or set **Edit →
-   Computer → Cloud sandbox**) and ask: _"Plot the squares of 1 to 10."_
+3. Hire the **Coding Agent**, or set **Edit → Computer → Cloud sandbox** on
+   any character, and ask: _"Plot the squares of 1 to 10."_
 
-Without the key, nothing changes: characters simply have no sandbox, and
-the form and the Apps page say how to turn it on. No migration is needed.
+The character asks to run its code, and you see the exact code before you
+click **Approve**. The chat header then shows **Sandbox on** with a Stop
+button, and **Apps & tools** lists every running sandbox.
 
-## What comes next
+![Waiting for approval to run code](screenshots/chat-ask.png)
 
-Chapter 10 gives characters a headless **browser** with Playwright, the
-second kind of computer.
+## Good to know
+
+- **Without `E2B_API_KEY`, there's no sandbox.** Nothing breaks: the form
+  and the Apps page just say how to turn it on.
+- A sandbox stops after 10 idle minutes (and E2B's free plan ends one after
+  an hour). The next run starts a fresh one, so earlier files are gone.
+- The repo pins the `e2b` package to a release that had been out a while,
+  because `@e2b/code-interpreter` pulled in one only a day old. Keep that
+  pin if your install picks up a brand-new version.
+- No migration: the tables for computers were already there from chapter 2.
+
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 8 repo.
+See [DIAGRAM.md](DIAGRAM.md) for what happens when a character runs code.
+
+## Next
+
+[Chapter 10](../chapter-10/README.md) gives characters a second kind of
+computer: a headless browser with Playwright.

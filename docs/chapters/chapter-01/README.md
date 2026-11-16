@@ -1,44 +1,50 @@
-# Chapter 1: Project init and authentication setup
+# Chapter 1: Project setup and sign-in
 
-**Goal:** a working monorepo where a user can create an account, sign in and
-sign out on the web and on a phone, with one shared design system.
+Binary starts as a monorepo where you can create an account and sign in, on
+the web and on your phone. There's no AI yet. This chapter builds the
+foundation every later feature sits on: one API, two apps, one database and
+one design system.
 
-## What you get
+![The sign-in page](../../screenshots/sign-in.png)
 
-- A Turborepo + pnpm monorepo with three apps and two shared packages
-- Postgres 16 (with pgvector, for later chapters) in Docker
-- Email + password authentication with [Better Auth](https://www.better-auth.com),
-  served by a Hono API
-- Web: sign-up, sign-in and a protected home page (Next.js, shadcn/ui, Tailwind)
-- Mobile: the same three screens in Expo, with the session in secure storage
-- One validation source (`packages/shared`) for web, mobile and API
-- ESLint rules that enforce the Google TypeScript Style Guide
-- Tests for validation and the full auth flow against a real database
-- A CI workflow, ready for when the repo goes to GitHub
+## What you'll learn
 
-## Files in this chapter's docs
+- How a **monorepo** (pnpm workspaces + Turborepo) lets a web app, a mobile app
+  and an API share code
+- How **Better Auth** handles sign-up, sign-in and sessions, with cookies on
+  the web and secure storage on the phone
+- Why validation lives in **one shared package**, so every app shows the same
+  errors
+- How a **design system** (dark, one lime accent) keeps every screen consistent
+- How ESLint, Prettier and CI keep the code in one style from day one
 
-| File                                   | What's in it                                        |
-| -------------------------------------- | --------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file walkthrough |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | How the pieces fit and why                          |
-| [TESTING.md](TESTING.md)               | What is tested and how to run it                    |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and what was simplified             |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | A standalone prompt to rebuild this chapter         |
-| [architecture/](architecture)          | System, request and integration diagrams            |
+## Try it
 
-## Run it
-
-See the [setup guide](../../SETUP.md). In short:
+The full walkthrough is in the [setup guide](../../SETUP.md). In short:
 
 ```bash
 pnpm install
 cp .env.example .env   # then set BETTER_AUTH_SECRET
-pnpm setup
-pnpm dev               # http://localhost:3000
+pnpm setup             # starts Postgres and creates the tables
+pnpm dev               # web on http://localhost:3000, API on :4000
+pnpm mobile            # optional: the Expo app on your phone
 ```
 
-## What comes next
+Create an account, sign out and sign back in. Try a short password or a
+wrong one to see the error messages.
 
-Chapter 2 moves the database to the Drizzle ORM and adds the schema for every
-entity in the project, including the auth tables created here.
+## Good to know
+
+- The API won't start while `BETTER_AUTH_SECRET` is still the placeholder.
+  That's on purpose.
+- On a phone, the app needs your laptop's Wi-Fi IP address, not `localhost`.
+
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in an empty folder. See
+[DIAGRAM.md](DIAGRAM.md) for how the pieces connect.
+
+## Next
+
+[Chapter 2](../chapter-02/README.md) adds a real database layer with the
+Drizzle ORM and the schema for the whole app.

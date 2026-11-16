@@ -1,97 +1,68 @@
 # Chapter 11: Controlling your computer with the Runner
 
-**Goal:** characters can work on **your own computer**, with **Claude Code
-or Codex** as their brain if you like, and on a **cloud desktop** you can
-watch. You stay in charge:
+Characters can now work on **your own computer**, inside the folders you
+share, through a small local app called the Runner. They can also think with
+**Claude Code** or **Codex** instead of an API model, and use a **cloud
+desktop** you can watch live. Anything that changes something still asks
+first.
 
-- They only work in the folders you share.
-- Anything that changes something asks first.
-- One switch pauses them all.
+![Your computers, with one Runner online](screenshots/computers.png)
+
+## What you'll learn
+
+- How a **long poll** lets a local app take work from a server without
+  opening any port on your machine
+- Why **the client enforces safety**: the Runner checks every path against
+  your shared folders, whatever the server asks
+- How **pairing** works: a one-time code, a token stored only as a hash, and
+  a kill switch
+- How an **external CLI** (Claude Code, Codex) becomes an engine, with your
+  approval mode mapped to its permission level
+- How a model **sees a screen**: desktop screenshots go to it as images
+
+## Try it
+
+```bash
+pnpm db:migrate   # one new column for the Runner's token
+pnpm dev
+```
+
+Open **Your computers** in the sidebar, add a computer, and run the two
+commands it shows in a new terminal:
+
+```bash
+pnpm runner pair K7QD-3MXP                     # your one-time code
+pnpm runner start --folder ~/code/my-project   # only this folder is shared
+```
+
+The page notices the computer coming online. Set a character's **Computer**
+to **Your computer** and ask it what files you have. Reading runs at once;
+running a command waits for your OK.
 
 ![A command on your computer, after approval](screenshots/chat-runner.png)
 
-## What you get
+For Claude Code or Codex, install and sign in to that CLI first, then pick
+it under **Thinks with**. For a cloud desktop, set `E2B_API_KEY` and choose
+**Computer → Cloud desktop**; the eye icon in the chat header lets you watch it live.
 
-### The Runner (your computer)
+![A cloud desktop after an approved click](screenshots/chat-desktop.png)
 
-- **Your computers** (sidebar): add a computer, and copy two commands.
+## Good to know
 
-  ```bash
-  pnpm runner pair K7QD-3MXP                      # the one-time code (15 minutes)
-  pnpm runner start --folder ~/code/my-project    # only these folders
-  ```
+- A command runs as you, with your environment. The shared folder is only
+  where it starts, so read each command before you approve it. **Pause**
+  stops everything at once.
+- Runner jobs live in the API's memory, so routines running on the
+  Trigger.dev worker can't reach your computer yet.
+- Without `E2B_API_KEY`, there's no cloud desktop.
 
-  The page notices the pairing and the computer coming online by itself.
-  It shows each computer's OS, its shared folders and whether it's
-  online, and has **Pause** (the kill switch) and **Remove** buttons.
+## Build it yourself
 
-- **The Runner never accepts connections.** It asks the API for work (a
-  long poll), so nothing on your computer is opened to the network.
-- **It enforces the folders itself.** Every path is resolved on your
-  computer, following symlinks. Anything outside the shared folders is
-  refused, whatever the server asks.
-- **Four tools** for a character whose Computer is **Your computer**:
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 10 repo.
+See [DIAGRAM.md](DIAGRAM.md) for how a job travels from the chat to your
+computer.
 
-  | Tool                   | Risk     |
-  | ---------------------- | -------- |
-  | `computer_list_files`  | Read     |
-  | `computer_read_file`   | Read     |
-  | `computer_run_command` | Computer |
-  | `computer_write_file`  | Computer |
+## Next
 
-- **Pause** sends your computer nothing, and the character is told it's
-  paused. **Remove** revokes the Runner's token, so the Runner signs out
-  and stops.
-
-### Claude Code and Codex as engines
-
-**Thinks with** now offers **Claude Code (your computer)** and **Codex
-(your computer)** next to OpenAI, Anthropic and Google:
-
-- The Runner runs the CLI in your first shared folder, with your own
-  sign-in.
-- What the CLI writes, and every tool it uses ("Used Bash · Computer"),
-  streams into the chat.
-- The character's permission level sets how far the CLI may go:
-
-  | Permission level                | Claude Code              | Codex                            |
-  | ------------------------------- | ------------------------ | -------------------------------- |
-  | Plan only                       | `--permission-mode plan` | read-only, asked for a plan only |
-  | Ask first or Auto-approve reads | default (looks only)     | `--sandbox read-only`            |
-  | Accept edits                    | `acceptEdits`            | `--sandbox workspace-write`      |
-
-### Cloud desktop (E2B Desktop)
-
-- **A full Linux desktop, one per chat.** You can **watch it live**
-  (view-only) from the chat header or Apps.
-- **The character really sees the screen.** Screenshots go to the model
-  as images, including the screen right after a click you approved.
-- **Looking, opening a page and scrolling are reads.** Clicking, typing
-  and pressing keys ask first.
-
-![Claude Sonnet on a real cloud desktop](screenshots/real-claude-desktop.png)
-
-## Files in this chapter's docs
-
-| File                                   | What's in it                                       |
-| -------------------------------------- | -------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | The Runner protocol, engines, desktops, security   |
-| [TESTING.md](TESTING.md)               | Tests, the walkthrough and the real runs           |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                          |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter          |
-| [architecture/](architecture)          | Components, pairing and a job end to end, states   |
-| [screenshots/](screenshots)            | Pairing, a command, Claude Code, the desktop, Apps |
-
-## Run it
-
-1. Apply the migration (one new column, the Runner's token hash):
-   `pnpm db:migrate`.
-2. Your computer:
-   - Open **Your computers**, add one, then run the two commands it shows.
-   - For Claude Code or Codex, install and sign in to that CLI first.
-3. Cloud desktop: needs `E2B_API_KEY` in `.env`, like sandboxes.
-
-## What comes next
-
-Chapter 12: long-term memory and knowledge with pgvector.
+[Chapter 12](../chapter-12/README.md) gives characters long-term memory and
+knowledge with pgvector.
