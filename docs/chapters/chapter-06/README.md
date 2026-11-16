@@ -1,69 +1,57 @@
-# Chapter 6: Tool system and MCP apps
+# Chapter 6: Tools and MCP apps
 
-**Goal:** agents stop only talking and start doing. Every tool has a risk
-level (read, write or computer), apps plug in through MCP servers
-(including Composio), and you can see every tool an agent used, inside its
-reply. The proof: connect a shop app, ask Mimi where an order is, and watch
-her look it up. Ask for a refund, and see it blocked.
+Characters stop only talking and start doing. They get built-in tools, plus
+the tools of any app you connect through MCP (Composio included), and every
+tool has a risk level: `read`, `write` or `computer`. In this chapter only
+`read` tools run. Anything that could change the outside world is blocked
+until Chapter 8 can ask you first.
 
-![A tool call inside a reply, and a blocked one](screenshots/chat-blocked.png)
+![A read tool used mid-answer, and a write tool blocked](screenshots/chat-blocked.png)
 
-## What you get
+## What you'll learn
 
-- **A tool registry with risk levels.**
-  - **read:** only looks things up, so it runs straight away.
-  - **write:** changes something outside Binary, so it's _blocked_ until
-    Chapter 8 adds approvals.
-  - **computer:** for sandboxes, browsers and your own computer (Chapters
-    9–11).
-- **Built-in tools:** `get_current_time`, and `fetch_web_page`, which only
-  reaches public addresses (an SSRF guard).
-- **Apps through MCP:** connect any Streamable-HTTP MCP server by URL, with
-  an optional `Authorization` header that's stored encrypted. Composio URLs
-  work the same way.
-  - Binary connects before saving, so a wrong URL or token is caught on the
-    form.
-  - A tool is **read** only if its server marks it `readOnlyHint`; anything
-    else counts as **write**.
-- **Apps & tools page** (`/apps`): the risk levels explained, the built-in
-  tools, your apps with their tools and risk, connect and remove.
-- **Tools in chat:** each tool call appears inside the reply ("Using…",
-  "Used…", "Blocked…") with its risk. Open it to see the exact input and
-  result. Calls are saved with the answer, and the character _thinks_ while
-  a tool runs.
-- **Multi-step answers:** the model can call a tool, read the result and
-  then answer, up to 5 steps per reply.
-- **`AppError` hierarchy:** carried over from Chapter 4's scope. Routes
-  throw `ValidationError`, `NotFoundError`, `MissingProviderKeyError`,
-  `ProviderError` or `AppConnectionError`, and one `app.onError` turns them
-  into JSON. A malformed JSON body is now a **400** instead of a 500.
+- How **tool calling** works: the model asks for a tool, reads the result,
+  then answers, over several steps
+- What **MCP** (Model Context Protocol) is, and how one URL plugs a whole app
+  into your agents
+- Why every tool gets a **risk level**, and why "blocked" is the safe default
+  until approvals exist
+- How an **SSRF guard** stops a tool from reaching your private network
+- How an **error hierarchy** (`AppError`) turns every failure into a clear
+  JSON response
 
-## Files in this chapter's docs
+## Try it
 
-| File                                   | What's in it                                        |
-| -------------------------------------- | --------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions  |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Registry, policy, MCP, stream events, API contracts |
-| [TESTING.md](TESTING.md)               | Tests and results                                   |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                           |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter           |
-| [architecture/](architecture)          | Components, a tool call end to end, policy and risk |
-| [screenshots/](screenshots)            | Apps page, tool calls in chat, phone                |
-
-## Run it
-
-No new settings, no migration.
+No new settings and no migration.
 
 ```bash
 pnpm dev
 ```
 
-Open **Apps & tools**. Built-in tools work at once: ask any character
-"What time is it in Tokyo?". To connect an app, create an MCP server URL
-(for example in [Composio](https://composio.dev)), paste it, and add its
-token in **Authorization header**, not in the URL.
+Ask any character "What time is it in Tokyo?" and open the tool call in the
+reply to see its input and result. Then open **Apps & tools**, create an MCP
+server URL (for example in [Composio](https://composio.dev)), paste it, and
+put its token in **Authorization header**, not in the URL. Ask for something
+the app can look up, then ask for something that changes it, and watch it get
+blocked.
 
-## What comes next
+![The Apps & tools page](screenshots/apps.png)
 
-Chapter 7 adds durable jobs and routines on Trigger.dev. Chapter 8 turns
-"blocked" into "waiting for your approval".
+## Good to know
+
+- Only MCP servers you reach by URL (Streamable HTTP) are supported, not
+  local command-line ones. Composio gives you a URL.
+- Every character gets every tool. Per-character control comes with
+  approval modes in Chapter 8.
+- Since Chapter 8, `write` and `computer` tools ask for your OK instead of
+  being blocked.
+
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 5 repo.
+See [DIAGRAM.md](DIAGRAM.md) for how a tool call flows.
+
+## Next
+
+[Chapter 7](../chapter-07/README.md) adds routines: jobs your characters run
+on a schedule, by webhook or on demand, as durable Trigger.dev tasks.

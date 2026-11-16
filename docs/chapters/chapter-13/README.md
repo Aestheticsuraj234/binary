@@ -1,61 +1,53 @@
 # Chapter 13: Multi-agent teams and rooms
 
-**Goal:** several characters work together in one chat.
+Several characters work together in one chat. A **room** holds 2 to 6 of
+your characters. Your message goes to the ones you @mention, or to the ones
+the lead picks, and they answer in turn, building on each other and handing
+work to a teammate when it fits.
 
-- A **room** holds 2–6 of your characters.
-- Your message goes to the right ones: those you @mention, or those the
-  lead picks.
-- Each answers in turn, sees what the others said, and can hand part of
-  the task to a teammate.
+![A room: Bolt, Ember and Nova on one launch](../../screenshots/room.png)
 
-![A real room: Claude and two GPT models](screenshots/real-room.png)
+## What you'll learn
 
-## What you get
+- How **routing** decides who answers: by @mention, or by letting the
+  lead's model choose
+- Why characters answer **in turn** instead of all at once
+- How a character sees the others' answers, labelled with their names, and
+  still keeps its own voice
+- How a **hand-off** works: an @mention inside an answer passes the turn
+- Why a hard **cap** (4 answers per message) keeps a team from talking in
+  circles
 
-- **Rooms** (sidebar):
-  - Create one with a name, its characters, **who answers** (@Mention or
-    Automatic) and a **lead**.
-  - Edit or delete it later; deleting a room keeps the characters.
-- **@Mention mode:** the characters you @mention answer, in the order you
-  mention them. Mention no one and the lead answers.
-- **Automatic mode:** the lead's model reads your message and picks up to
-  three characters, in order. An @mention still wins.
-- **Hand-offs:** a character that @mentions a teammate in its answer
-  ("@Bolt, can you prototype it?") passes them the next turn.
-- **One message, at most 4 answers**, so a room never talks in circles.
-- **Each character knows the room:**
-  - who is in it and what they do
-  - what the others said, labelled "[Name]: …"
-  - to answer only its part, not to repeat the others, and not to start
-    with its own name
-  - its own memory, tools, computer and engine still apply
-- **The room chat:**
-  - every answer streams under its character's face and name
-  - @Name chips above the box
-  - the room's chats in a side panel
-  - approvals in a room work as anywhere else, and Today links back into
-    the room
+## Try it
 
-![Nova hands over to Bolt](screenshots/room-handoff.png)
+There's no migration this time. With `pnpm dev` running:
 
-## Files in this chapter's docs
+1. Hire at least two characters.
+2. Open **Rooms**, then **New room**. Pick the characters, how they answer
+   (**@Mention** or **Automatic**) and a lead.
+3. Send a message with no mention, then one with `@Name`. Use the @Name
+   chips above the message box.
+4. Ask one character to hand something over ("research it, then pass it to
+   @Bolt") and watch the next one pick it up.
 
-| File                                   | What's in it                                               |
-| -------------------------------------- | ---------------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions         |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Routing, a room turn, history, streaming, APIs             |
-| [TESTING.md](TESTING.md)               | Tests, the walkthrough and the real run                    |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                                  |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter                  |
-| [architecture/](architecture)          | Components, a room message end to end, who answers         |
-| [screenshots/](screenshots)            | The form, auto routing, a hand-off, rooms, phone, real run |
+![Creating a room](screenshots/room-form.png)
 
-## Run it
+![Nova hands the work over to Bolt](screenshots/room-handoff.png)
 
-There's no migration: `rooms`, `room_members`, room threads and
-`messages.author_agent_id` have existed since Chapter 2. Hire two or more
-characters, then open **Rooms → New room**.
+## Good to know
 
-## What comes next
+- An @mention always wins, even in Automatic mode.
+- Each character still uses its own model, memory, tools and computer, so a
+  room can mix Claude and GPT. Approvals from a room reach Today and lead
+  back into the room.
+- Deleting a room keeps its characters.
 
-Chapter 14: the whole experience on the Expo mobile app, with voice input.
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 12 repo.
+See [DIAGRAM.md](DIAGRAM.md) for one room message from start to end.
+
+## Next
+
+[Chapter 14](../chapter-14/README.md) brings your crew, rooms and Today to
+the Expo mobile app, with voice input.

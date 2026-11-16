@@ -1,76 +1,53 @@
 # Chapter 14: Mobile app and voice
 
-**Goal:** the whole Binary experience in your pocket.
+The whole Binary experience comes to the Expo app: your crew, rooms and
+Today inbox, with streaming chats and approvals. And you can talk instead of
+typing: tap the mic, speak, and the words land in the message box.
 
-- Your crew, rooms and **Today** on the Expo app, with the same cartoon
-  characters as the web.
-- Answers stream in word by word, with tools, pictures and approvals.
-- **Talk instead of typing:** tap the microphone, speak, and the words land
-  in the message box.
+| Crew                                               | Today                                                                  | Voice                                                         |
+| -------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------- |
+| ![The Crew tab](../../screenshots/mobile-crew.png) | ![Today, with an approval waiting](../../screenshots/mobile-today.png) | ![Voice input, listening](../../screenshots/mobile-voice.png) |
 
-![The Expo app on an iPhone simulator: a real room](screenshots/ios-room.png)
+## What you'll learn
 
-## What you get
+- How a **mobile app shares one API** with the web, using the same session
+  and the same streamed answers
+- How **tabs and a sign-in guard** in Expo Router keep signed-out users on
+  the sign-in screens
+- How **voice input** works: record on the phone, transcribe on the server
+- Why **API keys stay on the server**, even for a feature that starts on the
+  phone
+- How one drawing of the characters is **reused** by both apps
 
-- **Four tabs:**
-  - **Crew:** the characters you hired, and your recent chats.
-  - **Rooms:** each room with its mode, faces and members.
-  - **Today:** what waits for you (Approve, Reject, Open chat), and what
-    your routines did. The tab shows a badge with the count.
-  - **You:** your account, and Sign out.
-- **Chats with one character:**
-  - its face in the header reacts: thinking, talking (the mouth moves),
-    happy, oops
-  - a greeting and starters in an empty chat
-  - answers stream in, with Markdown, tool rows you can open, charts and
-    screenshots, and Approve / Reject on a tool that waits for you
-  - New chat and Delete chat
-- **Room chats:** every answer under its character's name; @Name chips
-  above the box; the members, the lead, the mode and earlier chats in an
-  empty room.
-- **Voice input:**
-  - tap the mic, speak, tap the square
-  - the recording goes to the API, which turns it into text with **your
-    OpenAI key**
-  - the text lands in the box so you can fix a word before sending
-  - your characters' names are passed as a hint, so "Bolt" isn't heard as
-    "bold", and "at Mimi" becomes "@Mimi"
-- **Approvals remember where you decided:** a decision from the phone is
-  saved as `mobile` (the column has existed since Chapter 2).
-- **The same characters, one drawing:** a script renders the web's
-  `<Character>` to SVG for the app, so a change to a character reaches
-  both apps.
+## Try it
 
-![Voice: listening, then the words in the box](screenshots/voice-recording.png)
-
-## Files in this chapter's docs
-
-| File                                   | What's in it                                               |
-| -------------------------------------- | ---------------------------------------------------------- |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | Plan, acceptance criteria, file-by-file, decisions         |
-| [ARCHITECTURE.md](ARCHITECTURE.md)     | Screens, the API client, streaming, voice, faces, APIs     |
-| [TESTING.md](TESTING.md)               | Tests, the walkthrough, the simulator and the real voice   |
-| [PR_REVIEW.md](PR_REVIEW.md)           | Review findings and fixes                                  |
-| [REBUILD_PROMPT.md](REBUILD_PROMPT.md) | Standalone prompt to rebuild this chapter                  |
-| [architecture/](architecture)          | Components, a spoken message end to end, the auth guard    |
-| [screenshots/](screenshots)            | Crew, chats, voice, approvals, Today, rooms, iOS simulator |
-
-## Run it
-
-No migration. Start the API and web as usual (`pnpm dev`), then:
+There's no migration. Keep `pnpm dev` running, then:
 
 ```bash
-cp apps/mobile/.env.example apps/mobile/.env   # your laptop's IP, not localhost
-pnpm mobile
+cp apps/mobile/.env.example apps/mobile/.env   # set your laptop's IP
+pnpm mobile                                    # scan the QR code with Expo Go
 ```
 
-Scan the QR code with Expo Go. Hire characters and add keys on the web;
-they show up on the phone. Voice needs an OpenAI key (Settings on the web).
+Sign in, open a character from **Crew** and send a message. Ask for
+something that needs approval and decide it from **Today**. Then tap the
+mic, say a sentence with a character's name in it, and stop. The text
+lands in the box for you to check before sending.
 
-To try the app in a browser instead, run Expo with `--web`. The API only
-accepts the browser origin in `WEB_URL`, so point a second API at it, e.g.
-`WEB_URL=http://localhost:8081`.
+## Good to know
 
-## What comes next
+- `EXPO_PUBLIC_API_URL` must be your laptop's Wi-Fi IP, not `localhost`,
+  and the phone must be on the same Wi-Fi.
+- **Voice needs an OpenAI key.** Anthropic and Google keys don't turn it on.
+- Hiring characters, apps, API keys and routines stay on the web. Anything
+  you change there shows up on the phone.
 
-Chapter 15: usage tracking, end-to-end tests and deployment.
+## Build it yourself
+
+Paste [PROMPT.md](PROMPT.md) into your coding agent in your chapter 13 repo.
+See [DIAGRAM.md](DIAGRAM.md) for how the phone, the API and your OpenAI key
+fit together.
+
+## Next
+
+[Chapter 15](../chapter-15/README.md) makes Binary ready to share: a README
+with every feature, real screenshots and a setup guide.
